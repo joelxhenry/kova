@@ -1,0 +1,74 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+@source '../**/*.vue';
+
+/* ── Fonts ── */
+@font-face {
+    font-family: 'Inter Tight';
+    font-style: normal;
+    font-display: swap;
+    src: local('Inter Tight');
+}
+
+/* ── Design System Tokens ── */
+@theme {
+    /* Font families */
+    --font-sans: 'Inter Tight', 'Inter', system-ui, sans-serif;
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    /* Colors */
+    --color-background: #0A0A0A;
+    --color-foreground: #FAFAFA;
+    --color-muted: #1A1A1A;
+    --color-muted-foreground: #737373;
+    --color-accent: #FF3D00;
+    --color-accent-foreground: #0A0A0A;
+    --color-border: #262626;
+    --color-input: #1A1A1A;
+    --color-card: #0F0F0F;
+    --color-card-foreground: #FAFAFA;
+    --color-ring: #FF3D00;
+
+    /* Letter spacing */
+    --tracking-tighter: -0.06em;
+    --tracking-tight: -0.04em;
+    --tracking-normal: -0.01em;
+    --tracking-wide: 0.05em;
+    --tracking-wider: 0.1em;
+    --tracking-widest: 0.2em;
+
+    /* Line heights */
+    --leading-none: 1;
+    --leading-tight: 1.1;
+    --leading-snug: 1.25;
+    --leading-normal: 1.6;
+    --leading-relaxed: 1.75;
+
+    /* Border radius — sharp edges only */
+    --radius-none: 0px;
+    --radius-sm: 0px;
+    --radius-md: 0px;
+    --radius-lg: 0px;
+    --radius-xl: 0px;
+    --radius-2xl: 0px;
+    --radius-3xl: 0px;
+    --radius-full: 0px;
+}
+
+/* ── Base styles ── */
+@layer base {
+    body {
+        background-color: var(--color-background);
+        color: var(--color-foreground);
+        font-family: var(--font-sans);
+        letter-spacing: var(--tracking-normal);
+        line-height: var(--leading-normal);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}
