@@ -30,8 +30,6 @@ class StoreTaxProfileRequest extends FormRequest
             ])],
             'is_gct_registered' => ['required', 'boolean'],
             'gct_registration_date' => ['nullable', 'date', 'required_if:is_gct_registered,true'],
-            'nis_rate' => ['required', 'numeric', 'min:0', 'max:100'],
-            'education_tax_rate' => ['required', 'numeric', 'min:0', 'max:100'],
             'fiscal_year_start' => ['nullable', 'date'],
         ];
     }

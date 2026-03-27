@@ -1,8 +1,9 @@
 # Kova — Master Implementation Plan
 
-**Product:** Contractor Income & Tax Management Tool
+**Product:** Contractor Income & Tax Management Tool (SaaS)
 **Market:** Jamaica (TAJ compliance)
 **Stack:** Laravel 13 · Vue 3 · Inertia.js · PrimeVue · Tailwind CSS
+**Model:** Subscription-based (pricing TBD) with admin portal on separate subdomain
 
 ---
 
@@ -21,19 +22,24 @@ Foundation layer. Nothing else works without users and their tax context.
 ### 0.2 Tax Profile (Onboarding)
 
 After registration, the user must configure their tax identity. This drives all downstream calculations.
+Statutory contribution rates (NIS, education tax, etc.) are **not** user-configurable — they are managed centrally via the admin portal and displayed read-only to users.
 
 - [x] Migration: `tax_profiles` table
   ```
   user_id (FK), trn (Tax Registration Number), business_type enum (specified_services, construction, haulage, tillage, other),
   is_gct_registered (boolean, default false), gct_registration_date (nullable date),
-  nis_rate (decimal), education_tax_rate (decimal),
   fiscal_year_start (date), created_at, updated_at
   ```
-- [x] Model: `TaxProfile` (belongsTo User)
+- [x] Migration: `statutory_rates` table (admin-managed, seeded with defaults)
+  ```
+  key (unique), label, value (decimal 15,4), description, effective_from (date)
+  ```
+  Seeded keys: `nis_rate`, `education_tax_rate`, `gct_rate`, `withholding_tax_rate`, `contractors_levy_rate`, `tax_free_threshold`, `tax_bracket_25_limit`, `gct_registration_threshold`, `withholding_tax_invoice_threshold`
+- [x] Model: `TaxProfile` (belongsTo User), `StatutoryRate` (admin-managed lookup)
 - [x] Service: `TaxProfileService` — create/update profile, validate TRN format
-- [x] Form Request: `StoreTaxProfileRequest` / `UpdateTaxProfileRequest`
-- [x] Controller: `TaxProfileController` (edit, update)
-- [x] Page: `Pages/Profile/TaxProfile.vue` — onboarding wizard or settings page
+- [x] Form Request: `StoreTaxProfileRequest`
+- [x] Controller: `TaxProfileController` (edit, update) — passes statutory rates as read-only props
+- [x] Page: `Pages/Profile/TaxProfile.vue` — user edits their profile, statutory rates displayed read-only
 - [x] The `business_type` determines which withholding logic applies (3% vs 2%)
 
 ### Verification
@@ -190,12 +196,12 @@ The core intelligence of the application. Everything feeds into this.
   1. Gross Income = sum of all paid invoices + income entries for the year
   2. Total Expenses = sum of all expenses for the year
   3. Net Income = Gross Income − Total Expenses
-  4. Income Tax:
-     - First JMD $1,700,088 → 0% (tax-free threshold)
-     - Next JMD $4,299,912 (up to $6,000,000) → 25%
-     - Above JMD $6,000,000 → 30%
-  5. NIS Contribution = Net Income × NIS rate (from tax profile)
-  6. Education Tax = Net Income × Education Tax rate (from tax profile)
+  4. Income Tax (thresholds from `statutory_rates` table):
+     - First JMD `tax_free_threshold` → 0%
+     - Up to JMD `tax_bracket_25_limit` → 25%
+     - Above `tax_bracket_25_limit` → 30%
+  5. NIS Contribution = Net Income × `nis_rate` (from `statutory_rates`)
+  6. Education Tax = Net Income × `education_tax_rate` (from `statutory_rates`)
   7. Total Tax Liability = Income Tax + NIS + Education Tax
   8. Withholding Tax Credits = sum of all withholding tax from invoices + income entries
   9. Net Tax Payable = Total Tax Liability − Withholding Tax Credits
@@ -413,11 +419,103 @@ Proactive reminders so users never miss a deadline.
 
 ---
 
+## Phase 8 — Admin Portal
+
+Separate subdomain (`admin.kova.zncn.app`) for platform administration. Controls statutory rates, user management, and subscription oversight.
+
+### 8.1 Admin Authentication & Authorization
+
+- [ ] Admin `role` column on `users` table (or separate `admins` table)
+- [ ] Admin auth middleware — separate guard or role-based check
+- [ ] Admin login page on admin subdomain
+- [ ] Route group with admin middleware, served under admin subdomain
+- [ ] Separate Inertia entry point or route-based subdomain handling
+
+### 8.2 Statutory Rate Management
+
+- [ ] Controller: `Admin\StatutoryRateController` (index, edit, update)
+- [ ] Form Request: `Admin\UpdateStatutoryRateRequest`
+- [ ] Pages:
+  - `Pages/Admin/StatutoryRates/Index.vue` — list all rates with current values
+  - `Pages/Admin/StatutoryRates/Edit.vue` — update value and effective date
+- [ ] Audit log: track who changed what rate and when (optional `statutory_rate_audit_log` table)
+- [ ] Rate changes take effect for all users from `effective_from` date forward
+
+### 8.3 User Management
+
+- [ ] Controller: `Admin\UserController` (index, show, suspend, reactivate)
+- [ ] Pages:
+  - `Pages/Admin/Users/Index.vue` — paginated user list with search, subscription status
+  - `Pages/Admin/Users/Show.vue` — user detail, tax profile, subscription info
+- [ ] Ability to suspend/reactivate user accounts
+- [ ] View user's subscription status and history
+
+### 8.4 Platform Dashboard
+
+- [ ] Controller: `Admin\DashboardController`
+- [ ] Page: `Pages/Admin/Dashboard.vue`
+- [ ] Widgets: total users, active subscriptions, revenue (when billing is live), recent signups
+
+### Verification
+
+- [ ] Admin can log in on admin subdomain
+- [ ] Admin can update statutory rates and changes reflect for all users
+- [ ] Admin can view and manage user accounts
+- [ ] Regular users cannot access admin routes
+
+---
+
+## Phase 9 — Subscription & Billing
+
+Subscription-based access model. Pricing structure and tiers are TBD — this phase defines the infrastructure.
+
+### 9.1 Subscription Infrastructure
+
+- [ ] Migration: `subscriptions` table
+  ```
+  user_id (FK), plan_id (FK), status enum (active, past_due, cancelled, trialing),
+  trial_ends_at (nullable), current_period_start, current_period_end,
+  cancelled_at (nullable), created_at, updated_at
+  ```
+- [ ] Migration: `plans` table (admin-managed)
+  ```
+  name, slug, description, price (decimal), interval enum (monthly, yearly),
+  features (json), is_active (boolean), sort_order, created_at, updated_at
+  ```
+- [ ] Models: `Subscription`, `Plan`
+- [ ] Service: `SubscriptionService` — manage subscription lifecycle
+- [ ] Middleware: `EnsureSubscribed` — gate access to premium features
+- [ ] Pricing page: display available plans (structure TBD)
+
+### 9.2 Billing Integration (TBD)
+
+- [ ] Payment gateway integration (provider TBD — Stripe, PayPal, local JM gateway)
+- [ ] Webhook handling for payment events
+- [ ] Invoice generation for subscription payments
+- [ ] Billing history page for users
+
+### 9.3 Admin Plan Management
+
+- [ ] Controller: `Admin\PlanController` (index, create, store, edit, update)
+- [ ] Pages: admin CRUD for plans — name, price, features, active toggle
+- [ ] Subscription analytics in admin dashboard
+
+### Verification
+
+- [ ] Users can view available plans
+- [ ] Subscription middleware gates access appropriately
+- [ ] Admin can create/edit plans
+- [ ] Subscription status visible in admin user management
+
+---
+
 ## Data Model Summary
 
 ```
 User
  ├── TaxProfile (1:1)
+ ├── Subscription (1:1 active)
+ │    └── Plan (N:1)
  ├── Client (1:N)
  │    └── Invoice (1:N)
  │         └── InvoiceItem (1:N)
@@ -426,6 +524,9 @@ User
  │    └── ExpenseCategory (N:1)
  ├── WithholdingCredit (1:N)
  └── TaxFormSnapshot (1:N)
+
+StatutoryRate (admin-managed, global)
+Plan (admin-managed, global)
 ```
 
 ---
@@ -448,7 +549,13 @@ Phase 5 ─── TAJ Form Generation (depends on Phase 3)
 Phase 6 ─── Notifications & Scheduled Tasks (depends on Phases 1 + 3 + 4)
    │
 Phase 7 ─── Polish & Production Readiness (all phases)
+   │
+Phase 8 ─── Admin Portal (can start after Phase 0, independent of Phases 1-7)
+   │
+Phase 9 ─── Subscription & Billing (depends on Phase 8)
 ```
 
 Phases 4 and 5 can run in parallel after Phase 3 is complete.
 Phase 6 can begin as soon as Phase 4 is done.
+Phase 8 (Admin Portal) can be developed in parallel with Phases 1-7.
+Phase 9 (Subscriptions) requires Phase 8 for plan management.

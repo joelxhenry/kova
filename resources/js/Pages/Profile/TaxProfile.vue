@@ -8,6 +8,7 @@ import PrimaryButton from '@/Components/UI/PrimaryButton.vue';
 
 const props = defineProps({
     taxProfile: { type: Object, default: null },
+    statutoryRates: { type: Object, default: () => ({}) },
 });
 
 const page = usePage();
@@ -25,13 +26,27 @@ const form = useForm({
     business_type: props.taxProfile?.business_type ?? '',
     is_gct_registered: props.taxProfile?.is_gct_registered ?? false,
     gct_registration_date: props.taxProfile?.gct_registration_date?.split('T')[0] ?? '',
-    nis_rate: props.taxProfile?.nis_rate ?? '3.00',
-    education_tax_rate: props.taxProfile?.education_tax_rate ?? '2.25',
     fiscal_year_start: props.taxProfile?.fiscal_year_start?.split('T')[0] ?? '',
 });
 
 const submit = () => {
     form.put('/tax-profile');
+};
+
+const formatRate = (key) => {
+    const rate = props.statutoryRates[key];
+    return rate ? parseFloat(rate.value).toFixed(2) : '—';
+};
+
+const formatCurrency = (key) => {
+    const rate = props.statutoryRates[key];
+    if (!rate) return '—';
+    return new Intl.NumberFormat('en-JM', {
+        style: 'currency',
+        currency: 'JMD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    }).format(parseFloat(rate.value));
 };
 </script>
 
@@ -89,7 +104,7 @@ const submit = () => {
                     </select>
                     <InputError :message="form.errors.business_type" />
                     <p class="mt-1.5 text-xs text-muted-foreground">
-                        Determines withholding tax rate: 3% for specified services, 2% for construction/haulage/tillage
+                        Determines withholding tax rate: {{ formatRate('withholding_tax_rate') }}% for specified services, {{ formatRate('contractors_levy_rate') }}% for construction/haulage/tillage
                     </p>
                 </div>
 
@@ -104,7 +119,7 @@ const submit = () => {
                         <div>
                             <span class="text-sm font-medium text-foreground">GCT Registered</span>
                             <p class="text-xs text-muted-foreground mt-0.5">
-                                Required when annual turnover exceeds JMD $15,000,000. Enables 15% GCT on invoices.
+                                Required when annual turnover exceeds {{ formatCurrency('gct_registration_threshold') }}. Enables {{ formatRate('gct_rate') }}% GCT on invoices.
                             </p>
                         </div>
                     </div>
@@ -117,33 +132,6 @@ const submit = () => {
                             :error="form.errors.gct_registration_date"
                         />
                         <InputError :message="form.errors.gct_registration_date" />
-                    </div>
-                </div>
-
-                <!-- Statutory Rates -->
-                <div class="border-t border-border pt-8">
-                    <h2 class="text-lg font-semibold tracking-tight mb-4">Statutory Contribution Rates</h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div>
-                            <InputLabel value="NIS Rate (%)" />
-                            <TextInput
-                                v-model="form.nis_rate"
-                                type="number"
-                                step="0.01"
-                                :error="form.errors.nis_rate"
-                            />
-                            <InputError :message="form.errors.nis_rate" />
-                        </div>
-                        <div>
-                            <InputLabel value="Education Tax Rate (%)" />
-                            <TextInput
-                                v-model="form.education_tax_rate"
-                                type="number"
-                                step="0.01"
-                                :error="form.errors.education_tax_rate"
-                            />
-                            <InputError :message="form.errors.education_tax_rate" />
-                        </div>
                     </div>
                 </div>
 

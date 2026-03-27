@@ -16,8 +16,6 @@ class TaxProfile extends Model
         'business_type',
         'is_gct_registered',
         'gct_registration_date',
-        'nis_rate',
-        'education_tax_rate',
         'fiscal_year_start',
     ];
 
@@ -29,8 +27,6 @@ class TaxProfile extends Model
         return [
             'is_gct_registered' => 'boolean',
             'gct_registration_date' => 'date',
-            'nis_rate' => 'decimal:2',
-            'education_tax_rate' => 'decimal:2',
             'fiscal_year_start' => 'date',
         ];
     }

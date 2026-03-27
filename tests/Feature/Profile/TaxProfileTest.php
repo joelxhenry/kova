@@ -22,6 +22,19 @@ test('authenticated user can view tax profile page', function () {
         ->assertInertia(fn ($page) => $page->component('Profile/TaxProfile'));
 });
 
+test('tax profile page includes statutory rates', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get('/tax-profile')
+        ->assertInertia(fn ($page) => $page
+            ->component('Profile/TaxProfile')
+            ->has('statutoryRates.nis_rate')
+            ->has('statutoryRates.education_tax_rate')
+            ->has('statutoryRates.gct_rate')
+        );
+});
+
 test('user can create a tax profile', function () {
     $user = User::factory()->create();
 
@@ -30,8 +43,6 @@ test('user can create a tax profile', function () {
             'trn' => '123456789',
             'business_type' => 'specified_services',
             'is_gct_registered' => false,
-            'nis_rate' => 3.00,
-            'education_tax_rate' => 2.25,
         ])
         ->assertRedirect('/tax-profile')
         ->assertSessionHas('status', 'Tax profile updated.');
@@ -49,8 +60,6 @@ test('user can update an existing tax profile', function () {
     TaxProfile::create([
         'user_id' => $user->id,
         'business_type' => 'other',
-        'nis_rate' => 3.00,
-        'education_tax_rate' => 2.25,
     ]);
 
     $this->actingAs($user)
@@ -59,8 +68,6 @@ test('user can update an existing tax profile', function () {
             'business_type' => 'construction',
             'is_gct_registered' => true,
             'gct_registration_date' => '2025-01-15',
-            'nis_rate' => 3.00,
-            'education_tax_rate' => 2.25,
         ])
         ->assertRedirect('/tax-profile');
 
@@ -71,7 +78,6 @@ test('user can update an existing tax profile', function () {
         'is_gct_registered' => true,
     ]);
 
-    // Should still be only one record
     expect(TaxProfile::where('user_id', $user->id)->count())->toBe(1);
 });
 
@@ -82,8 +88,6 @@ test('business_type is required', function () {
         ->put('/tax-profile', [
             'business_type' => '',
             'is_gct_registered' => false,
-            'nis_rate' => 3.00,
-            'education_tax_rate' => 2.25,
         ])
         ->assertSessionHasErrors('business_type');
 });
@@ -95,8 +99,6 @@ test('business_type must be a valid enum value', function () {
         ->put('/tax-profile', [
             'business_type' => 'invalid_type',
             'is_gct_registered' => false,
-            'nis_rate' => 3.00,
-            'education_tax_rate' => 2.25,
         ])
         ->assertSessionHasErrors('business_type');
 });
@@ -109,8 +111,6 @@ test('trn must be exactly 9 digits', function () {
             'trn' => '12345',
             'business_type' => 'other',
             'is_gct_registered' => false,
-            'nis_rate' => 3.00,
-            'education_tax_rate' => 2.25,
         ])
         ->assertSessionHasErrors('trn');
 });
@@ -123,8 +123,6 @@ test('gct_registration_date is required when gct registered', function () {
             'business_type' => 'specified_services',
             'is_gct_registered' => true,
             'gct_registration_date' => '',
-            'nis_rate' => 3.00,
-            'education_tax_rate' => 2.25,
         ])
         ->assertSessionHasErrors('gct_registration_date');
 });
@@ -137,8 +135,6 @@ test('gct_registration_date is cleared when not gct registered', function () {
             'business_type' => 'specified_services',
             'is_gct_registered' => false,
             'gct_registration_date' => '2025-01-01',
-            'nis_rate' => 3.00,
-            'education_tax_rate' => 2.25,
         ])
         ->assertRedirect('/tax-profile');
 
@@ -151,8 +147,6 @@ test('existing tax profile data is passed to the edit page', function () {
         'user_id' => $user->id,
         'trn' => '111222333',
         'business_type' => 'haulage',
-        'nis_rate' => 3.00,
-        'education_tax_rate' => 2.25,
     ]);
 
     $this->actingAs($user)
@@ -169,8 +163,6 @@ test('tax profile is shared in inertia props', function () {
     TaxProfile::create([
         'user_id' => $user->id,
         'business_type' => 'construction',
-        'nis_rate' => 3.00,
-        'education_tax_rate' => 2.25,
     ]);
 
     $this->actingAs($user)
