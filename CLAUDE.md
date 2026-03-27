@@ -34,3 +34,4 @@
 - Use PrimeVue `pt` prop for styling (unstyled mode + Tailwind)
 - No inline CSS, no new UI libraries without permission
 - No new dependencies without permission
+- **Every task must include passing Pest tests before it can be marked complete** — feature tests for controllers/routes, unit tests for services/business logic. Run `make test` to verify.

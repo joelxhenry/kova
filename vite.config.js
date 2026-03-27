@@ -27,8 +27,9 @@ export default defineConfig({
     server: {
         host: '0.0.0.0',
         port: 5170,
+        origin: process.env.DEV_VITE_ORIGIN || undefined,
         hmr: {
-            host: process.env.VITE_HMR_HOST || 'localhost',
+            host: process.env.DEV_VITE_HMR_HOST || 'localhost',
         },
         cors: true,
         watch: {

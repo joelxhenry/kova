@@ -33,5 +33,11 @@
 * **No Secrets in Props:** Never pass sensitive data (hashed passwords, internal system tokens, unused personal user data) to the frontend via Inertia props. Only send exactly what the Vue component needs to render.
 * **Error Handling:** Wrap external API calls or complex database transactions inside `try/catch` blocks within the Service class. Throw custom exceptions or return standardized error formats that the Controller can pass back to the user smoothly.
 
-## 6. Self-Correction Mandate
+## 6. Testing Requirements
+* **Test Before Done:** Every task that introduces or modifies backend logic (controllers, services, form requests, models, routes) **must** include automated Pest tests that pass before the task can be marked as completed.
+* **What to Test:** Write feature tests for controller actions (HTTP status codes, redirects, validation errors, authorization). Write unit tests for service classes (calculations, business logic, edge cases).
+* **Test Must Pass:** Run `php artisan test` (or `make test` in Docker) and confirm all tests pass. A task with failing tests is not complete — fix the code or the test before marking it done.
+* **Test Location:** Feature tests go in `tests/Feature/`, unit tests in `tests/Unit/`. Mirror the app structure (e.g., `tests/Feature/Auth/LoginTest.php` for `LoginController`).
+
+## 7. Self-Correction Mandate
 * If you generate code that violates any of the rules above, and you catch it during your own generation process, immediately rewrite it to comply before finishing the response.
