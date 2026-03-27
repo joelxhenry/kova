@@ -43,15 +43,15 @@ Bold Typography is **poster design translated to web**. Typography isn't decorat
 
 2. **Extreme Scale Contrast**: The gap between headline and body creates drama. Think 6:1 or greater ratio between H1 and paragraph text.
 
-3. **Deliberate Negative Space**: White (or black) space isn't empty—it's the frame around your type. Generous margins make headlines feel intentional, not cramped.
+3. **Deliberate Negative Space**: White space isn't empty—it's the canvas that frames your type. Generous margins make headlines feel intentional, not cramped.
 
 4. **Strict Hierarchy**: Every element has a clear rank. No two elements compete for attention. The eye flows naturally: headline → subhead → body → action.
 
-5. **Restrained Palette**: Black, white, and one accent. Maybe two. More colors dilute the typographic impact. Let the type shapes do the work.
+5. **Restrained Palette**: White, black, and one accent. Maybe two. More colors dilute the typographic impact. Let the type shapes do the work.
 
 ### The Vibe
 
-**Confident. Editorial. Deliberate.** This isn't friendly SaaS—it's a design manifesto. The page feels like a gallery exhibition or luxury magazine spread. Every word earns its place.
+**Confident. Editorial. Deliberate.** This isn't friendly SaaS—it's a design manifesto. The page feels like a high-end gallery exhibition or a pristine luxury magazine spread. Every word earns its place.
 
 Visual signatures:
 - Massive headlines that make you scroll
@@ -65,23 +65,23 @@ Visual signatures:
 
 ## Design Token System
 
-### Colors (Dark Mode)
+### Colors (Light Mode)
 
 ```
-background:        #0A0A0A    // Near-black, not pure black
-foreground:        #FAFAFA    // Warm white
-muted:             #1A1A1A    // Subtle surface elevation
-mutedForeground:   #737373    // Secondary text (WCAG AA on dark)
+background:        #FAFAFA    // Warm, crisp white (gallery wall)
+foreground:        #0A0A0A    // Near-black, absolute contrast
+muted:             #F0F0F0    // Subtle surface elevation/contrast
+mutedForeground:   #525252    // Secondary text (WCAG AA on light)
 accent:            #FF3D00    // Vermillion—warm, urgent, visible
-accentForeground:  #0A0A0A    // Dark text on accent
-border:            #262626    // Barely-there dividers
-input:             #1A1A1A    // Input backgrounds
-card:              #0F0F0F    // Slight elevation from bg
-cardForeground:    #FAFAFA
+accentForeground:  #FAFAFA    // Light text on accent
+border:            #E5E5E5    // Barely-there dividers
+input:             #F0F0F0    // Input backgrounds
+card:              #FFFFFF    // Pure white for slight pop from bg
+cardForeground:    #0A0A0A
 ring:              #FF3D00    // Focus states match accent
 ```
 
-The accent is deliberate: vermillion/red-orange creates urgency and warmth against the cold dark background. It's used sparingly—headlines, key CTAs, and underlines only.
+The accent is deliberate: vermillion/red-orange creates urgency and warmth against the crisp, stark background. It's used sparingly—headlines, key CTAs, and underlines only.
 
 ### Typography
 
@@ -142,8 +142,8 @@ borderThick: 2px    // Accent underlines
 
 ### Shadows & Effects
 
-No traditional shadows. Depth comes from:
-- **Layered type**: Large muted text behind smaller bright text
+No traditional drop shadows. Depth comes from:
+- **Layered type**: Large muted text behind smaller stark text
 - **Underlines**: 2-3px accent lines under interactive elements
 - **Dividers**: Full-width horizontal rules
 
@@ -154,10 +154,10 @@ textShadow: none
 
 ### Textures & Patterns
 
-**Subtle noise grain texture**: A very subtle fractal noise pattern at 1.5% opacity overlays the entire page, adding tactile quality to the dark background without being obtrusive. Implemented via inline SVG data URL with feTurbulence filter.
+**Subtle noise grain texture**: A very subtle fractal noise pattern at 1.5% opacity overlays the entire page, adding tactile quality to the light background without looking muddy. Implemented via inline SVG data URL with feTurbulence filter.
 
 **Typographic layering for depth**:
-- Decorative oversized numbers/text behind content with low opacity
+- Decorative oversized numbers/text behind content with low opacity (text-muted)
 - Text shadow technique: duplicate text offset 1-2px in border color creates depth without traditional shadows
 - Accent bars: thin horizontal accent-colored bars (h-1, w-16) as visual anchors on key elements
 
@@ -221,17 +221,17 @@ All buttons:
 When a "card" is necessary (pricing, testimonials):
 ```
 - Border: 1px solid border (controlled by `bordered` prop)
-- Background: transparent (bg-transparent)
+- Background: transparent (bg-transparent) or card (bg-white)
 - No radius (0px, sharp corners)
 - No shadow
 - Padding: p-6 (mobile) to p-8 (desktop)
-- Transition on hover: border-hover color (150ms)
+- Transition on hover: border-foreground color (150ms)
 ```
 
 Highlighted cards (featured pricing tier):
 ```
 - Border: 2px solid accent (overrides default 1px)
-- Small accent badge above content (bg-accent, px-3 py-1, uppercase mono text)
+- Small accent badge above content (bg-accent, px-3 py-1, text-accentForeground, uppercase mono text)
 - No background change, border is the differentiator
 ```
 
@@ -245,7 +245,7 @@ Special depth technique (Product Detail card):
 ### Inputs
 
 ```
-- Background: input color (#1A1A1A)
+- Background: input color (#F0F0F0)
 - Border: 1px solid border
 - Border-radius: 0px (rounded-none, sharp corners)
 - Height: h-12 (mobile) to h-14 (desktop), responsive
@@ -261,11 +261,12 @@ Special depth technique (Product Detail card):
 
 Special case (Final CTA inverted section):
 ```
-- Background: transparent (to show inverted bg)
-- Border: border-background/30 (semi-transparent white)
-- Text: background color (inverted)
+- Background: foreground (#0A0A0A)
+- Text: background (#FAFAFA)
+- Input Background: transparent 
+- Border: border-background/20 (semi-transparent dark)
 - Placeholder: background/50 (semi-transparent)
-- Focus border: accent (stands out on white bg)
+- Focus border: accent 
 ```
 
 ---
@@ -313,8 +314,8 @@ easing: cubic-bezier(0.25, 0, 0, 1) - fast-out, crisp stop
 - No scale, no glow, no bounce
 
 **Card hover**:
-- Border color lightens (border-hover token)
-- Background color change on feature cards (transparent → muted)
+- Border color darkens (border-foreground token)
+- Background color change on feature cards (transparent → card)
 - No lift, no shadow, no scale
 
 **Image hover** (blog posts):
@@ -408,9 +409,9 @@ UI controls: Plus, Minus (FAQ), ArrowRight (CTAs), Check (pricing features)
 ## Accessibility
 
 **Contrast**:
-- foreground (#FAFAFA) on background (#0A0A0A) = 18.1:1 ✓
-- mutedForeground (#737373) on background = 5.3:1 ✓ (AA)
-- accent (#FF3D00) on background = 5.4:1 ✓ (AA for large text)
+- foreground (#0A0A0A) on background (#FAFAFA) = 18.1:1 ✓ (AAA)
+- mutedForeground (#525252) on background = 7.1:1 ✓ (AAA)
+- accent (#FF3D00) on background = 3.9:1 ✓ (AA for large text, must be 18pt+ or 14pt+ bold)
 
 **Focus states**:
 - 2px accent outline

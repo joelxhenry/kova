@@ -22,25 +22,25 @@ Foundation layer. Nothing else works without users and their tax context.
 
 After registration, the user must configure their tax identity. This drives all downstream calculations.
 
-- [ ] Migration: `tax_profiles` table
+- [x] Migration: `tax_profiles` table
   ```
   user_id (FK), trn (Tax Registration Number), business_type enum (specified_services, construction, haulage, tillage, other),
   is_gct_registered (boolean, default false), gct_registration_date (nullable date),
   nis_rate (decimal), education_tax_rate (decimal),
   fiscal_year_start (date), created_at, updated_at
   ```
-- [ ] Model: `TaxProfile` (belongsTo User)
-- [ ] Service: `TaxProfileService` — create/update profile, validate TRN format
-- [ ] Form Request: `StoreTaxProfileRequest` / `UpdateTaxProfileRequest`
-- [ ] Controller: `TaxProfileController` (edit, update)
-- [ ] Page: `Pages/Profile/TaxProfile.vue` — onboarding wizard or settings page
-- [ ] The `business_type` determines which withholding logic applies (3% vs 2%)
+- [x] Model: `TaxProfile` (belongsTo User)
+- [x] Service: `TaxProfileService` — create/update profile, validate TRN format
+- [x] Form Request: `StoreTaxProfileRequest` / `UpdateTaxProfileRequest`
+- [x] Controller: `TaxProfileController` (edit, update)
+- [x] Page: `Pages/Profile/TaxProfile.vue` — onboarding wizard or settings page
+- [x] The `business_type` determines which withholding logic applies (3% vs 2%)
 
 ### Verification
 
-- [ ] User can register, log in, and complete their tax profile
-- [ ] `business_type` selection persists and is accessible in session/shared Inertia props
-- [ ] Unauthenticated users are redirected to login
+- [x] User can register, log in, and complete their tax profile
+- [x] `business_type` selection persists and is accessible in session/shared Inertia props
+- [x] Unauthenticated users are redirected to login
 
 ---
 

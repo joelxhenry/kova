@@ -6,7 +6,8 @@ const page = usePage();
 const user = computed(() => page.props.auth.user);
 
 const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: 'grid' },
+    { name: 'Dashboard', href: '/dashboard' },
+    { name: 'Tax Profile', href: '/tax-profile' },
 ];
 
 const isActive = (href) => {

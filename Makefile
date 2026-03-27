@@ -27,7 +27,7 @@ fresh:
 	docker compose exec app php artisan migrate:fresh --seed
 
 test:
-	docker compose exec app php artisan test
+	docker compose exec -e APP_ENV=testing app php artisan test
 
 tinker:
 	docker compose exec app php artisan tinker
