@@ -34,12 +34,15 @@ test('admin users can access admin dashboard', function () {
 
 test('admin dashboard shows correct user count', function () {
     $admin = User::factory()->create(['is_admin' => true]);
-    User::factory()->count(3)->create(['is_admin' => false]);
+    User::factory()->count(2)->create(['is_admin' => false]);
+    User::factory()->create(['is_admin' => false, 'suspended_at' => now()]);
 
     $this->actingAs($admin)
         ->get('/admin')
         ->assertInertia(fn ($page) => $page
             ->where('stats.totalUsers', 3)
+            ->where('stats.activeUsers', 2)
+            ->where('stats.suspendedUsers', 1)
         );
 });
 
@@ -52,6 +55,19 @@ test('admin dashboard shows recent signups', function () {
         ->assertInertia(fn ($page) => $page
             ->has('recentSignups', 1)
             ->where('recentSignups.0.name', 'New User')
+        );
+});
+
+test('admin dashboard includes signup chart and invoice stats', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    $this->actingAs($admin)
+        ->get('/admin')
+        ->assertInertia(fn ($page) => $page
+            ->has('signupChart', 12)
+            ->has('year')
+            ->has('stats.invoiceCount')
+            ->has('stats.totalInvoiced')
         );
 });
 

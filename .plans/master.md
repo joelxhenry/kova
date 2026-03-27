@@ -551,25 +551,35 @@ Separate subdomain (`admin.kova.zncn.app`) for platform administration. Controls
 
 ### 7.3 User Management
 
-- [ ] Controller: `Admin\UserController` (index, show, suspend, reactivate)
-- [ ] Pages:
-  - `Pages/Admin/Users/Index.vue` — paginated user list with search, subscription status
-  - `Pages/Admin/Users/Show.vue` — user detail, tax profile, subscription info
-- [ ] Ability to suspend/reactivate user accounts
-- [ ] View user's subscription status and history
+- [x] Migration: `suspended_at` timestamp (nullable) on `users` table
+- [x] User model: `isSuspended()` helper, `suspended_at` cast to datetime, added to `$fillable`
+- [x] Middleware: `EnsureNotSuspended` — logs out suspended users, redirects to login with error message, registered on web middleware stack
+- [x] Controller: `Admin\UserController` (index with search + status filter, show with stats, suspend, reactivate)
+  - Suspend sets `suspended_at` to now, prevents suspending admin users
+  - Reactivate clears `suspended_at`
+  - Show aggregates client count, invoice count, total paid invoices
+- [x] Pages:
+  - `Pages/Admin/Users/Index.vue` — paginated list with search (name/email), status filter (active/suspended), status badges
+  - `Pages/Admin/Users/Show.vue` — user header with status badge, suspend/reactivate button, stats cards (clients, invoices, total invoiced), account details, tax profile
+- [x] Routes: `GET /admin/users`, `GET /admin/users/{id}`, `POST /admin/users/{id}/suspend`, `POST /admin/users/{id}/reactivate`
+- [x] Tests (13 tests): access control, index listing/search/filter/pagination, show with stats + tax profile, suspend/reactivate, cannot suspend admin, suspended user blocked from app
 
 ### 7.4 Platform Dashboard
 
-- [ ] Controller: `Admin\DashboardController`
-- [ ] Page: `Pages/Admin/Dashboard.vue`
-- [ ] Widgets: total users, active subscriptions, revenue (when billing is live), recent signups
+- [x] Controller: `Admin\DashboardController` — aggregates platform-wide stats
+- [x] Page: `Pages/Admin/Dashboard.vue`
+- [x] Widgets:
+  - **5 stat cards**: total users, active users, suspended users (accent-highlighted if > 0), total invoices, total paid revenue (JMD)
+  - **Signup chart**: CSS bar chart showing monthly signups for the current year, with labels and counts
+  - **Recent signups**: 5 most recent users with name, email, date, suspended badge, linked to user detail page
 
 ### Verification
 
-- [ ] Admin can log in on admin subdomain
-- [ ] Admin can update statutory rates and changes reflect for all users
-- [ ] Admin can view and manage user accounts
-- [ ] Regular users cannot access admin routes
+- [x] Admin can access `/admin` with `is_admin` flag
+- [x] Admin can update statutory rates with versioned history and changes reflect for all users
+- [x] Admin can view, search, filter, suspend, and reactivate user accounts
+- [x] Regular users get 403 on admin routes
+- [x] Suspended users are logged out and blocked from accessing the app
 
 ---
 
