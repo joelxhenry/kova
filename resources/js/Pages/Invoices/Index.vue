@@ -97,14 +97,14 @@ const statusColors = {
                     class="flex items-center justify-between py-4 border-b border-border hover:bg-muted/50 transition-colors duration-150 -mx-4 px-4"
                 >
                     <div>
-                        <span class="font-mono text-sm text-muted-foreground">{{ inv.invoice_number }}</span>
+                        <span class="tabular-nums text-sm text-muted-foreground">{{ inv.invoice_number }}</span>
                         <span class="ml-3 text-base font-medium text-foreground">{{ inv.client?.name }}</span>
                         <div class="mt-0.5 text-sm text-muted-foreground">
                             {{ inv.issue_date?.split('T')[0] }}
                         </div>
                     </div>
                     <div class="text-right">
-                        <div class="font-mono text-base font-medium">{{ formatJMD(inv.total) }}</div>
+                        <div class="tabular-nums text-base font-medium">{{ formatJMD(inv.total) }}</div>
                         <div class="text-xs font-medium text-muted-foreground" :class="statusColors[inv.status]">
                             {{ inv.status }}
                         </div>

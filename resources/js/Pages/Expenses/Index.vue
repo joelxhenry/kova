@@ -84,12 +84,12 @@ const deleteExpense = (expense) => {
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                     <div v-for="(total, catId) in totals" :key="catId">
                         <div class="text-xs font-medium text-muted-foreground">{{ getCategoryName(Number(catId)) }}</div>
-                        <div class="font-mono text-base font-medium mt-0.5">{{ formatJMD(total) }}</div>
+                        <div class="tabular-nums text-base font-medium mt-0.5">{{ formatJMD(total) }}</div>
                     </div>
                 </div>
                 <div class="mt-4 pt-4 flex justify-between items-center">
                     <span class="text-xs font-medium text-muted-foreground">Total</span>
-                    <span class="font-mono text-lg font-bold">{{ formatJMD(grandTotal) }}</span>
+                    <span class="tabular-nums text-lg font-bold">{{ formatJMD(grandTotal) }}</span>
                 </div>
             </div>
 
@@ -114,7 +114,7 @@ const deleteExpense = (expense) => {
                         </div>
                     </div>
                     <div class="flex items-center gap-4">
-                        <span class="font-mono text-base font-medium">{{ formatJMD(expense.amount) }}</span>
+                        <span class="tabular-nums text-base font-medium">{{ formatJMD(expense.amount) }}</span>
                         <div class="flex items-center gap-2">
                             <Link :href="`/expenses/${expense.id}/edit`">
                                 <Button label="Edit" text size="small" />

@@ -82,7 +82,7 @@ const submit = () => {
                 <div>
                     <InputLabel value="Receipt" />
                     <div v-if="expense.receipt_path" class="mb-2 text-xs text-muted-foreground">
-                        <span class="text-accent font-mono text-xs font-medium">Current receipt attached</span>
+                        <span class="text-accent tabular-nums text-xs font-medium">Current receipt attached</span>
                         <span class="ml-1">— upload a new file to replace it.</span>
                     </div>
                     <input

@@ -32,7 +32,7 @@ const deleteInvoice = () => {
         <section class="py-12 md:py-20 max-w-3xl">
             <div class="flex items-center justify-between mb-10">
                 <div>
-                    <h1 class="text-3xl md:text-4xl font-bold tracking-tighter leading-none font-mono">
+                    <h1 class="text-3xl md:text-4xl font-bold tracking-tighter leading-none tabular-nums">
                         {{ invoice.invoice_number }}
                     </h1>
                     <p class="mt-2 text-muted-foreground">
@@ -47,11 +47,11 @@ const deleteInvoice = () => {
             <div class="grid grid-cols-2 gap-6 mb-10 text-sm">
                 <div>
                     <span class="text-xs font-medium text-muted-foreground">Issue Date</span>
-                    <div class="mt-1 font-mono">{{ invoice.issue_date?.split('T')[0] }}</div>
+                    <div class="mt-1 tabular-nums">{{ invoice.issue_date?.split('T')[0] }}</div>
                 </div>
                 <div v-if="invoice.due_date">
                     <span class="text-xs font-medium text-muted-foreground">Due Date</span>
-                    <div class="mt-1 font-mono">{{ invoice.due_date?.split('T')[0] }}</div>
+                    <div class="mt-1 tabular-nums">{{ invoice.due_date?.split('T')[0] }}</div>
                 </div>
             </div>
 
@@ -69,9 +69,9 @@ const deleteInvoice = () => {
                     class="grid grid-cols-12 py-3 border-b border-border text-sm"
                 >
                     <div class="col-span-6">{{ item.description }}</div>
-                    <div class="col-span-2 text-right font-mono">{{ item.quantity }}</div>
-                    <div class="col-span-2 text-right font-mono">{{ formatJMD(item.unit_price) }}</div>
-                    <div class="col-span-2 text-right font-mono">{{ formatJMD(item.amount) }}</div>
+                    <div class="col-span-2 text-right tabular-nums">{{ item.quantity }}</div>
+                    <div class="col-span-2 text-right tabular-nums">{{ formatJMD(item.unit_price) }}</div>
+                    <div class="col-span-2 text-right tabular-nums">{{ formatJMD(item.amount) }}</div>
                 </div>
             </div>
 
@@ -79,27 +79,27 @@ const deleteInvoice = () => {
             <div class="mt-6 space-y-2 text-right text-sm">
                 <div class="flex justify-end gap-8">
                     <span class="text-muted-foreground">Subtotal</span>
-                    <span class="font-mono w-32">{{ formatJMD(invoice.subtotal) }}</span>
+                    <span class="tabular-nums w-32">{{ formatJMD(invoice.subtotal) }}</span>
                 </div>
                 <div v-if="Number(invoice.gct_amount) > 0" class="flex justify-end gap-8">
                     <span class="text-muted-foreground">GCT</span>
-                    <span class="font-mono w-32">{{ formatJMD(invoice.gct_amount) }}</span>
+                    <span class="tabular-nums w-32">{{ formatJMD(invoice.gct_amount) }}</span>
                 </div>
                 <div class="flex justify-end gap-8 text-base font-medium border-t border-border pt-2">
                     <span>Total</span>
-                    <span class="font-mono w-32">{{ formatJMD(invoice.total) }}</span>
+                    <span class="tabular-nums w-32">{{ formatJMD(invoice.total) }}</span>
                 </div>
                 <div v-if="Number(invoice.withholding_tax_amount) > 0" class="flex justify-end gap-8 text-muted-foreground">
                     <span>Less: Withholding Tax</span>
-                    <span class="font-mono w-32">-{{ formatJMD(invoice.withholding_tax_amount) }}</span>
+                    <span class="tabular-nums w-32">-{{ formatJMD(invoice.withholding_tax_amount) }}</span>
                 </div>
                 <div v-if="Number(invoice.contractors_levy_amount) > 0" class="flex justify-end gap-8 text-muted-foreground">
                     <span>Less: Contractors Levy</span>
-                    <span class="font-mono w-32">-{{ formatJMD(invoice.contractors_levy_amount) }}</span>
+                    <span class="tabular-nums w-32">-{{ formatJMD(invoice.contractors_levy_amount) }}</span>
                 </div>
                 <div v-if="Number(invoice.withholding_tax_amount) > 0 || Number(invoice.contractors_levy_amount) > 0" class="flex justify-end gap-8 text-base font-medium border-t border-border pt-2">
                     <span>Net Receivable</span>
-                    <span class="font-mono w-32">{{ formatJMD(invoice.net_receivable) }}</span>
+                    <span class="tabular-nums w-32">{{ formatJMD(invoice.net_receivable) }}</span>
                 </div>
             </div>
 

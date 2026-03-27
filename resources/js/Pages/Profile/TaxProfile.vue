@@ -156,11 +156,11 @@ const formatCurrency = (key) => {
                     >
                         <div>
                             <span class="text-sm text-foreground">{{ rate.label }}</span>
-                            <span v-if="rate.effective_from" class="ml-2 text-xs text-muted-foreground font-mono">
+                            <span v-if="rate.effective_from" class="ml-2 text-xs text-muted-foreground tabular-nums">
                                 from {{ rate.effective_from.split('T')[0] }}
                             </span>
                         </div>
-                        <span class="text-sm font-mono font-medium text-foreground">
+                        <span class="text-sm tabular-nums font-medium text-foreground">
                             {{ parseFloat(rate.value).toLocaleString('en-JM') }}
                         </span>
                     </div>

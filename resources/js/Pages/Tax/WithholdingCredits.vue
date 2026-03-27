@@ -87,19 +87,19 @@ const deleteCredit = (credit) => {
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div>
                         <div class="text-xs font-medium text-muted-foreground">Invoice WHT</div>
-                        <div class="font-mono text-base font-medium mt-0.5">{{ formatJMD(summary.invoiceCredits) }}</div>
+                        <div class="tabular-nums text-base font-medium mt-0.5">{{ formatJMD(summary.invoiceCredits) }}</div>
                     </div>
                     <div>
                         <div class="text-xs font-medium text-muted-foreground">Income WHT</div>
-                        <div class="font-mono text-base font-medium mt-0.5">{{ formatJMD(summary.incomeCredits) }}</div>
+                        <div class="tabular-nums text-base font-medium mt-0.5">{{ formatJMD(summary.incomeCredits) }}</div>
                     </div>
                     <div>
                         <div class="text-xs font-medium text-muted-foreground">Manual</div>
-                        <div class="font-mono text-base font-medium mt-0.5">{{ formatJMD(summary.manualCredits) }}</div>
+                        <div class="tabular-nums text-base font-medium mt-0.5">{{ formatJMD(summary.manualCredits) }}</div>
                     </div>
                     <div>
                         <div class="text-xs font-medium text-muted-foreground">Total</div>
-                        <div class="font-mono text-lg font-bold text-accent mt-0.5">{{ formatJMD(summary.totalCredits) }}</div>
+                        <div class="tabular-nums text-lg font-bold text-accent mt-0.5">{{ formatJMD(summary.totalCredits) }}</div>
                     </div>
                 </div>
             </div>
@@ -155,13 +155,13 @@ const deleteCredit = (credit) => {
                         <span class="text-sm font-medium text-foreground">{{ credit.description }}</span>
                         <div class="text-xs text-muted-foreground mt-0.5">
                             {{ credit.date_withheld?.split('T')[0] }}
-                            <span class="ml-2 font-mono text-xs font-medium" :class="credit.source_type === 'invoice' ? 'text-accent' : ''">
+                            <span class="ml-2 tabular-nums text-xs font-medium" :class="credit.source_type === 'invoice' ? 'text-accent' : ''">
                                 {{ credit.source_type }}
                             </span>
                         </div>
                     </div>
                     <div class="flex items-center gap-4">
-                        <span class="font-mono text-sm font-medium">{{ formatJMD(credit.amount) }}</span>
+                        <span class="tabular-nums text-sm font-medium">{{ formatJMD(credit.amount) }}</span>
                         <Button v-if="credit.source_type === 'manual'" label="Delete" text severity="danger" size="small" @click="deleteCredit(credit)" />
                     </div>
                 </div>

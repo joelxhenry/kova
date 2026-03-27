@@ -52,6 +52,10 @@ class HandleInertiaRequests extends Middleware
             'notifications' => [
                 'unreadCount' => $request->user()?->unreadNotifications()->count() ?? 0,
             ],
+            'settings' => $request->user()?->settings ? [
+                'business_name' => $request->user()->settings->get('business_name'),
+                'business_logo_path' => $request->user()->settings->get('business_logo_path'),
+            ] : null,
             'flash' => [
                 'status' => $request->session()->get('status'),
             ],

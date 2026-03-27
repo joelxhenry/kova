@@ -77,7 +77,7 @@ const submit = () => {
     <AuthenticatedLayout>
         <section class="py-12 md:py-20 max-w-3xl">
             <h1 class="text-3xl md:text-4xl font-bold tracking-tighter leading-none">
-                Edit <span class="font-mono">{{ invoice.invoice_number }}</span>
+                Edit <span class="tabular-nums">{{ invoice.invoice_number }}</span>
             </h1>
 
             <form @submit.prevent="submit" class="mt-10 space-y-8">
@@ -132,7 +132,7 @@ const submit = () => {
 
                     <Button type="button" label="+ Add line item" text size="small" class="mt-4" @click="addItem" />
 
-                    <div class="mt-6 text-right text-lg font-mono font-medium">
+                    <div class="mt-6 text-right text-lg tabular-nums font-medium">
                         Subtotal: {{ formatJMD(subtotal) }}
                     </div>
                 </div>

@@ -15,7 +15,7 @@ const { formatJMD } = useCurrencyFormatter();
             <span v-if="gctStatus.isRegistered" class="text-xs font-medium text-accent bg-accent/10 px-2 py-0.5 rounded-full">Registered</span>
         </div>
 
-        <div class="font-mono text-2xl font-bold">{{ gctStatus.percentage }}%</div>
+        <div class="tabular-nums text-2xl font-bold">{{ gctStatus.percentage }}%</div>
         <p class="text-xs text-muted-foreground mt-1">
             {{ formatJMD(gctStatus.turnover) }} of {{ formatJMD(gctStatus.threshold) }}
         </p>

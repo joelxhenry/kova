@@ -110,7 +110,7 @@ const submit = () => {
 
                     <Button type="button" label="+ Add line item" text size="small" class="mt-4" @click="addItem" />
 
-                    <div class="mt-6 text-right text-lg font-mono font-medium">
+                    <div class="mt-6 text-right text-lg tabular-nums font-medium">
                         Subtotal: {{ formatJMD(subtotal) }}
                     </div>
                 </div>

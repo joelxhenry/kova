@@ -85,7 +85,7 @@ const taxpayer = props.formData.taxpayer;
                     <h3 class="text-sm font-medium text-muted-foreground mb-3">Section 1 — Income</h3>
                     <div class="flex justify-between py-2 border-b border-border/50">
                         <span>Gross Professional / Business Income</span>
-                        <span class="font-mono font-medium">{{ formatJMD(comp.net_statutory_income + expenses.total) }}</span>
+                        <span class="tabular-nums font-medium">{{ formatJMD(comp.net_statutory_income + expenses.total) }}</span>
                     </div>
                 </div>
 
@@ -98,11 +98,11 @@ const taxpayer = props.formData.taxpayer;
                         class="flex justify-between py-1.5 text-sm"
                     >
                         <span class="text-muted-foreground">{{ category }}</span>
-                        <span class="font-mono">{{ formatJMD(amount) }}</span>
+                        <span class="tabular-nums">{{ formatJMD(amount) }}</span>
                     </div>
                     <div class="flex justify-between py-2 border-t border-border/50 mt-2 font-medium">
                         <span>Total Expenses</span>
-                        <span class="font-mono">{{ formatJMD(expenses.total) }}</span>
+                        <span class="tabular-nums">{{ formatJMD(expenses.total) }}</span>
                     </div>
                 </div>
 
@@ -113,18 +113,18 @@ const taxpayer = props.formData.taxpayer;
                     <div class="space-y-1.5 text-sm">
                         <div class="flex justify-between py-1.5 font-medium">
                             <span>Net Statutory Income</span>
-                            <span class="font-mono">{{ formatJMD(comp.net_statutory_income) }}</span>
+                            <span class="tabular-nums">{{ formatJMD(comp.net_statutory_income) }}</span>
                         </div>
                         <div class="flex justify-between py-1.5 text-muted-foreground">
                             <span>Less: Tax-Free Threshold</span>
-                            <span class="font-mono">{{ formatJMD(comp.tax_free_threshold) }}</span>
+                            <span class="tabular-nums">{{ formatJMD(comp.tax_free_threshold) }}</span>
                         </div>
 
                         <div class="border-t border-border/50 pt-2 mt-2"></div>
 
                         <div class="flex justify-between py-1.5">
                             <span>Tax on first bracket (25%)</span>
-                            <span class="font-mono">{{ formatJMD(comp.tax_on_25_bracket) }}</span>
+                            <span class="tabular-nums">{{ formatJMD(comp.tax_on_25_bracket) }}</span>
                         </div>
                         <div class="flex justify-between py-1.5 text-muted-foreground text-xs">
                             <span>Taxable amount: {{ formatJMD(comp.taxable_25_bracket) }}</span>
@@ -132,7 +132,7 @@ const taxpayer = props.formData.taxpayer;
                         </div>
                         <div class="flex justify-between py-1.5">
                             <span>Tax on remaining (30%)</span>
-                            <span class="font-mono">{{ formatJMD(comp.tax_on_30_bracket) }}</span>
+                            <span class="tabular-nums">{{ formatJMD(comp.tax_on_30_bracket) }}</span>
                         </div>
                         <div class="flex justify-between py-1.5 text-muted-foreground text-xs">
                             <span>Taxable amount: {{ formatJMD(comp.taxable_30_bracket) }}</span>
@@ -141,7 +141,7 @@ const taxpayer = props.formData.taxpayer;
 
                         <div class="flex justify-between py-2 border-t border-border/50 mt-2 font-medium">
                             <span>Total Income Tax</span>
-                            <span class="font-mono">{{ formatJMD(comp.total_income_tax) }}</span>
+                            <span class="tabular-nums">{{ formatJMD(comp.total_income_tax) }}</span>
                         </div>
                     </div>
                 </div>
@@ -152,15 +152,15 @@ const taxpayer = props.formData.taxpayer;
                     <div class="space-y-1.5 text-sm">
                         <div class="flex justify-between py-1.5">
                             <span>NIS Contribution</span>
-                            <span class="font-mono">{{ formatJMD(comp.nis_contribution) }}</span>
+                            <span class="tabular-nums">{{ formatJMD(comp.nis_contribution) }}</span>
                         </div>
                         <div class="flex justify-between py-1.5">
                             <span>NHT Contribution</span>
-                            <span class="font-mono">{{ formatJMD(comp.nht_contribution) }}</span>
+                            <span class="tabular-nums">{{ formatJMD(comp.nht_contribution) }}</span>
                         </div>
                         <div class="flex justify-between py-1.5">
                             <span>Education Tax</span>
-                            <span class="font-mono">{{ formatJMD(comp.education_tax) }}</span>
+                            <span class="tabular-nums">{{ formatJMD(comp.education_tax) }}</span>
                         </div>
                     </div>
                 </div>
@@ -170,15 +170,15 @@ const taxpayer = props.formData.taxpayer;
                     <div class="space-y-2 text-sm">
                         <div class="flex justify-between py-1.5 font-medium">
                             <span>Total Tax Liability</span>
-                            <span class="font-mono">{{ formatJMD(comp.total_tax_liability) }}</span>
+                            <span class="tabular-nums">{{ formatJMD(comp.total_tax_liability) }}</span>
                         </div>
                         <div class="flex justify-between py-1.5 text-muted-foreground">
                             <span>Less: Withholding Tax Credits</span>
-                            <span class="font-mono">-{{ formatJMD(comp.withholding_credits) }}</span>
+                            <span class="tabular-nums">-{{ formatJMD(comp.withholding_credits) }}</span>
                         </div>
                         <div class="flex justify-between py-3 border-t border-border text-lg font-bold">
                             <span>{{ comp.net_tax_payable >= 0 ? 'Net Tax Payable' : 'Refund Due' }}</span>
-                            <span class="font-mono" :class="comp.net_tax_payable < 0 ? 'text-accent' : ''">
+                            <span class="tabular-nums" :class="comp.net_tax_payable < 0 ? 'text-accent' : ''">
                                 {{ formatJMD(Math.abs(comp.net_tax_payable)) }}
                             </span>
                         </div>

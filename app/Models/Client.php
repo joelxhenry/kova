@@ -18,6 +18,12 @@ class Client extends Model
         'phone',
         'trn',
         'is_designated_entity',
+        'address_line_1',
+        'address_line_2',
+        'city',
+        'state_or_parish',
+        'postal_code',
+        'country',
     ];
 
     /**
@@ -44,5 +50,28 @@ class Client extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    /**
+     * @return HasMany<ClientContact, $this>
+     */
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(ClientContact::class);
+    }
+
+    /**
+     * Get a formatted address string.
+     */
+    public function getFormattedAddressAttribute(): string
+    {
+        return collect([
+            $this->address_line_1,
+            $this->address_line_2,
+            $this->city,
+            $this->state_or_parish,
+            $this->postal_code,
+            $this->country,
+        ])->filter()->implode(', ');
     }
 }

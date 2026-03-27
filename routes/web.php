@@ -8,6 +8,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\TaxFormController;
 use App\Http\Controllers\WithholdingCreditController;
 use App\Http\Controllers\IncomeEntryController;
@@ -36,8 +37,9 @@ Route::middleware('guest')->group(function (): void {
 Route::middleware('auth')->group(function (): void {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
-    Route::get('/tax-profile', [TaxProfileController::class, 'edit'])->name('tax-profile.edit');
-    Route::put('/tax-profile', [TaxProfileController::class, 'update'])->name('tax-profile.update');
+    // Legacy tax-profile routes redirect to settings
+    Route::get('/tax-profile', fn () => redirect()->route('settings.index'))->name('tax-profile.edit');
+    Route::put('/tax-profile', [SettingsController::class, 'updateTaxProfile'])->name('tax-profile.update');
 
     Route::resource('clients', ClientController::class)->except(['show']);
     Route::resource('invoices', InvoiceController::class);
@@ -55,6 +57,13 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::put('/settings/business', [SettingsController::class, 'updateBusiness'])->name('settings.business');
+    Route::put('/settings/invoicing', [SettingsController::class, 'updateInvoicing'])->name('settings.invoicing');
+    Route::put('/settings/email', [SettingsController::class, 'updateEmail'])->name('settings.email');
+    Route::put('/settings/tax-profile', [SettingsController::class, 'updateTaxProfile'])->name('settings.tax-profile');
+    Route::delete('/settings/logo', [SettingsController::class, 'removeLogo'])->name('settings.logo.remove');
 
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 });

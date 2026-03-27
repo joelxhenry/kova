@@ -31,7 +31,7 @@ const formatDeadline = (date) => {
                     <span v-if="est.isPast" class="text-xs text-muted-foreground">Past</span>
                     <span v-else class="text-xs text-accent font-medium">Due</span>
                 </div>
-                <div class="font-mono text-base font-medium">{{ formatJMD(est.amountDue) }}</div>
+                <div class="tabular-nums text-base font-medium">{{ formatJMD(est.amountDue) }}</div>
                 <div class="text-xs text-muted-foreground mt-1">{{ formatDeadline(est.deadline) }}</div>
             </div>
         </div>

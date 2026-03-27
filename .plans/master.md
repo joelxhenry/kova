@@ -48,6 +48,48 @@ Statutory contribution rates (NIS, education tax, etc.) are **not** user-configu
 - [x] `business_type` selection persists and is accessible in session/shared Inertia props
 - [x] Unauthenticated users are redirected to login
 
+### 0.3 System Settings
+
+User-configurable settings stored as a JSON column per user, organized by group.
+
+**Migration & Model:**
+- [x] Migration: `user_settings` table (`user_id FK unique, settings json`)
+- [x] Model: `UserSetting` — `get(key, default)`, `set(key, value)`, `getGroup(group)` with `DEFAULTS` constant
+- [x] User relationship: `hasOne UserSetting`
+
+**Setting Groups:**
+
+1. **Business Profile** (`business`)
+   - [x] `business_name`, `business_logo_path` (stored in `storage/app/public/logos/{user_id}/`)
+   - [x] `business_address_*` — line 1, line 2, city, state/parish, postal code, country (default Jamaica)
+   - [x] `business_phone`, `business_email`
+   - [x] `payment_terms`, `payment_instructions`
+
+2. **Invoice Settings** (`invoicing`)
+   - [x] `invoice_prefix` (default "INV"), `invoice_separator` (default "-")
+   - [x] `invoice_next_number` (auto-incrementing), `invoice_padding` (default 4)
+   - [x] Live preview of next invoice number in settings page
+
+3. **Email Templates** (`email`)
+   - [x] `invoice_email_subject`, `invoice_email_greeting`, `invoice_email_body`, `invoice_email_footer`
+   - [x] Variables: `{invoice_number}`, `{business_name}`, `{client_name}`, `{total}`
+   - [x] `invoice_email_include_payment_instructions` toggle
+
+**Controller & Pages:**
+- [x] Service: `UserSettingService` — get/set with defaults, logo upload/remove, `generateInvoiceNumber()`, `previewInvoiceNumber()`
+- [x] Controller: `SettingsController` (index, updateBusiness, updateInvoicing, updateEmail, removeLogo)
+- [x] Form Requests: `UpdateBusinessSettingsRequest`, `UpdateInvoiceSettingsRequest`, `UpdateEmailSettingsRequest`
+- [x] Page: `Pages/Settings/Index.vue` — tabbed layout (Business Profile, Invoice Settings, Email Templates)
+- [x] Routes: `GET /settings`, `PUT /settings/{group}`, `DELETE /settings/logo`
+- [x] Shared Inertia props: `settings.business_name`, `settings.business_logo_path`
+
+**Verification:**
+- [x] Business profile settings persist (12 tests)
+- [x] Invoice numbering generates and increments correctly
+- [x] Logo uploads, displays, and removes
+- [x] Default values work when no settings configured
+- [x] Settings shared in Inertia props for nav/layouts
+
 ---
 
 ## Phase 1 — Income Tracking & Invoicing
@@ -68,6 +110,40 @@ Core data entry. Users log the money coming in.
 - [x] Controller: `ClientController` (index, create, store, edit, update, destroy)
 - [x] Pages: `Pages/Clients/Index.vue`, `Pages/Clients/Create.vue`, `Pages/Clients/Edit.vue`
 - [x] `is_designated_entity` flag triggers withholding tax logic on invoices
+
+#### 1.1.1 Client Enhancements (Pending)
+
+- [ ] Migration: add address columns to `clients` table — structured to support international addresses:
+  ```
+  address_line_1 (nullable), address_line_2 (nullable),
+  city (nullable), state_or_parish (nullable),
+  postal_code (nullable), country (nullable, default 'Jamaica')
+  ```
+  Uses `state_or_parish` (not `parish`) so the label adapts to the country context (parish in JM, state in US, county in UK, etc.)
+- [ ] Migration: `client_contacts` table
+  ```
+  client_id (FK), first_name, last_name, email (nullable), phone (nullable),
+  created_at, updated_at
+  ```
+- [ ] Model: `ClientContact` (belongsTo Client)
+- [ ] Update `Client` model: add `hasMany ClientContacts` relationship
+- [ ] Update `StoreClientRequest` to validate address fields and nested contacts array
+- [ ] Service: update `ClientService` to handle contact sync (create/update/delete contacts on client save)
+- [ ] Update `ClientController` to include `show` action
+- [ ] Page: `Pages/Clients/Show.vue` — client detail view containing:
+  - Client info (name, formatted address, TRN, designated entity status)
+  - Contacts list with inline add/edit/delete
+  - Invoices list for this client (filtered from invoices table)
+  - Financial summary: total invoiced, total paid, balance due
+- [ ] Update `Pages/Clients/Create.vue` and `Pages/Clients/Edit.vue`:
+  - Add address fields (line 1, line 2, city, state/parish, postal code, country)
+  - Add dynamic contacts section (add/remove contacts with first name, last name, email, phone)
+- [ ] Update route: add `show` to clients resource (currently excluded)
+- [ ] Tests:
+  - Client show page renders with invoices and summary
+  - Contacts CRUD (create with client, update, remove)
+  - Address fields validate and persist
+  - Financial summary totals are accurate (total invoiced = sum of all invoice totals, total paid = sum of paid invoices, balance = total - paid)
 
 ### 1.2 Invoices
 
@@ -105,6 +181,59 @@ Core data entry. Users log the money coming in.
   - `Pages/Invoices/Show.vue` — invoice detail with itemized breakdown
   - `Pages/Invoices/Edit.vue` — edit with status change
 - [x] Composable: `useCurrencyFormatter.js` — format JMD amounts consistently
+
+#### 1.2.1 Invoice Enhancements (Pending)
+
+**Invoice Items — Unit Field:**
+- [ ] Migration: add `unit` column (string, nullable) to `invoice_items` table
+  - Stores what the quantity represents: "hours", "items", "days", "units", "sessions", etc.
+- [ ] Update `InvoiceItem` model, `StoreInvoiceRequest`, and `InvoiceService` to handle the `unit` field
+- [ ] Update Create/Edit forms to include a unit field per line item (text input or select with common presets)
+- [ ] Display unit in Show page line items table (e.g., "10 hours × J$5,000.00")
+
+**Invoice Number Configuration:**
+- [ ] Invoice numbering is configurable per user via Settings (see Phase 0.3)
+  - Prefix (default "INV"), separator (default "-"), next number, zero-padding width
+  - Example formats: `INV-0001`, `KV/2025/001`, `001`
+- [ ] Update `InvoiceService.generateInvoiceNumber()` to read from user settings
+- [ ] Settings page shows current format preview and next number
+
+**Invoice View Page — Professional Layout:**
+- [ ] Redesign `Pages/Invoices/Show.vue` to look like an actual printed invoice:
+  - **Header**: user's business name/logo (from settings) + invoice number + status badge
+  - **From/To columns**: user's business info (left) and client name + address + contacts (right)
+  - **Meta row**: invoice number, issue date, due date, payment terms
+  - **Line items table**: description, unit, quantity, unit price, amount — with column headers
+  - **Totals section**: subtotal, GCT, total, withholding tax, contractors levy, net receivable
+  - **Notes/terms footer**: invoice notes + configurable payment terms (from settings)
+- [ ] Quick action buttons:
+  - **Update Status**: dropdown or button group to change status (draft → sent → paid)
+  - **Send by Email**: sends a professionally formatted email with PDF attachment to client contacts
+    - Email template configurable from system settings
+    - Includes invoice PDF as attachment
+    - Subject line: "Invoice {number} from {business_name}"
+  - **Print / Download PDF**: generates and downloads a PDF version via browser print or server-side
+  - **Duplicate**: create a new invoice pre-filled with the same line items and client
+
+**Invoice Email System:**
+- [ ] Service: `InvoiceEmailService`
+  - Build email from configurable template (stored in `user_settings`)
+  - Attach generated invoice PDF
+  - Send to client's contacts (or specified email)
+  - Log sent emails on the invoice (optional: `invoice_emails` table tracking sent_at, recipient, status)
+- [ ] Mailable: `InvoiceEmail` — professionally structured email
+  - Configurable sections: greeting, body text, payment instructions, footer
+  - Uses user's business name and logo
+  - Responsive HTML email template
+- [ ] Controller action: `InvoiceController@send` (POST `/invoices/{invoice}/send`)
+  - Sends email, auto-updates status to "sent" if currently "draft"
+
+**Tests:**
+- [ ] Unit field persists and displays correctly
+- [ ] Invoice number respects user's configured format
+- [ ] Invoice email sends with correct template and PDF attachment
+- [ ] Status quick-update works via API
+- [ ] Duplicate action creates a new draft with same items
 
 ### 1.3 Income Log (Non-Invoice Income)
 
@@ -509,11 +638,13 @@ Subscription-based access model. Pricing structure and tiers are TBD — this ph
 ```
 User
  ├── TaxProfile (1:1)
+ ├── UserSetting (1:1) — business profile, invoice config, email templates
  ├── Subscription (1:1 active)
  │    └── Plan (N:1)
  ├── Client (1:N)
+ │    ├── ClientContact (1:N)
  │    └── Invoice (1:N)
- │         └── InvoiceItem (1:N)
+ │         └── InvoiceItem (1:N) — now includes `unit` field
  ├── IncomeEntry (1:N)
  ├── Expense (1:N)
  │    └── ExpenseCategory (N:1)
@@ -529,19 +660,24 @@ Plan (admin-managed, global)
 ## Implementation Order & Dependencies
 
 ```
-Phase 0 ─── Authentication & Tax Profile
+Phase 0 ─── Authentication, Tax Profile & System Settings
    │
-Phase 1 ─── Income Tracking (Clients → Invoices → Income Entries)
+Phase 0.3 ── System Settings (required before Invoice Enhancements 1.2.1)
    │
-Phase 2 ─── Expense Management (Categories → Expenses)
+Phase 1 ─── Income Tracking
+   │  ├── 1.1 Clients (done) + 1.1.1 Client Enhancements (pending)
+   │  ├── 1.2 Invoices (done) + 1.2.1 Invoice Enhancements (depends on 0.3 + 1.1.1)
+   │  └── 1.3 Income Log (done)
    │
-Phase 3 ─── Tax Calculation Engine (depends on Phases 1 + 2)
+Phase 2 ─── Expense Management (done)
    │
-Phase 4 ─── Dashboard & Visualizations (depends on Phase 3)
+Phase 3 ─── Tax Calculation Engine (done)
    │
-Phase 5 ─── TAJ Form Generation (depends on Phase 3)
+Phase 4 ─── Dashboard & Visualizations (done)
    │
-Phase 6 ─── Notifications & Scheduled Tasks (depends on Phases 1 + 3 + 4)
+Phase 5 ─── TAJ Form Generation (done)
+   │
+Phase 6 ─── Notifications & Scheduled Tasks (done)
    │
 Phase 7 ─── Polish & Production Readiness (all phases)
    │
@@ -550,7 +686,11 @@ Phase 8 ─── Admin Portal (can start after Phase 0, independent of Phases 1
 Phase 9 ─── Subscription & Billing (depends on Phase 8)
 ```
 
+**Pending implementation order for enhancements:**
+1. Phase 0.3 (System Settings) — must come first, provides invoice numbering config and email templates
+2. Phase 1.1.1 (Client Enhancements) — addresses, contacts table
+3. Phase 1.2.1 (Invoice Enhancements) — depends on both 0.3 (settings) and 1.1.1 (client addresses/contacts for invoice view and email sending)
+
 Phases 4 and 5 can run in parallel after Phase 3 is complete.
-Phase 6 can begin as soon as Phase 4 is done.
 Phase 8 (Admin Portal) can be developed in parallel with Phases 1-7.
 Phase 9 (Subscriptions) requires Phase 8 for plan management.

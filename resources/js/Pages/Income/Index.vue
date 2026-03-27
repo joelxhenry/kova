@@ -60,8 +60,8 @@ const deleteEntry = (entry) => {
                     </div>
                     <div class="flex items-center gap-6">
                         <div class="text-right">
-                            <div class="font-mono text-base font-medium">{{ formatJMD(entry.amount) }}</div>
-                            <div v-if="Number(entry.withholding_tax_applied) > 0" class="text-xs text-muted-foreground font-mono">
+                            <div class="tabular-nums text-base font-medium">{{ formatJMD(entry.amount) }}</div>
+                            <div v-if="Number(entry.withholding_tax_applied) > 0" class="text-xs text-muted-foreground tabular-nums">
                                 WHT: {{ formatJMD(entry.withholding_tax_applied) }}
                             </div>
                         </div>

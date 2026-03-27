@@ -38,15 +38,46 @@ class ClientController extends Controller
 
     public function store(StoreClientRequest $request): RedirectResponse
     {
-        $this->clientService->create($request->user(), $request->validated());
+        $validated = $request->validated();
+        $contacts = $validated['contacts'] ?? [];
+        unset($validated['contacts']);
 
-        return redirect()->route('clients.index')
+        $client = $this->clientService->create($request->user(), $validated, $contacts);
+
+        return redirect()->route('clients.show', $client)
             ->with('status', 'Client created.');
+    }
+
+    public function show(Client $client): Response
+    {
+        abort_unless($client->user_id === auth()->id(), 403);
+
+        $client->load('contacts');
+
+        $invoices = $client->invoices()
+            ->orderByDesc('issue_date')
+            ->get();
+
+        $totalInvoiced = (float) $invoices->sum('total');
+        $totalPaid = (float) $invoices->where('status', 'paid')->sum('total');
+        $balanceDue = $totalInvoiced - $totalPaid;
+
+        return Inertia::render('Clients/Show', [
+            'client' => $client,
+            'invoices' => $invoices,
+            'summary' => [
+                'totalInvoiced' => round($totalInvoiced, 2),
+                'totalPaid' => round($totalPaid, 2),
+                'balanceDue' => round($balanceDue, 2),
+            ],
+        ]);
     }
 
     public function edit(Client $client): Response
     {
         abort_unless($client->user_id === auth()->id(), 403);
+
+        $client->load('contacts');
 
         return Inertia::render('Clients/Edit', [
             'client' => $client,
@@ -57,9 +88,13 @@ class ClientController extends Controller
     {
         abort_unless($client->user_id === auth()->id(), 403);
 
-        $this->clientService->update($client, $request->validated());
+        $validated = $request->validated();
+        $contacts = $validated['contacts'] ?? [];
+        unset($validated['contacts']);
 
-        return redirect()->route('clients.index')
+        $this->clientService->update($client, $validated, $contacts);
+
+        return redirect()->route('clients.show', $client)
             ->with('status', 'Client updated.');
     }
 

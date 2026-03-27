@@ -13,7 +13,7 @@ const navigation = [
     { name: 'Invoices', href: '/invoices' },
     { name: 'Income', href: '/income' },
     { name: 'Expenses', href: '/expenses' },
-    { name: 'Tax Profile', href: '/tax-profile' },
+    { name: 'Settings', href: '/settings' },
 ];
 
 const isActive = (href) => {

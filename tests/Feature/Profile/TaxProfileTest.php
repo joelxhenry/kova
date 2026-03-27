@@ -8,43 +8,38 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-test('guests cannot access tax profile page', function () {
-    $this->get('/tax-profile')
-        ->assertRedirect('/login');
-});
-
-test('authenticated user can view tax profile page', function () {
+test('tax-profile route redirects to settings', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
         ->get('/tax-profile')
-        ->assertStatus(200)
-        ->assertInertia(fn ($page) => $page->component('Profile/TaxProfile'));
+        ->assertRedirect('/settings');
 });
 
-test('tax profile page includes statutory rates', function () {
+test('settings page includes tax profile and statutory rates', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->get('/tax-profile')
+        ->get('/settings')
         ->assertInertia(fn ($page) => $page
-            ->component('Profile/TaxProfile')
+            ->component('Settings/Index')
+            ->has('taxProfile')
             ->has('statutoryRates.nis_rate')
             ->has('statutoryRates.education_tax_rate')
             ->has('statutoryRates.gct_rate')
         );
 });
 
-test('user can create a tax profile', function () {
+test('user can create a tax profile via settings', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->put('/tax-profile', [
+        ->put('/settings/tax-profile', [
             'trn' => '123456789',
             'business_type' => 'specified_services',
             'is_gct_registered' => false,
         ])
-        ->assertRedirect('/tax-profile')
+        ->assertRedirect('/settings')
         ->assertSessionHas('status', 'Tax profile updated.');
 
     $this->assertDatabaseHas('tax_profiles', [
@@ -63,13 +58,13 @@ test('user can update an existing tax profile', function () {
     ]);
 
     $this->actingAs($user)
-        ->put('/tax-profile', [
+        ->put('/settings/tax-profile', [
             'trn' => '987654321',
             'business_type' => 'construction',
             'is_gct_registered' => true,
             'gct_registration_date' => '2025-01-15',
         ])
-        ->assertRedirect('/tax-profile');
+        ->assertRedirect('/settings');
 
     $this->assertDatabaseHas('tax_profiles', [
         'user_id' => $user->id,
@@ -81,11 +76,28 @@ test('user can update an existing tax profile', function () {
     expect(TaxProfile::where('user_id', $user->id)->count())->toBe(1);
 });
 
-test('business_type is required', function () {
+test('legacy PUT /tax-profile route still works', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
         ->put('/tax-profile', [
+            'trn' => '111222333',
+            'business_type' => 'other',
+            'is_gct_registered' => false,
+        ])
+        ->assertRedirect('/settings');
+
+    $this->assertDatabaseHas('tax_profiles', [
+        'user_id' => $user->id,
+        'trn' => '111222333',
+    ]);
+});
+
+test('business_type is required', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->put('/settings/tax-profile', [
             'business_type' => '',
             'is_gct_registered' => false,
         ])
@@ -96,7 +108,7 @@ test('business_type must be a valid enum value', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->put('/tax-profile', [
+        ->put('/settings/tax-profile', [
             'business_type' => 'invalid_type',
             'is_gct_registered' => false,
         ])
@@ -107,7 +119,7 @@ test('trn must be exactly 9 digits', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->put('/tax-profile', [
+        ->put('/settings/tax-profile', [
             'trn' => '12345',
             'business_type' => 'other',
             'is_gct_registered' => false,
@@ -119,7 +131,7 @@ test('gct_registration_date is required when gct registered', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->put('/tax-profile', [
+        ->put('/settings/tax-profile', [
             'business_type' => 'specified_services',
             'is_gct_registered' => true,
             'gct_registration_date' => '',
@@ -131,17 +143,17 @@ test('gct_registration_date is cleared when not gct registered', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->put('/tax-profile', [
+        ->put('/settings/tax-profile', [
             'business_type' => 'specified_services',
             'is_gct_registered' => false,
             'gct_registration_date' => '2025-01-01',
         ])
-        ->assertRedirect('/tax-profile');
+        ->assertRedirect('/settings');
 
     expect($user->fresh()->taxProfile->gct_registration_date)->toBeNull();
 });
 
-test('existing tax profile data is passed to the edit page', function () {
+test('existing tax profile data is passed to settings page', function () {
     $user = User::factory()->create();
     TaxProfile::create([
         'user_id' => $user->id,
@@ -150,9 +162,9 @@ test('existing tax profile data is passed to the edit page', function () {
     ]);
 
     $this->actingAs($user)
-        ->get('/tax-profile')
+        ->get('/settings')
         ->assertInertia(fn ($page) => $page
-            ->component('Profile/TaxProfile')
+            ->component('Settings/Index')
             ->where('taxProfile.trn', '111222333')
             ->where('taxProfile.business_type', 'haulage')
         );

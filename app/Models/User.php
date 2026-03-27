@@ -85,4 +85,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(TaxFormSnapshot::class);
     }
+
+    /**
+     * @return HasOne<UserSetting, $this>
+     */
+    public function settings(): HasOne
+    {
+        return $this->hasOne(UserSetting::class);
+    }
 }
