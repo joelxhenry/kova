@@ -2,6 +2,9 @@
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import Select from 'primevue/select';
+import DatePicker from 'primevue/datepicker';
+import Button from 'primevue/button';
 import { useCurrencyFormatter } from '@/Composables/useCurrencyFormatter.js';
 
 const props = defineProps({
@@ -13,17 +16,33 @@ const props = defineProps({
 const page = usePage();
 const { formatJMD } = useCurrencyFormatter();
 
-const status = ref(props.filters.status ?? '');
-const clientId = ref(props.filters.client_id ?? '');
-const from = ref(props.filters.from ?? '');
-const to = ref(props.filters.to ?? '');
+const statusOptions = [
+    { label: 'All statuses', value: null },
+    { label: 'Draft', value: 'draft' },
+    { label: 'Sent', value: 'sent' },
+    { label: 'Paid', value: 'paid' },
+    { label: 'Overdue', value: 'overdue' },
+    { label: 'Cancelled', value: 'cancelled' },
+];
+
+const clientOptions = [
+    { label: 'All clients', value: null },
+    ...props.clients.map(c => ({ label: c.name, value: c.id })),
+];
+
+const status = ref(props.filters.status ?? null);
+const clientId = ref(props.filters.client_id ? Number(props.filters.client_id) : null);
+const from = ref(props.filters.from ? new Date(props.filters.from) : null);
+const to = ref(props.filters.to ? new Date(props.filters.to) : null);
+
+const formatDateParam = (d) => d ? d.toISOString().split('T')[0] : undefined;
 
 const applyFilters = () => {
     router.get('/invoices', {
         status: status.value || undefined,
         client_id: clientId.value || undefined,
-        from: from.value || undefined,
-        to: to.value || undefined,
+        from: formatDateParam(from.value),
+        to: formatDateParam(to.value),
     }, { preserveState: true });
 };
 
@@ -60,20 +79,10 @@ const statusColors = {
 
             <!-- Filters -->
             <div class="flex flex-wrap gap-3 mb-8">
-                <select v-model="status" @change="applyFilters" class="h-10 bg-input border border-border px-3 text-sm text-foreground outline-none focus:border-accent">
-                    <option value="">All statuses</option>
-                    <option value="draft">Draft</option>
-                    <option value="sent">Sent</option>
-                    <option value="paid">Paid</option>
-                    <option value="overdue">Overdue</option>
-                    <option value="cancelled">Cancelled</option>
-                </select>
-                <select v-model="clientId" @change="applyFilters" class="h-10 bg-input border border-border px-3 text-sm text-foreground outline-none focus:border-accent">
-                    <option value="">All clients</option>
-                    <option v-for="c in clients" :key="c.id" :value="c.id">{{ c.name }}</option>
-                </select>
-                <input v-model="from" @change="applyFilters" type="date" class="h-10 bg-input border border-border px-3 text-sm text-foreground outline-none focus:border-accent" placeholder="From" />
-                <input v-model="to" @change="applyFilters" type="date" class="h-10 bg-input border border-border px-3 text-sm text-foreground outline-none focus:border-accent" placeholder="To" />
+                <Select v-model="status" :options="statusOptions" optionLabel="label" optionValue="value" placeholder="All statuses" @change="applyFilters" />
+                <Select v-model="clientId" :options="clientOptions" optionLabel="label" optionValue="value" placeholder="All clients" @change="applyFilters" />
+                <DatePicker v-model="from" placeholder="From" dateFormat="yy-mm-dd" showIcon @date-select="applyFilters" />
+                <DatePicker v-model="to" placeholder="To" dateFormat="yy-mm-dd" showIcon @date-select="applyFilters" />
             </div>
 
             <div v-if="invoices.data.length === 0" class="py-20 text-center text-muted-foreground">

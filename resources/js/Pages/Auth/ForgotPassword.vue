@@ -1,10 +1,10 @@
 <script setup>
 import { useForm, Link, Head, usePage } from '@inertiajs/vue3';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
-import TextInput from '@/Components/UI/TextInput.vue';
 import InputLabel from '@/Components/UI/InputLabel.vue';
 import InputError from '@/Components/UI/InputError.vue';
-import PrimaryButton from '@/Components/UI/PrimaryButton.vue';
+import InputText from 'primevue/inputtext';
+import Button from 'primevue/button';
 
 const page = usePage();
 
@@ -48,20 +48,12 @@ const submit = () => {
             <form @submit.prevent="submit" class="space-y-6">
                 <div>
                     <InputLabel value="Email" />
-                    <TextInput
-                        v-model="form.email"
-                        type="email"
-                        :error="form.errors.email"
-                        autocomplete="username"
-                        autofocus
-                    />
+                    <InputText v-model="form.email" type="email" autocomplete="username" autofocus fluid :invalid="!!form.errors.email" />
                     <InputError :message="form.errors.email" />
                 </div>
 
                 <div class="pt-2">
-                    <PrimaryButton :disabled="form.processing">
-                        Send reset link
-                    </PrimaryButton>
+                    <Button type="submit" label="Send reset link" :loading="form.processing" text />
                 </div>
             </form>
 

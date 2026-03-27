@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import Button from 'primevue/button';
 
 const props = defineProps({
     clients: { type: Array, default: () => [] },
@@ -60,13 +61,11 @@ const deleteClient = (client) => {
                             <span v-if="client.invoices_count !== undefined" class="ml-2">· {{ client.invoices_count }} invoice{{ client.invoices_count !== 1 ? 's' : '' }}</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-4">
-                        <Link :href="`/clients/${client.id}/edit`" class="text-sm text-muted-foreground hover:text-foreground transition-colors duration-150">
-                            Edit
+                    <div class="flex items-center gap-2">
+                        <Link :href="`/clients/${client.id}/edit`">
+                            <Button label="Edit" text size="small" />
                         </Link>
-                        <button @click="deleteClient(client)" class="text-sm text-muted-foreground hover:text-accent transition-colors duration-150">
-                            Delete
-                        </button>
+                        <Button label="Delete" text severity="danger" size="small" @click="deleteClient(client)" />
                     </div>
                 </div>
             </div>

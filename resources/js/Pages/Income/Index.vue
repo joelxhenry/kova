@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import Button from 'primevue/button';
 import { useCurrencyFormatter } from '@/Composables/useCurrencyFormatter.js';
 
 const props = defineProps({
@@ -65,9 +66,11 @@ const deleteEntry = (entry) => {
                                 WHT: {{ formatJMD(entry.withholding_tax_applied) }}
                             </div>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <Link :href="`/income/${entry.id}/edit`" class="text-sm text-muted-foreground hover:text-foreground transition-colors duration-150">Edit</Link>
-                            <button @click="deleteEntry(entry)" class="text-sm text-muted-foreground hover:text-accent transition-colors duration-150">Delete</button>
+                        <div class="flex items-center gap-2">
+                            <Link :href="`/income/${entry.id}/edit`">
+                                <Button label="Edit" text size="small" />
+                            </Link>
+                            <Button label="Delete" text severity="danger" size="small" @click="deleteEntry(entry)" />
                         </div>
                     </div>
                 </div>

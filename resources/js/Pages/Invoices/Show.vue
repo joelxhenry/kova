@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import Button from 'primevue/button';
 import { useCurrencyFormatter } from '@/Composables/useCurrencyFormatter.js';
 
 const props = defineProps({
@@ -108,13 +109,11 @@ const deleteInvoice = () => {
                 <p class="mt-2 text-sm text-muted-foreground">{{ invoice.notes }}</p>
             </div>
 
-            <div class="mt-10 flex items-center gap-6 border-t border-border pt-6">
-                <Link :href="`/invoices/${invoice.id}/edit`" class="text-sm text-muted-foreground hover:text-foreground transition-colors duration-150 uppercase tracking-wider">
-                    Edit
+            <div class="mt-10 flex items-center gap-4 border-t border-border pt-6">
+                <Link :href="`/invoices/${invoice.id}/edit`">
+                    <Button label="Edit" text size="small" />
                 </Link>
-                <button @click="deleteInvoice" class="text-sm text-muted-foreground hover:text-accent transition-colors duration-150 uppercase tracking-wider">
-                    Delete
-                </button>
+                <Button label="Delete" text severity="danger" size="small" @click="deleteInvoice" />
                 <Link href="/invoices" class="text-sm text-muted-foreground hover:text-foreground transition-colors duration-150 ml-auto">
                     Back to invoices
                 </Link>

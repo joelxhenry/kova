@@ -1,6 +1,7 @@
 <script setup>
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import Button from 'primevue/button';
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
@@ -54,12 +55,7 @@ const logout = () => {
                         <span class="text-sm text-muted-foreground hidden sm:block">
                             {{ user.name }}
                         </span>
-                        <button
-                            @click="logout"
-                            class="text-sm text-muted-foreground hover:text-foreground uppercase tracking-wider transition-colors duration-150"
-                        >
-                            Logout
-                        </button>
+                        <Button label="Logout" text size="small" @click="logout" />
                     </div>
                 </div>
             </div>

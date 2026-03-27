@@ -1,10 +1,10 @@
 <script setup>
 import { useForm, Link, Head } from '@inertiajs/vue3';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
-import TextInput from '@/Components/UI/TextInput.vue';
 import InputLabel from '@/Components/UI/InputLabel.vue';
 import InputError from '@/Components/UI/InputError.vue';
-import PrimaryButton from '@/Components/UI/PrimaryButton.vue';
+import InputText from 'primevue/inputtext';
+import Button from 'primevue/button';
 
 const form = useForm({
     name: '',
@@ -44,53 +44,30 @@ const submit = () => {
             <form @submit.prevent="submit" class="space-y-6">
                 <div>
                     <InputLabel value="Name" />
-                    <TextInput
-                        v-model="form.name"
-                        type="text"
-                        :error="form.errors.name"
-                        autocomplete="name"
-                        autofocus
-                    />
+                    <InputText v-model="form.name" autocomplete="name" autofocus fluid :invalid="!!form.errors.name" />
                     <InputError :message="form.errors.name" />
                 </div>
 
                 <div>
                     <InputLabel value="Email" />
-                    <TextInput
-                        v-model="form.email"
-                        type="email"
-                        :error="form.errors.email"
-                        autocomplete="username"
-                    />
+                    <InputText v-model="form.email" type="email" autocomplete="username" fluid :invalid="!!form.errors.email" />
                     <InputError :message="form.errors.email" />
                 </div>
 
                 <div>
                     <InputLabel value="Password" />
-                    <TextInput
-                        v-model="form.password"
-                        type="password"
-                        :error="form.errors.password"
-                        autocomplete="new-password"
-                    />
+                    <InputText v-model="form.password" type="password" autocomplete="new-password" fluid :invalid="!!form.errors.password" />
                     <InputError :message="form.errors.password" />
                 </div>
 
                 <div>
                     <InputLabel value="Confirm Password" />
-                    <TextInput
-                        v-model="form.password_confirmation"
-                        type="password"
-                        :error="form.errors.password_confirmation"
-                        autocomplete="new-password"
-                    />
+                    <InputText v-model="form.password_confirmation" type="password" autocomplete="new-password" fluid :invalid="!!form.errors.password_confirmation" />
                     <InputError :message="form.errors.password_confirmation" />
                 </div>
 
                 <div class="pt-2">
-                    <PrimaryButton :disabled="form.processing">
-                        Create account
-                    </PrimaryButton>
+                    <Button type="submit" label="Create account" :loading="form.processing" text />
                 </div>
             </form>
 

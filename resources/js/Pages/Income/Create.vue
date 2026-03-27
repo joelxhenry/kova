@@ -1,21 +1,29 @@
 <script setup>
 import { useForm, Head, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import TextInput from '@/Components/UI/TextInput.vue';
 import InputLabel from '@/Components/UI/InputLabel.vue';
 import InputError from '@/Components/UI/InputError.vue';
-import PrimaryButton from '@/Components/UI/PrimaryButton.vue';
+import InputText from 'primevue/inputtext';
+import InputNumber from 'primevue/inputnumber';
+import Textarea from 'primevue/textarea';
+import DatePicker from 'primevue/datepicker';
+import Button from 'primevue/button';
 
 const form = useForm({
     source: '',
     description: '',
-    amount: '',
-    date_received: new Date().toISOString().split('T')[0],
-    withholding_tax_applied: '',
+    amount: null,
+    date_received: new Date(),
+    withholding_tax_applied: null,
 });
 
+const formatDate = (d) => d ? d.toISOString().split('T')[0] : null;
+
 const submit = () => {
-    form.post('/income');
+    form.transform((data) => ({
+        ...data,
+        date_received: formatDate(data.date_received),
+    })).post('/income');
 };
 </script>
 
@@ -30,43 +38,38 @@ const submit = () => {
             <form @submit.prevent="submit" class="mt-10 space-y-6">
                 <div>
                     <InputLabel value="Source" />
-                    <TextInput v-model="form.source" :error="form.errors.source" placeholder="e.g., Cash job, Consulting fee" autofocus />
+                    <InputText v-model="form.source" placeholder="e.g., Cash job, Consulting fee" autofocus fluid :invalid="!!form.errors.source" />
                     <InputError :message="form.errors.source" />
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <InputLabel value="Amount (JMD)" />
-                        <TextInput v-model="form.amount" type="number" step="0.01" min="0.01" :error="form.errors.amount" />
+                        <InputNumber v-model="form.amount" :min="0.01" :minFractionDigits="2" :maxFractionDigits="2" fluid :invalid="!!form.errors.amount" />
                         <InputError :message="form.errors.amount" />
                     </div>
                     <div>
                         <InputLabel value="Date Received" />
-                        <TextInput v-model="form.date_received" type="date" :error="form.errors.date_received" />
+                        <DatePicker v-model="form.date_received" dateFormat="yy-mm-dd" showIcon fluid :invalid="!!form.errors.date_received" />
                         <InputError :message="form.errors.date_received" />
                     </div>
                 </div>
 
                 <div>
                     <InputLabel value="Withholding Tax Applied (JMD)" />
-                    <TextInput v-model="form.withholding_tax_applied" type="number" step="0.01" min="0" :error="form.errors.withholding_tax_applied" placeholder="0.00" />
+                    <InputNumber v-model="form.withholding_tax_applied" :min="0" :minFractionDigits="2" :maxFractionDigits="2" placeholder="0.00" fluid :invalid="!!form.errors.withholding_tax_applied" />
                     <InputError :message="form.errors.withholding_tax_applied" />
                     <p class="mt-1.5 text-xs text-muted-foreground">Amount already withheld at source, if any.</p>
                 </div>
 
                 <div>
                     <InputLabel value="Description" />
-                    <textarea
-                        v-model="form.description"
-                        rows="3"
-                        class="w-full bg-input border border-border px-4 py-3 text-base text-foreground placeholder:text-muted-foreground outline-none transition-colors duration-150 focus:border-accent resize-none"
-                        placeholder="Optional notes..."
-                    ></textarea>
+                    <Textarea v-model="form.description" rows="3" placeholder="Optional notes..." fluid :invalid="!!form.errors.description" />
                     <InputError :message="form.errors.description" />
                 </div>
 
                 <div class="flex items-center gap-6 pt-4">
-                    <PrimaryButton :disabled="form.processing">Save entry</PrimaryButton>
+                    <Button type="submit" label="Save entry" :loading="form.processing" text />
                     <Link href="/income" class="text-sm text-muted-foreground hover:text-foreground transition-colors duration-150">Cancel</Link>
                 </div>
             </form>

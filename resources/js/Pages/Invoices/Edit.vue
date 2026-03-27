@@ -2,10 +2,14 @@
 import { useForm, Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import TextInput from '@/Components/UI/TextInput.vue';
 import InputLabel from '@/Components/UI/InputLabel.vue';
 import InputError from '@/Components/UI/InputError.vue';
-import PrimaryButton from '@/Components/UI/PrimaryButton.vue';
+import InputText from 'primevue/inputtext';
+import InputNumber from 'primevue/inputnumber';
+import Textarea from 'primevue/textarea';
+import Select from 'primevue/select';
+import DatePicker from 'primevue/datepicker';
+import Button from 'primevue/button';
 import { useCurrencyFormatter } from '@/Composables/useCurrencyFormatter.js';
 
 const props = defineProps({
@@ -15,21 +19,33 @@ const props = defineProps({
 
 const { formatJMD } = useCurrencyFormatter();
 
+const clientOptions = props.clients.map(c => ({ label: c.name, value: c.id }));
+
+const statusOptions = [
+    { label: 'Draft', value: 'draft' },
+    { label: 'Sent', value: 'sent' },
+    { label: 'Paid', value: 'paid' },
+    { label: 'Overdue', value: 'overdue' },
+    { label: 'Cancelled', value: 'cancelled' },
+];
+
+const parseDate = (d) => d ? new Date(d) : null;
+
 const form = useForm({
     client_id: props.invoice.client_id,
-    issue_date: props.invoice.issue_date?.split('T')[0] ?? '',
-    due_date: props.invoice.due_date?.split('T')[0] ?? '',
+    issue_date: parseDate(props.invoice.issue_date),
+    due_date: parseDate(props.invoice.due_date),
     status: props.invoice.status,
     notes: props.invoice.notes ?? '',
     items: props.invoice.items.map(item => ({
         description: item.description,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
+        quantity: Number(item.quantity),
+        unit_price: Number(item.unit_price),
     })),
 });
 
 const addItem = () => {
-    form.items.push({ description: '', quantity: 1, unit_price: '' });
+    form.items.push({ description: '', quantity: 1, unit_price: null });
 };
 
 const removeItem = (index) => {
@@ -44,8 +60,14 @@ const subtotal = computed(() => {
     }, 0);
 });
 
+const formatDate = (d) => d ? d.toISOString().split('T')[0] : null;
+
 const submit = () => {
-    form.put(`/invoices/${props.invoice.id}`);
+    form.transform((data) => ({
+        ...data,
+        issue_date: formatDate(data.issue_date),
+        due_date: formatDate(data.due_date),
+    })).put(`/invoices/${props.invoice.id}`);
 };
 </script>
 
@@ -63,38 +85,24 @@ const submit = () => {
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <InputLabel value="Client" />
-                        <select
-                            v-model="form.client_id"
-                            class="w-full h-12 md:h-14 bg-input border border-border px-4 text-base text-foreground outline-none transition-colors duration-150 focus:border-accent appearance-none"
-                        >
-                            <option v-for="c in clients" :key="c.id" :value="c.id">{{ c.name }}</option>
-                        </select>
+                        <Select v-model="form.client_id" :options="clientOptions" optionLabel="label" optionValue="value" fluid :invalid="!!form.errors.client_id" />
                         <InputError :message="form.errors.client_id" />
                     </div>
                     <div>
                         <InputLabel value="Status" />
-                        <select
-                            v-model="form.status"
-                            class="w-full h-12 md:h-14 bg-input border border-border px-4 text-base text-foreground outline-none transition-colors duration-150 focus:border-accent appearance-none"
-                        >
-                            <option value="draft">Draft</option>
-                            <option value="sent">Sent</option>
-                            <option value="paid">Paid</option>
-                            <option value="overdue">Overdue</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
+                        <Select v-model="form.status" :options="statusOptions" optionLabel="label" optionValue="value" fluid />
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <InputLabel value="Issue Date" />
-                        <TextInput v-model="form.issue_date" type="date" :error="form.errors.issue_date" />
+                        <DatePicker v-model="form.issue_date" dateFormat="yy-mm-dd" showIcon fluid :invalid="!!form.errors.issue_date" />
                         <InputError :message="form.errors.issue_date" />
                     </div>
                     <div>
                         <InputLabel value="Due Date" />
-                        <TextInput v-model="form.due_date" type="date" :error="form.errors.due_date" />
+                        <DatePicker v-model="form.due_date" dateFormat="yy-mm-dd" showIcon fluid :invalid="!!form.errors.due_date" />
                         <InputError :message="form.errors.due_date" />
                     </div>
                 </div>
@@ -107,25 +115,23 @@ const submit = () => {
                         <div v-for="(item, index) in form.items" :key="index" class="grid grid-cols-12 gap-3 items-end">
                             <div class="col-span-6">
                                 <InputLabel v-if="index === 0" value="Description" />
-                                <TextInput v-model="item.description" :error="form.errors[`items.${index}.description`]" />
+                                <InputText v-model="item.description" fluid :invalid="!!form.errors[`items.${index}.description`]" />
                             </div>
                             <div class="col-span-2">
                                 <InputLabel v-if="index === 0" value="Qty" />
-                                <TextInput v-model="item.quantity" type="number" step="0.01" min="0.01" />
+                                <InputNumber v-model="item.quantity" :min="0.01" :minFractionDigits="0" :maxFractionDigits="2" fluid />
                             </div>
                             <div class="col-span-3">
                                 <InputLabel v-if="index === 0" value="Unit Price" />
-                                <TextInput v-model="item.unit_price" type="number" step="0.01" min="0" />
+                                <InputNumber v-model="item.unit_price" :min="0" :minFractionDigits="2" :maxFractionDigits="2" fluid />
                             </div>
                             <div class="col-span-1 pb-1">
-                                <button v-if="form.items.length > 1" type="button" @click="removeItem(index)" class="text-muted-foreground hover:text-accent transition-colors duration-150 text-lg">&times;</button>
+                                <Button v-if="form.items.length > 1" icon="pi pi-times" text severity="danger" size="small" @click="removeItem(index)" />
                             </div>
                         </div>
                     </div>
 
-                    <button type="button" @click="addItem" class="mt-4 text-sm text-muted-foreground hover:text-foreground transition-colors duration-150 uppercase tracking-wider">
-                        + Add line item
-                    </button>
+                    <Button type="button" label="+ Add line item" text size="small" class="mt-4" @click="addItem" />
 
                     <div class="mt-6 text-right text-lg font-mono font-medium">
                         Subtotal: {{ formatJMD(subtotal) }}
@@ -134,11 +140,11 @@ const submit = () => {
 
                 <div>
                     <InputLabel value="Notes" />
-                    <textarea v-model="form.notes" rows="3" class="w-full bg-input border border-border px-4 py-3 text-base text-foreground placeholder:text-muted-foreground outline-none transition-colors duration-150 focus:border-accent resize-none"></textarea>
+                    <Textarea v-model="form.notes" rows="3" fluid />
                 </div>
 
                 <div class="flex items-center gap-6 pt-4">
-                    <PrimaryButton :disabled="form.processing">Update invoice</PrimaryButton>
+                    <Button type="submit" label="Update invoice" :loading="form.processing" text />
                     <Link :href="`/invoices/${invoice.id}`" class="text-sm text-muted-foreground hover:text-foreground transition-colors duration-150">Cancel</Link>
                 </div>
             </form>

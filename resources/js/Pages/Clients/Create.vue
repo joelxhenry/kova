@@ -1,10 +1,11 @@
 <script setup>
 import { useForm, Head, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import TextInput from '@/Components/UI/TextInput.vue';
 import InputLabel from '@/Components/UI/InputLabel.vue';
 import InputError from '@/Components/UI/InputError.vue';
-import PrimaryButton from '@/Components/UI/PrimaryButton.vue';
+import InputText from 'primevue/inputtext';
+import Checkbox from 'primevue/checkbox';
+import Button from 'primevue/button';
 
 const form = useForm({
     name: '',
@@ -30,31 +31,31 @@ const submit = () => {
             <form @submit.prevent="submit" class="mt-10 space-y-6">
                 <div>
                     <InputLabel value="Client Name" />
-                    <TextInput v-model="form.name" :error="form.errors.name" autofocus />
+                    <InputText v-model="form.name" autofocus fluid :invalid="!!form.errors.name" />
                     <InputError :message="form.errors.name" />
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <InputLabel value="Email" />
-                        <TextInput v-model="form.email" type="email" :error="form.errors.email" />
+                        <InputText v-model="form.email" type="email" fluid :invalid="!!form.errors.email" />
                         <InputError :message="form.errors.email" />
                     </div>
                     <div>
                         <InputLabel value="Phone" />
-                        <TextInput v-model="form.phone" :error="form.errors.phone" />
+                        <InputText v-model="form.phone" fluid :invalid="!!form.errors.phone" />
                         <InputError :message="form.errors.phone" />
                     </div>
                 </div>
 
                 <div>
                     <InputLabel value="TRN" />
-                    <TextInput v-model="form.trn" :error="form.errors.trn" placeholder="123456789" maxlength="9" />
+                    <InputText v-model="form.trn" placeholder="123456789" maxlength="9" fluid :invalid="!!form.errors.trn" />
                     <InputError :message="form.errors.trn" />
                 </div>
 
                 <div class="flex items-start gap-3">
-                    <input v-model="form.is_designated_entity" type="checkbox" class="mt-1 w-4 h-4 bg-input border border-border text-accent focus:ring-accent" />
+                    <Checkbox v-model="form.is_designated_entity" :binary="true" />
                     <div>
                         <span class="text-sm font-medium text-foreground">Designated Entity</span>
                         <p class="text-xs text-muted-foreground mt-0.5">
@@ -64,7 +65,7 @@ const submit = () => {
                 </div>
 
                 <div class="flex items-center gap-6 pt-4">
-                    <PrimaryButton :disabled="form.processing">Save client</PrimaryButton>
+                    <Button type="submit" label="Save client" :loading="form.processing" text />
                     <Link href="/clients" class="text-sm text-muted-foreground hover:text-foreground transition-colors duration-150">Cancel</Link>
                 </div>
             </form>
