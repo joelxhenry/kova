@@ -10,11 +10,11 @@
 | Service | Image | Port (host:container) | Purpose |
 |---------|-------|----------------------|---------|
 | **app** | Custom (PHP 8.4-FPM) | — | Laravel application |
-| **web** | nginx:alpine | 8000:80 | HTTP server |
-| **node** | node:22-alpine | 5173:5173 | Vite dev server |
-| **mysql** | mysql:8.4 | 3306:3306 | Primary database |
-| **redis** | redis:7-alpine | 6379:6379 | Cache, sessions, queues |
-| **mailpit** | axllent/mailpit | 8025:8025, 1025:1025 | Email capture & UI |
+| **web** | nginx:alpine | 9000:80 | HTTP server |
+| **node** | node:22-alpine | 5170:5170 | Vite dev server |
+| **mysql** | mysql:8.4 | 3309:3306 | Primary database |
+| **redis** | redis:7-alpine | 6380:6379 | Cache, sessions, queues |
+| **mailpit** | axllent/mailpit | 9025:8025, 1025:1025 | Email capture & UI |
 
 ---
 
@@ -24,7 +24,7 @@ Create the foundational Docker files and get the Laravel app running.
 
 ### Files to Create
 
-- [ ] `Dockerfile` — Multi-stage build for PHP 8.4-FPM
+- [x] `Dockerfile` — Multi-stage build for PHP 8.4-FPM
   - Base image: `php:8.4-fpm-alpine`
   - Install extensions: `pdo_mysql`, `redis` (via pecl), `bcmath`, `gd`, `zip`, `intl`, `pcntl`
   - Install Composer from official image
@@ -32,22 +32,22 @@ Create the foundational Docker files and get the Laravel app running.
   - Copy application code, run `composer install`
   - Configure PHP-FPM pool settings for development (error display, xdebug-ready)
 
-- [ ] `docker/nginx/default.conf` — Nginx site config
+- [x] `docker/nginx/default.conf` — Nginx site config
   - Proxy PHP requests to `app:9000` via FastCGI
   - Serve static assets from `/var/www/html/public`
   - Set `client_max_body_size` to 64M (receipt uploads)
 
-- [ ] `docker-compose.yml` — Define all services
+- [x] `docker-compose.yml` — Define all services
   - `app` service: build from Dockerfile, mount project as volume
   - `web` service: nginx, depends on `app`
   - `mysql` service: named volume for data persistence
   - Environment variables via `.env` file
 
-- [ ] `.dockerignore` — Exclude vendor, node_modules, .git, storage logs
+- [x] `.dockerignore` — Exclude vendor, node_modules, .git, storage logs
 
 ### Environment Changes
 
-- [ ] Create `.env.docker` template with Docker-specific defaults:
+- [x] Create `.env.docker` template with Docker-specific defaults:
   ```
   DB_CONNECTION=mysql
   DB_HOST=mysql
@@ -59,9 +59,9 @@ Create the foundational Docker files and get the Laravel app running.
 
 ### Verification
 
-- [ ] `docker compose up -d` starts all containers without errors
-- [ ] `php artisan migrate` runs successfully against MySQL
-- [ ] Visiting `http://localhost:8000` renders the Dashboard page
+- [x] `docker compose up -d` starts all containers without errors
+- [x] `php artisan migrate` runs successfully against MySQL
+- [x] Visiting `http://localhost:9000` renders the Dashboard page
 
 ---
 
@@ -71,12 +71,12 @@ Switch from database-backed drivers to Redis.
 
 ### Configuration Changes
 
-- [ ] Add Redis service to `docker-compose.yml`
+- [x] Add Redis service to `docker-compose.yml`
   - Image: `redis:7-alpine`
   - Named volume for persistence
   - Healthcheck: `redis-cli ping`
 
-- [ ] Update `.env.docker`:
+- [x] Update `.env.docker`:
   ```
   CACHE_STORE=redis
   SESSION_DRIVER=redis
@@ -85,13 +85,13 @@ Switch from database-backed drivers to Redis.
   REDIS_PORT=6379
   ```
 
-- [ ] Ensure `phpredis` extension is installed in Dockerfile (Phase 1 already covers this)
+- [x] Ensure `phpredis` extension is installed in Dockerfile (Phase 1 already covers this)
 
 ### Verification
 
-- [ ] `php artisan tinker` → `Cache::put('test', 'ok', 60)` → `Cache::get('test')` returns `'ok'`
-- [ ] Login/session persists across requests (session stored in Redis)
-- [ ] `redis-cli` inside container shows keys being written
+- [x] `php artisan tinker` → `Cache::put('test', 'ok', 60)` → `Cache::get('test')` returns `'ok'`
+- [x] Login/session persists across requests (session stored in Redis)
+- [x] `redis-cli` inside container shows keys being written
 
 ---
 
@@ -101,12 +101,12 @@ Capture all outgoing email in a local web UI.
 
 ### Configuration Changes
 
-- [ ] Add Mailpit service to `docker-compose.yml`
+- [x] Add Mailpit service to `docker-compose.yml`
   - Image: `axllent/mailpit:latest`
-  - Ports: `8025:8025` (web UI), `1025:1025` (SMTP)
+  - Ports: `9025:8025` (web UI), SMTP on internal port 1025
   - No volume needed (ephemeral is fine for dev)
 
-- [ ] Update `.env.docker`:
+- [x] Update `.env.docker`:
   ```
   MAIL_MAILER=smtp
   MAIL_HOST=mailpit
@@ -117,8 +117,8 @@ Capture all outgoing email in a local web UI.
 
 ### Verification
 
-- [ ] `php artisan tinker` → `Mail::raw('Test', fn($m) => $m->to('test@example.com'))` sends without error
-- [ ] Email appears in Mailpit UI at `http://localhost:8025`
+- [x] `php artisan tinker` → `Mail::raw('Test', fn($m) => $m->to('test@example.com'))` sends without error
+- [x] Email appears in Mailpit UI at `http://localhost:9025`
 
 ---
 
@@ -128,15 +128,15 @@ Hot-reload frontend development inside Docker.
 
 ### Configuration Changes
 
-- [ ] Add `node` service to `docker-compose.yml`
+- [x] Add `node` service to `docker-compose.yml`
   - Image: `node:22-alpine`
   - Working dir: `/var/www/html`
   - Mount project as volume
   - Command: `sh -c "corepack enable && pnpm install && pnpm run dev --host 0.0.0.0"`
-  - Ports: `5173:5173`
+  - Ports: `5170:5170`
   - Depends on: `app`
 
-- [ ] Update `vite.config.js` — Add HMR config for Docker:
+- [x] Update `vite.config.js` — Add HMR config for Docker:
   ```js
   server: {
       host: '0.0.0.0',
@@ -146,15 +146,15 @@ Hot-reload frontend development inside Docker.
   }
   ```
 
-- [ ] Update `.env.docker`:
+- [x] Update `.env.docker`:
   ```
-  VITE_DEV_SERVER_URL=http://localhost:5173
+  VITE_DEV_SERVER_URL=http://localhost:5170
   ```
 
 ### Verification
 
-- [ ] `pnpm run dev` starts inside container, HMR websocket connects in browser
-- [ ] Editing a `.vue` file triggers hot reload without full page refresh
+- [x] `pnpm run dev` starts inside container, HMR websocket connects in browser
+- [x] Editing a `.vue` file triggers hot reload without full page refresh
 
 ---
 
@@ -164,27 +164,27 @@ Add a dedicated queue worker and streamline the full stack.
 
 ### Configuration Changes
 
-- [ ] Add `queue` service to `docker-compose.yml`
+- [x] Add `queue` service to `docker-compose.yml`
   - Reuse `app` image (no separate build)
   - Command: `php artisan queue:work redis --tries=3 --timeout=90`
   - Depends on: `app`, `redis`, `mysql`
   - Restart policy: `unless-stopped`
   - No port exposure needed
 
-- [ ] Add healthchecks to all services:
+- [x] Add healthchecks to all services:
   - `app`: `php-fpm -t`
   - `mysql`: `mysqladmin ping -h 127.0.0.1`
   - `redis`: `redis-cli ping`
-  - `mailpit`: HTTP check on port 8025
+  - `mailpit`: HTTP check on port 9025
 
-- [ ] Add `depends_on` with `condition: service_healthy` to enforce startup order:
+- [x] Add `depends_on` with `condition: service_healthy` to enforce startup order:
   `mysql` + `redis` → `app` → `web`, `queue`, `node`
 
 ### Verification
 
-- [ ] `docker compose up -d` brings up all 6 services in correct order
-- [ ] Dispatching a job from tinker processes via the queue worker
-- [ ] `docker compose down` cleanly stops everything; `docker compose up -d` restores state (MySQL data persisted)
+- [x] `docker compose up -d` brings up all 7 services in correct order
+- [x] Dispatching a job from tinker processes via the queue worker
+- [x] `docker compose down` cleanly stops everything; `docker compose up -d` restores state (MySQL data persisted)
 
 ---
 
@@ -194,7 +194,7 @@ Make it seamless to onboard and work daily.
 
 ### Files to Create
 
-- [ ] `Makefile` with common shortcuts:
+- [x] `Makefile` with common shortcuts:
   ```makefile
   up:          docker compose up -d
   down:        docker compose down
@@ -209,23 +209,23 @@ Make it seamless to onboard and work daily.
   pnpm:        docker compose exec node pnpm
   ```
 
-- [ ] `docker/app/entrypoint.sh` — Container entrypoint script:
+- [x] `docker/app/entrypoint.sh` — Container entrypoint script:
   - Wait for MySQL to be ready
   - Run `php artisan migrate --force` on startup
   - Generate app key if missing
   - Set correct storage permissions
   - Start PHP-FPM
 
-- [ ] Update `.gitignore` to include:
+- [x] Update `.gitignore` to include:
   ```
   docker/mysql/data/
   ```
 
 ### Verification
 
-- [ ] Fresh clone → `cp .env.docker .env && make up` → working app within 2 minutes
-- [ ] `make test` runs Pest test suite inside the container
-- [ ] `make shell` drops into the app container
+- [x] Fresh clone → `cp .env.docker .env && make up` → working app within 2 minutes
+- [x] `make test` runs Pest test suite inside the container
+- [x] `make shell` drops into the app container
 
 ---
 
@@ -234,31 +234,39 @@ Make it seamless to onboard and work daily.
 ```yaml
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: kova-app
     volumes:
       - .:/var/www/html
-      - /var/www/html/vendor  # anonymous volume, don't overwrite container vendor
     depends_on:
       mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
     env_file: .env
+    healthcheck:
+      test: ["CMD-SHELL", "php-fpm -t 2>/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   web:
     image: nginx:alpine
     ports:
-      - "8000:80"
+      - "9000:80"
     volumes:
       - .:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
-      - app
+      app:
+        condition: service_healthy
 
   mysql:
     image: mysql:8.4
     ports:
-      - "3306:3306"
+      - "3309:3306"
     environment:
       MYSQL_DATABASE: kova
       MYSQL_USER: kova
@@ -269,24 +277,30 @@ services:
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
       interval: 5s
-      retries: 5
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
+      timeout: 5s
       retries: 5
 
   mailpit:
     image: axllent/mailpit:latest
     ports:
-      - "8025:8025"
-      - "1025:1025"
+      - "9025:8025"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8025"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   node:
     image: node:22-alpine
@@ -294,22 +308,20 @@ services:
     volumes:
       - .:/var/www/html
       - node_modules:/var/www/html/node_modules
-    command: sh -c "corepack enable && pnpm install && pnpm run dev --host 0.0.0.0"
+    command: sh -c "corepack enable && pnpm install && pnpm run dev --host 0.0.0.0 --port 5170"
     ports:
-      - "5173:5173"
+      - "5170:5170"
     depends_on:
-      - app
+      app:
+        condition: service_healthy
 
   queue:
-    build: .
-    command: php artisan queue:work redis --tries=3 --timeout=90
+    image: kova-app
+    command: ["php", "artisan", "queue:work", "redis", "--tries=3", "--timeout=90"]
     volumes:
       - .:/var/www/html
-      - /var/www/html/vendor
     depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
+      app:
         condition: service_healthy
     env_file: .env
     restart: unless-stopped
@@ -326,8 +338,8 @@ volumes:
 
 | URL | Service |
 |-----|---------|
-| `http://localhost:8000` | Kova application |
-| `http://localhost:5173` | Vite HMR dev server |
-| `http://localhost:8025` | Mailpit email UI |
-| `localhost:3306` | MySQL (DB clients) |
-| `localhost:6379` | Redis (redis-cli) |
+| `http://localhost:9000` | Kova application |
+| `http://localhost:5170` | Vite HMR dev server |
+| `http://localhost:9025` | Mailpit email UI |
+| `localhost:3309` | MySQL (DB clients) |
+| `localhost:6380` | Redis (redis-cli) |

@@ -25,6 +25,12 @@ export default defineConfig({
         },
     },
     server: {
+        host: '0.0.0.0',
+        port: 5170,
+        hmr: {
+            host: process.env.VITE_HMR_HOST || 'localhost',
+        },
+        cors: true,
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },
