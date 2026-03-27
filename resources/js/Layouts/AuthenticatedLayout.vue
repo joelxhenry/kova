@@ -11,6 +11,7 @@ const navigation = [
     { name: 'Clients', href: '/clients' },
     { name: 'Invoices', href: '/invoices' },
     { name: 'Income', href: '/income' },
+    { name: 'Expenses', href: '/expenses' },
     { name: 'Tax Profile', href: '/tax-profile' },
 ];
 

@@ -138,17 +138,17 @@ Users offset gross revenue with business expenses to determine taxable income.
 
 ### 2.1 Expense Categories
 
-- [ ] Migration: `expense_categories` table
+- [x] Migration: `expense_categories` table
   ```
   user_id (FK, nullable — null = system default), name, description (nullable),
   is_default (boolean), sort_order (int)
   ```
-- [ ] Seeder: default categories (Equipment, Fuel & Transport, Office Rent, Software & Subscriptions, Professional Services, Utilities, Other)
-- [ ] Model: `ExpenseCategory` (hasMany Expenses)
+- [x] Seeder: default categories (Equipment, Fuel & Transport, Office Rent, Software & Subscriptions, Professional Services, Utilities, Other)
+- [x] Model: `ExpenseCategory` (hasMany Expenses, `forUser()` scope)
 
 ### 2.2 Expenses
 
-- [ ] Migration: `expenses` table
+- [x] Migration: `expenses` table
   ```
   user_id (FK), expense_category_id (FK), description (string),
   amount (decimal 15,2), date_incurred (date),
@@ -156,25 +156,26 @@ Users offset gross revenue with business expenses to determine taxable income.
   notes (text, nullable),
   created_at, updated_at
   ```
-- [ ] Model: `Expense` (belongsTo User, belongsTo ExpenseCategory)
-- [ ] Service: `ExpenseService`
+- [x] Model: `Expense` (belongsTo User, belongsTo ExpenseCategory)
+- [x] Service: `ExpenseService`
   - CRUD operations
   - Handle file upload for receipts (store in `storage/app/private/receipts/{user_id}/`)
-  - Aggregate expenses by category for a given period
-- [ ] Form Requests: `StoreExpenseRequest` / `UpdateExpenseRequest`
-  - Validate receipt file type (jpg, png, pdf) and size (max 5MB)
-- [ ] Controller: `ExpenseController` (index, create, store, edit, update, destroy)
-- [ ] Pages:
-  - `Pages/Expenses/Index.vue` — list with category filter, date range, totals summary
-  - `Pages/Expenses/Create.vue` — form with receipt upload dropzone
-  - `Pages/Expenses/Edit.vue`
+  - Delete receipt file on expense deletion or receipt replacement
+- [x] Form Requests: `StoreExpenseRequest`
+  - Validate receipt file type (jpg, jpeg, png, pdf) and size (max 5MB)
+  - Validate category belongs to user or is system default
+- [x] Controller: `ExpenseController` (index with filters + totals, create, store, edit, update, destroy)
+- [x] Pages:
+  - `Pages/Expenses/Index.vue` — list with category filter, date range, totals by category summary
+  - `Pages/Expenses/Create.vue` — form with receipt file upload
+  - `Pages/Expenses/Edit.vue` — edit with receipt replacement
 
 ### Verification
 
-- [ ] User can log expenses with categories and receipt attachments
-- [ ] Receipts upload and are accessible only to the owning user
-- [ ] Expense totals aggregate correctly by category and date range
-- [ ] Deleting an expense removes the associated receipt file
+- [x] User can log expenses with categories and receipt attachments
+- [x] Receipts upload and are accessible only to the owning user
+- [x] Expense totals aggregate correctly by category and date range
+- [x] Deleting an expense removes the associated receipt file
 
 ---
 
