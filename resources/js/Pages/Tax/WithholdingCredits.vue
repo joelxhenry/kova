@@ -1,5 +1,5 @@
 <script setup>
-import { useForm, Head, router, usePage } from '@inertiajs/vue3';
+import { useForm, Head, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputLabel from '@/Components/UI/InputLabel.vue';
@@ -9,6 +9,7 @@ import InputNumber from 'primevue/inputnumber';
 import DatePicker from 'primevue/datepicker';
 import Select from 'primevue/select';
 import Button from 'primevue/button';
+import { useConfirm } from 'primevue/useconfirm';
 import { useCurrencyFormatter } from '@/Composables/useCurrencyFormatter.js';
 
 const props = defineProps({
@@ -17,7 +18,6 @@ const props = defineProps({
     summary: { type: Object, required: true },
 });
 
-const page = usePage();
 const { formatJMD } = useCurrencyFormatter();
 
 const currentYear = new Date().getFullYear();
@@ -55,10 +55,15 @@ const submit = () => {
     });
 };
 
+const confirmDialog = useConfirm();
+
 const deleteCredit = (credit) => {
-    if (confirm('Delete this withholding credit entry?')) {
-        router.delete(`/withholding-credits/${credit.id}`);
-    }
+    confirmDialog.require({
+        message: 'Delete this withholding credit entry?',
+        header: 'Delete Credit',
+        acceptClass: 'p-button-danger',
+        accept: () => router.delete(`/withholding-credits/${credit.id}`),
+    });
 };
 </script>
 
@@ -72,13 +77,6 @@ const deleteCredit = (credit) => {
                     <h1 class="text-3xl md:text-4xl font-bold tracking-tighter leading-none">Withholding Credits</h1>
                 </div>
                 <Select v-model="selectedYear" :options="yearOptions" optionLabel="label" optionValue="value" @change="changeYear" />
-            </div>
-
-            <div
-                v-if="page.props.flash.status"
-                class="mb-6 bg-accent/10 rounded-xl px-4 py-3 text-sm text-foreground"
-            >
-                {{ page.props.flash.status }}
             </div>
 
             <!-- Summary -->

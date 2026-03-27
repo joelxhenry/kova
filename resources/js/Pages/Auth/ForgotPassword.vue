@@ -1,12 +1,10 @@
 <script setup>
-import { useForm, Link, Head, usePage } from '@inertiajs/vue3';
+import { useForm, Link, Head } from '@inertiajs/vue3';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputLabel from '@/Components/UI/InputLabel.vue';
 import InputError from '@/Components/UI/InputError.vue';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
-
-const page = usePage();
 
 const form = useForm({
     email: '',
@@ -35,13 +33,6 @@ const submit = () => {
                 <p class="mt-3 text-muted-foreground text-base">
                     Enter your email and we'll send you a reset link.
                 </p>
-            </div>
-
-            <div
-                v-if="page.props.flash.status"
-                class="mb-6 bg-accent/10 rounded-xl px-4 py-3 text-sm text-foreground"
-            >
-                {{ page.props.flash.status }}
             </div>
 
             <div class="bg-card rounded-2xl shadow-sm p-8">

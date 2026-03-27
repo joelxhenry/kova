@@ -1,5 +1,5 @@
 <script setup>
-import { useForm, Head, router, usePage } from '@inertiajs/vue3';
+import { useForm, Head, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputLabel from '@/Components/UI/InputLabel.vue';
@@ -22,7 +22,6 @@ const props = defineProps({
     statutoryRates: { type: Object, default: () => ({}) },
 });
 
-const page = usePage();
 const activeTab = ref('business');
 const showRatesDrawer = ref(false);
 
@@ -134,13 +133,6 @@ const formatCurrency = (key) => {
         <section class="py-12 md:py-20">
             <div class="flex items-center justify-between mb-8">
                 <h1 class="text-3xl md:text-4xl font-bold tracking-tight leading-tight">Settings</h1>
-            </div>
-
-            <div
-                v-if="page.props.flash.status"
-                class="mb-6 bg-accent/10 rounded-xl px-4 py-3 text-sm text-foreground"
-            >
-                {{ page.props.flash.status }}
             </div>
 
             <div class="flex justify-between gap-8 items-start">

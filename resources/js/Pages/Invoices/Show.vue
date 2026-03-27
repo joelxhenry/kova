@@ -8,6 +8,7 @@ import Checkbox from 'primevue/checkbox';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import InputLabel from '@/Components/UI/InputLabel.vue';
+import { useConfirm } from 'primevue/useconfirm';
 import { useCurrencyFormatter } from '@/Composables/useCurrencyFormatter.js';
 
 const props = defineProps({
@@ -17,6 +18,7 @@ const props = defineProps({
 });
 
 const page = usePage();
+const confirmDialog = useConfirm();
 const { formatJMD } = useCurrencyFormatter();
 
 const statusOptions = [
@@ -81,9 +83,12 @@ const sendInvoice = () => {
 };
 
 const deleteInvoice = () => {
-    if (confirm('Delete this invoice? This action cannot be undone.')) {
-        router.delete(`/invoices/${props.invoice.id}`);
-    }
+    confirmDialog.require({
+        message: 'Delete this invoice? This action cannot be undone.',
+        header: 'Delete Invoice',
+        acceptClass: 'p-button-danger',
+        accept: () => router.delete(`/invoices/${props.invoice.id}`),
+    });
 };
 
 
@@ -142,13 +147,6 @@ const clientAddress = [
                     <Button label="Edit" icon="pi pi-pencil" text size="small" />
                 </Link>
                 <Button label="Delete" icon="pi pi-trash" text severity="danger" size="small" @click="deleteInvoice" />
-            </div>
-
-            <div
-                v-if="page.props.flash.status"
-                class="mb-6 bg-accent/10 rounded-xl px-4 py-3 text-sm text-foreground"
-            >
-                {{ page.props.flash.status }}
             </div>
 
             <!-- Invoice Document -->

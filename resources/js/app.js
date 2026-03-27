@@ -1,8 +1,20 @@
 import { createApp, h } from 'vue';
-import { createInertiaApp } from '@inertiajs/vue3';
+import { createInertiaApp, router } from '@inertiajs/vue3';
+import NProgress from 'nprogress';
 import PrimeVue from 'primevue/config';
+import ToastService from 'primevue/toastservice';
+import ConfirmationService from 'primevue/confirmationservice';
 import KovaPreset from './primevue-preset.js';
 import '../css/app.css';
+
+// Inertia progress bar via NProgress
+NProgress.configure({ showSpinner: false });
+router.on('start', () => NProgress.start());
+router.on('finish', (event) => {
+    if (event.detail.visit.completed) NProgress.done();
+    else if (event.detail.visit.interrupted) NProgress.done();
+    else if (event.detail.visit.cancelled) NProgress.done();
+});
 
 createInertiaApp({
     title: (title) => title ? `${title} — Kova` : 'Kova',
@@ -22,6 +34,8 @@ createInertiaApp({
                     },
                 },
             })
+            .use(ToastService)
+            .use(ConfirmationService)
             .mount(el);
     },
 });

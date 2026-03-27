@@ -1,18 +1,22 @@
 <script setup>
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Button from 'primevue/button';
+import { useConfirm } from 'primevue/useconfirm';
 
 const props = defineProps({
     clients: { type: Array, default: () => [] },
 });
 
-const page = usePage();
+const confirm = useConfirm();
 
 const deleteClient = (client) => {
-    if (confirm(`Delete "${client.name}"? This will also delete all their invoices.`)) {
-        router.delete(`/clients/${client.id}`);
-    }
+    confirm.require({
+        message: `Delete "${client.name}"? This will also delete all their invoices.`,
+        header: 'Delete Client',
+        acceptClass: 'p-button-danger',
+        accept: () => router.delete(`/clients/${client.id}`),
+    });
 };
 </script>
 
@@ -28,13 +32,6 @@ const deleteClient = (client) => {
                 <Link href="/clients/create" class="inline-flex items-center gap-2 px-5 py-2.5 bg-accent/10 text-accent font-medium text-sm rounded-full hover:bg-accent/20 transition-all duration-200">
                     Add client
                 </Link>
-            </div>
-
-            <div
-                v-if="page.props.flash.status"
-                class="mb-6 bg-accent/10 rounded-xl px-4 py-3 text-sm text-foreground"
-            >
-                {{ page.props.flash.status }}
             </div>
 
             <div v-if="clients.length === 0" class="py-20 text-center text-muted-foreground">

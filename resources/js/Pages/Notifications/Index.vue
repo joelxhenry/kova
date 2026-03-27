@@ -1,13 +1,11 @@
 <script setup>
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Button from 'primevue/button';
 
 const props = defineProps({
     notifications: { type: Object, required: true },
 });
-
-const page = usePage();
 
 const markAsRead = (id) => {
     router.post(`/notifications/${id}/read`);
@@ -42,13 +40,6 @@ const formatTime = (date) => {
                     size="small"
                     @click="markAllRead"
                 />
-            </div>
-
-            <div
-                v-if="page.props.flash.status"
-                class="mb-6 bg-accent/10 rounded-xl px-4 py-3 text-sm text-foreground"
-            >
-                {{ page.props.flash.status }}
             </div>
 
             <div v-if="notifications.data.length === 0" class="py-20 text-center text-muted-foreground">

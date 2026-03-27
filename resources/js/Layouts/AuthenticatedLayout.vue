@@ -1,9 +1,13 @@
 <script setup>
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import Button from 'primevue/button';
+import Toast from 'primevue/toast';
+import ConfirmDialog from 'primevue/confirmdialog';
+import { useToast } from 'primevue/usetoast';
 
 const page = usePage();
+const toast = useToast();
 const user = computed(() => page.props.auth.user);
 const unreadCount = computed(() => page.props.notifications?.unreadCount ?? 0);
 
@@ -11,7 +15,7 @@ const navigation = [
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Clients', href: '/clients' },
     { name: 'Invoices', href: '/invoices' },
-{ name: 'Settings', href: '/settings' },
+    { name: 'Settings', href: '/settings' },
 ];
 
 const isActive = (href) => {
@@ -21,10 +25,20 @@ const isActive = (href) => {
 const logout = () => {
     router.post('/logout');
 };
+
+// Show toast on flash status
+watch(() => page.props.flash.status, (message) => {
+    if (message) {
+        toast.add({ severity: 'success', summary: message, life: 4000 });
+    }
+}, { immediate: true });
 </script>
 
 <template>
     <div class="min-h-screen bg-background text-foreground">
+        <Toast position="top-right" />
+        <ConfirmDialog />
+
         <!-- Top navbar -->
         <nav class="bg-card shadow-sm">
             <div class="mx-auto max-w-7xl px-6 md:px-12 lg:px-16">

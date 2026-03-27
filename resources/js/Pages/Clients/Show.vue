@@ -1,7 +1,8 @@
 <script setup>
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Button from 'primevue/button';
+import { useConfirm } from 'primevue/useconfirm';
 import { useCurrencyFormatter } from '@/Composables/useCurrencyFormatter.js';
 
 const props = defineProps({
@@ -10,7 +11,7 @@ const props = defineProps({
     summary: { type: Object, required: true },
 });
 
-const page = usePage();
+const confirmDialog = useConfirm();
 const { formatJMD } = useCurrencyFormatter();
 
 const statusColors = {
@@ -27,9 +28,12 @@ const formatAddress = (c) => {
 };
 
 const deleteClient = () => {
-    if (confirm(`Delete "${props.client.name}"? This will also delete all their invoices.`)) {
-        router.delete(`/clients/${props.client.id}`);
-    }
+    confirmDialog.require({
+        message: `Delete "${props.client.name}"? This will also delete all their invoices.`,
+        header: 'Delete Client',
+        acceptClass: 'p-button-danger',
+        accept: () => router.delete(`/clients/${props.client.id}`),
+    });
 };
 </script>
 
@@ -58,13 +62,6 @@ const deleteClient = () => {
                     </Link>
                     <Button label="Delete" severity="danger" text size="small" @click="deleteClient" />
                 </div>
-            </div>
-
-            <div
-                v-if="page.props.flash.status"
-                class="mb-6 bg-accent/10 rounded-xl px-4 py-3 text-sm text-foreground"
-            >
-                {{ page.props.flash.status }}
             </div>
 
             <!-- Financial Summary -->

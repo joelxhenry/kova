@@ -1,5 +1,5 @@
 <script setup>
-import { useForm, Head, usePage } from '@inertiajs/vue3';
+import { useForm, Head } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputLabel from '@/Components/UI/InputLabel.vue';
 import InputError from '@/Components/UI/InputError.vue';
@@ -13,8 +13,6 @@ const props = defineProps({
     taxProfile: { type: Object, default: null },
     statutoryRates: { type: Object, default: () => ({}) },
 });
-
-const page = usePage();
 
 const businessTypes = [
     { value: 'specified_services', label: 'Specified Services (IT, Engineering, Management, Accounting)' },
@@ -72,13 +70,6 @@ const formatCurrency = (key) => {
             <p class="mt-3 text-muted-foreground text-base">
                 Configure your tax identity. This drives all calculations, withholding logic, and TAJ form generation.
             </p>
-
-            <div
-                v-if="page.props.flash.status"
-                class="mt-8 bg-accent/10 rounded-xl px-4 py-3 text-sm text-foreground"
-            >
-                {{ page.props.flash.status }}
-            </div>
 
             <form @submit.prevent="submit" class="mt-10 space-y-8">
                 <!-- TRN -->

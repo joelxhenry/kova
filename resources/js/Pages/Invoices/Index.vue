@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Select from 'primevue/select';
@@ -13,7 +13,6 @@ const props = defineProps({
     filters: { type: Object, default: () => ({}) },
 });
 
-const page = usePage();
 const { formatJMD } = useCurrencyFormatter();
 
 const statusOptions = [
@@ -67,13 +66,6 @@ const statusColors = {
                 <Link href="/invoices/create" class="inline-flex items-center gap-2 px-5 py-2.5 bg-accent/10 text-accent font-medium text-sm rounded-full hover:bg-accent/20 transition-all duration-200">
                     New invoice
                 </Link>
-            </div>
-
-            <div
-                v-if="page.props.flash.status"
-                class="mb-6 bg-accent/10 rounded-xl px-4 py-3 text-sm text-foreground"
-            >
-                {{ page.props.flash.status }}
             </div>
 
             <!-- Filters -->

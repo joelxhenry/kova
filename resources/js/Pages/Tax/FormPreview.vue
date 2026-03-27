@@ -1,5 +1,5 @@
 <script setup>
-import { Head, router, usePage, Link } from '@inertiajs/vue3';
+import { Head, router, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Select from 'primevue/select';
 import Button from 'primevue/button';
@@ -13,7 +13,6 @@ const props = defineProps({
     viewingSnapshot: { type: Number, default: null },
 });
 
-const page = usePage();
 const { formatJMD } = useCurrencyFormatter();
 const { year: selectedYear, years, changeYear } = useFiscalYear(props.year);
 
@@ -50,13 +49,6 @@ const taxpayer = props.formData.taxpayer;
                     optionValue="value"
                     @change="changeYear(selectedYear)"
                 />
-            </div>
-
-            <div
-                v-if="page.props.flash.status"
-                class="mb-6 bg-accent/10 rounded-xl px-4 py-3 text-sm text-foreground"
-            >
-                {{ page.props.flash.status }}
             </div>
 
             <div v-if="viewingSnapshot" class="mb-6 bg-muted/50 rounded-xl px-4 py-3 text-sm text-muted-foreground">
