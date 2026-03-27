@@ -3,9 +3,6 @@
 declare(strict_types=1);
 
 use App\Models\Client;
-use App\Models\Expense;
-use App\Models\ExpenseCategory;
-use App\Models\IncomeEntry;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\TaxProfile;
@@ -15,7 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-function setupTajUser(float $invoiceSubtotal = 0, float $expense = 0): User
+function setupTajUser(float $invoiceSubtotal = 0): User
 {
     $user = User::factory()->create(['name' => 'Test Taxpayer']);
     TaxProfile::create(['user_id' => $user->id, 'business_type' => 'specified_services', 'trn' => '123456789']);
@@ -34,23 +31,15 @@ function setupTajUser(float $invoiceSubtotal = 0, float $expense = 0): User
         ]);
     }
 
-    if ($expense > 0) {
-        $category = ExpenseCategory::whereNull('user_id')->first();
-        Expense::create([
-            'user_id' => $user->id, 'expense_category_id' => $category->id,
-            'description' => 'Business expense', 'amount' => $expense, 'date_incurred' => '2025-06-01',
-        ]);
-    }
-
     return $user;
 }
 
 test('buildFormData returns correct structure', function () {
-    $user = setupTajUser(invoiceSubtotal: 4000000, expense: 500000);
+    $user = setupTajUser(invoiceSubtotal: 4000000);
     $service = app(TajFormService::class);
     $data = $service->buildFormData($user, 2025);
 
-    expect($data)->toHaveKeys(['taxpayer', 'tax_year', 'form_type', 'income', 'expenses', 'computation'])
+    expect($data)->toHaveKeys(['taxpayer', 'tax_year', 'form_type', 'income', 'computation'])
         ->and($data['taxpayer']['name'])->toBe('Test Taxpayer')
         ->and($data['taxpayer']['trn'])->toBe('123456789')
         ->and($data['tax_year'])->toBe(2025)
@@ -65,32 +54,13 @@ test('buildFormData income matches gross income', function () {
     expect($data['income']['gross_professional_income'])->toBe(3000000.0);
 });
 
-test('buildFormData expenses broken down by category', function () {
-    $user = User::factory()->create();
-    TaxProfile::create(['user_id' => $user->id, 'business_type' => 'other']);
-
-    $cat1 = ExpenseCategory::where('name', 'Equipment')->first();
-    $cat2 = ExpenseCategory::where('name', 'Fuel & Transport')->first();
-
-    Expense::create(['user_id' => $user->id, 'expense_category_id' => $cat1->id, 'description' => 'Laptop', 'amount' => 150000, 'date_incurred' => '2025-03-01']);
-    Expense::create(['user_id' => $user->id, 'expense_category_id' => $cat1->id, 'description' => 'Monitor', 'amount' => 50000, 'date_incurred' => '2025-04-01']);
-    Expense::create(['user_id' => $user->id, 'expense_category_id' => $cat2->id, 'description' => 'Gas', 'amount' => 30000, 'date_incurred' => '2025-05-01']);
-
-    $service = app(TajFormService::class);
-    $data = $service->buildFormData($user, 2025);
-
-    expect($data['expenses']['by_category']['Equipment'])->toBe(200000.0)
-        ->and($data['expenses']['by_category']['Fuel & Transport'])->toBe(30000.0)
-        ->and($data['expenses']['total'])->toBe(230000.0);
-});
-
 test('buildFormData computation matches tax breakdown', function () {
-    $user = setupTajUser(invoiceSubtotal: 8000000, expense: 1000000);
+    $user = setupTajUser(invoiceSubtotal: 8000000);
     $service = app(TajFormService::class);
     $data = $service->buildFormData($user, 2025);
     $comp = $data['computation'];
 
-    expect($comp['net_statutory_income'])->toBe(7000000.0)
+    expect($comp['net_statutory_income'])->toBe(8000000.0)
         ->and($comp['total_income_tax'])->toBeGreaterThan(0)
         ->and($comp['nis_contribution'])->toBeGreaterThan(0)
         ->and($comp['nht_contribution'])->toBeGreaterThan(0)

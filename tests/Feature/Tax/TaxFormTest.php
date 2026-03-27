@@ -45,7 +45,6 @@ test('tax form data includes all required sections', function () {
         ->assertInertia(fn ($page) => $page
             ->has('formData.taxpayer')
             ->has('formData.income')
-            ->has('formData.expenses')
             ->has('formData.computation')
             ->where('formData.taxpayer.trn', '999888777')
         );

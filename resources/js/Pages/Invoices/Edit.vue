@@ -34,18 +34,19 @@ const parseDate = (d) => d ? new Date(d) : null;
 const form = useForm({
     client_id: props.invoice.client_id,
     issue_date: parseDate(props.invoice.issue_date),
-    due_date: parseDate(props.invoice.due_date),
+    due_date: props.invoice.due_date ? parseDate(props.invoice.due_date) : '',
     status: props.invoice.status,
     notes: props.invoice.notes ?? '',
     items: props.invoice.items.map(item => ({
         description: item.description,
+        unit: item.unit ?? '',
         quantity: Number(item.quantity),
         unit_price: Number(item.unit_price),
     })),
 });
 
 const addItem = () => {
-    form.items.push({ description: '', quantity: 1, unit_price: null });
+    form.items.push({ description: '', unit: '', quantity: 1, unit_price: null });
 };
 
 const removeItem = (index) => {
@@ -112,11 +113,15 @@ const submit = () => {
 
                     <div class="space-y-4">
                         <div v-for="(item, index) in form.items" :key="index" class="grid grid-cols-12 gap-3 items-end">
-                            <div class="col-span-6">
+                            <div class="col-span-5">
                                 <InputLabel v-if="index === 0" value="Description" />
                                 <InputText v-model="item.description" fluid :invalid="!!form.errors[`items.${index}.description`]" />
                             </div>
                             <div class="col-span-2">
+                                <InputLabel v-if="index === 0" value="Unit" />
+                                <InputText v-model="item.unit" fluid placeholder="e.g. hours" />
+                            </div>
+                            <div class="col-span-1">
                                 <InputLabel v-if="index === 0" value="Qty" />
                                 <InputNumber v-model="item.quantity" :min="0.01" :minFractionDigits="0" :maxFractionDigits="2" fluid />
                             </div>
@@ -125,7 +130,7 @@ const submit = () => {
                                 <InputNumber v-model="item.unit_price" :min="0" :minFractionDigits="2" :maxFractionDigits="2" fluid />
                             </div>
                             <div class="col-span-1 pb-1">
-                                <Button v-if="form.items.length > 1" icon="pi pi-times" text severity="danger" size="small" @click="removeItem(index)" />
+                                <Button v-if="form.items.length > 1" icon="pi pi-times" text severity="danger" size="small" @click="removeItem(index)" type="button" />
                             </div>
                         </div>
                     </div>

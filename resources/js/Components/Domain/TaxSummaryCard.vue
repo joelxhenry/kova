@@ -12,18 +12,10 @@ const { formatJMD } = useCurrencyFormatter();
     <div class="bg-card rounded-2xl shadow-sm p-6 md:p-8">
         <h2 class="text-sm font-medium text-muted-foreground mb-6">Tax Summary</h2>
 
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-6">
             <div>
                 <div class="text-xs text-muted-foreground">Gross Income</div>
                 <div class="tabular-nums text-lg font-bold mt-1">{{ formatJMD(breakdown.grossIncome) }}</div>
-            </div>
-            <div>
-                <div class="text-xs text-muted-foreground">Expenses</div>
-                <div class="tabular-nums text-lg font-bold mt-1">{{ formatJMD(breakdown.totalExpenses) }}</div>
-            </div>
-            <div>
-                <div class="text-xs text-muted-foreground">Net Income</div>
-                <div class="tabular-nums text-lg font-bold mt-1">{{ formatJMD(breakdown.netIncome) }}</div>
             </div>
             <div>
                 <div class="text-xs text-muted-foreground">Net Payable</div>

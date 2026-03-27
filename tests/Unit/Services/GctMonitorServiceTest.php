@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Models\Client;
-use App\Models\IncomeEntry;
 use App\Models\Invoice;
 use App\Models\TaxProfile;
 use App\Models\User;
@@ -53,21 +52,6 @@ test('turnover includes sent and paid invoices', function () {
     $status = $service->getStatus($user, 2025);
 
     expect($status['turnover'])->toBe(8000000.0);
-});
-
-test('turnover includes income entries', function () {
-    $user = User::factory()->create();
-    TaxProfile::create(['user_id' => $user->id, 'business_type' => 'other']);
-
-    IncomeEntry::create([
-        'user_id' => $user->id, 'source' => 'Cash',
-        'amount' => 2000000, 'date_received' => '2025-03-15',
-    ]);
-
-    $service = app(GctMonitorService::class);
-    $status = $service->getStatus($user, 2025);
-
-    expect($status['turnover'])->toBe(2000000.0);
 });
 
 test('percentage caps at 100', function () {

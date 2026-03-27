@@ -23,13 +23,13 @@ const clientOptions = props.clients.map(c => ({ label: c.name, value: c.id }));
 const form = useForm({
     client_id: null,
     issue_date: new Date(),
-    due_date: null,
+    due_date: '',
     notes: '',
-    items: [{ description: '', quantity: 1, unit_price: null }],
+    items: [{ description: '', unit: '', quantity: 1, unit_price: null }],
 });
 
 const addItem = () => {
-    form.items.push({ description: '', quantity: 1, unit_price: null });
+    form.items.push({ description: '', unit: '', quantity: 1, unit_price: null });
 };
 
 const removeItem = (index) => {
@@ -89,12 +89,16 @@ const submit = () => {
 
                     <div class="space-y-4">
                         <div v-for="(item, index) in form.items" :key="index" class="grid grid-cols-12 gap-3 items-end">
-                            <div class="col-span-6">
+                            <div class="col-span-5">
                                 <InputLabel v-if="index === 0" value="Description" />
                                 <InputText v-model="item.description" fluid :invalid="!!form.errors[`items.${index}.description`]" />
                                 <InputError :message="form.errors[`items.${index}.description`]" />
                             </div>
                             <div class="col-span-2">
+                                <InputLabel v-if="index === 0" value="Unit" />
+                                <InputText v-model="item.unit" fluid placeholder="e.g. hours" />
+                            </div>
+                            <div class="col-span-1">
                                 <InputLabel v-if="index === 0" value="Qty" />
                                 <InputNumber v-model="item.quantity" :min="0.01" :minFractionDigits="0" :maxFractionDigits="2" fluid :invalid="!!form.errors[`items.${index}.quantity`]" />
                             </div>
@@ -103,7 +107,7 @@ const submit = () => {
                                 <InputNumber v-model="item.unit_price" :min="0" :minFractionDigits="2" :maxFractionDigits="2" fluid :invalid="!!form.errors[`items.${index}.unit_price`]" />
                             </div>
                             <div class="col-span-1 pb-1">
-                                <Button v-if="form.items.length > 1" icon="pi pi-times" text severity="danger" size="small" @click="removeItem(index)" />
+                                <Button v-if="form.items.length > 1" icon="pi pi-times" text severity="danger" size="small" @click="removeItem(index)" type="button" />
                             </div>
                         </div>
                     </div>

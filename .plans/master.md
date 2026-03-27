@@ -111,39 +111,36 @@ Core data entry. Users log the money coming in.
 - [x] Pages: `Pages/Clients/Index.vue`, `Pages/Clients/Create.vue`, `Pages/Clients/Edit.vue`
 - [x] `is_designated_entity` flag triggers withholding tax logic on invoices
 
-#### 1.1.1 Client Enhancements (Pending)
+#### 1.1.1 Client Enhancements
 
-- [ ] Migration: add address columns to `clients` table — structured to support international addresses:
+- [x] Migration: add address columns to `clients` table (international-friendly)
   ```
-  address_line_1 (nullable), address_line_2 (nullable),
-  city (nullable), state_or_parish (nullable),
-  postal_code (nullable), country (nullable, default 'Jamaica')
+  address_line_1, address_line_2, city, state_or_parish, postal_code, country (default 'Jamaica')
   ```
-  Uses `state_or_parish` (not `parish`) so the label adapts to the country context (parish in JM, state in US, county in UK, etc.)
-- [ ] Migration: `client_contacts` table
-  ```
-  client_id (FK), first_name, last_name, email (nullable), phone (nullable),
-  created_at, updated_at
-  ```
-- [ ] Model: `ClientContact` (belongsTo Client)
-- [ ] Update `Client` model: add `hasMany ClientContacts` relationship
-- [ ] Update `StoreClientRequest` to validate address fields and nested contacts array
-- [ ] Service: update `ClientService` to handle contact sync (create/update/delete contacts on client save)
-- [ ] Update `ClientController` to include `show` action
-- [ ] Page: `Pages/Clients/Show.vue` — client detail view containing:
-  - Client info (name, formatted address, TRN, designated entity status)
-  - Contacts list with inline add/edit/delete
-  - Invoices list for this client (filtered from invoices table)
-  - Financial summary: total invoiced, total paid, balance due
-- [ ] Update `Pages/Clients/Create.vue` and `Pages/Clients/Edit.vue`:
-  - Add address fields (line 1, line 2, city, state/parish, postal code, country)
-  - Add dynamic contacts section (add/remove contacts with first name, last name, email, phone)
-- [ ] Update route: add `show` to clients resource (currently excluded)
-- [ ] Tests:
-  - Client show page renders with invoices and summary
-  - Contacts CRUD (create with client, update, remove)
-  - Address fields validate and persist
-  - Financial summary totals are accurate (total invoiced = sum of all invoice totals, total paid = sum of paid invoices, balance = total - paid)
+- [x] Migration: `client_contacts` table (`client_id FK cascadeOnDelete, first_name, last_name, email, phone`)
+- [x] Model: `ClientContact` (belongsTo Client)
+- [x] Updated `Client` model: `hasMany contacts`, `formattedAddress` accessor, address fields in `$fillable`
+- [x] Updated `StoreClientRequest`: validates address fields + nested `contacts.*` array with first/last name required
+- [x] Updated `ClientService`: `syncContacts()` — keeps existing by id, creates new, deletes removed
+- [x] Updated `ClientController`: added `show` action with contacts, invoices, and financial summary
+- [x] Page: `Pages/Clients/Show.vue` — client detail with:
+  - Client info header (name, email, phone, address, TRN, designated badge)
+  - Financial summary cards (total invoiced, total paid, balance due)
+  - Contacts grid with name/email/phone per contact
+  - Invoice list linked to invoice detail pages
+- [x] Updated `Pages/Clients/Create.vue` and `Edit.vue`:
+  - Address section (line 1, line 2, city, state/parish, postal code, country)
+  - Dynamic contacts section (add/remove with first name, last name, email, phone per contact)
+- [x] Updated route: full resource (removed `except(['show'])`)
+- [x] Updated `Clients/Index.vue`: client names link to show page
+- [x] Tests (12 tests):
+  - Show page renders with invoices, summary, and contacts
+  - Financial summary totals accurate (invoiced, paid, balance)
+  - Contacts CRUD (create with client, sync on update, delete cascade)
+  - Address fields persist
+  - Contact validation (first/last name required)
+  - Ownership auth on show + edit
+  - Creating without contacts works
 
 ### 1.2 Invoices
 
@@ -182,140 +179,108 @@ Core data entry. Users log the money coming in.
   - `Pages/Invoices/Edit.vue` — edit with status change
 - [x] Composable: `useCurrencyFormatter.js` — format JMD amounts consistently
 
-#### 1.2.1 Invoice Enhancements (Pending)
+#### 1.2.1 Invoice Enhancements
 
 **Invoice Items — Unit Field:**
-- [ ] Migration: add `unit` column (string, nullable) to `invoice_items` table
+- [x] Migration: add `unit` column (string, nullable) to `invoice_items` table
   - Stores what the quantity represents: "hours", "items", "days", "units", "sessions", etc.
-- [ ] Update `InvoiceItem` model, `StoreInvoiceRequest`, and `InvoiceService` to handle the `unit` field
-- [ ] Update Create/Edit forms to include a unit field per line item (text input or select with common presets)
-- [ ] Display unit in Show page line items table (e.g., "10 hours × J$5,000.00")
+- [x] Update `InvoiceItem` model, `StoreInvoiceRequest`, and `InvoiceService` to handle the `unit` field
+- [x] Update Create/Edit forms to include a unit field per line item (text input)
+- [x] Display unit in Show page line items table
 
 **Invoice Number Configuration:**
-- [ ] Invoice numbering is configurable per user via Settings (see Phase 0.3)
+- [x] Invoice numbering is configurable per user via Settings (see Phase 0.3)
   - Prefix (default "INV"), separator (default "-"), next number, zero-padding width
   - Example formats: `INV-0001`, `KV/2025/001`, `001`
-- [ ] Update `InvoiceService.generateInvoiceNumber()` to read from user settings
-- [ ] Settings page shows current format preview and next number
+- [x] Update `InvoiceService` to delegate to `UserSettingService.generateInvoiceNumber()`
+- [x] Settings page shows current format preview and next number
 
 **Invoice View Page — Professional Layout:**
-- [ ] Redesign `Pages/Invoices/Show.vue` to look like an actual printed invoice:
-  - **Header**: user's business name/logo (from settings) + invoice number + status badge
-  - **From/To columns**: user's business info (left) and client name + address + contacts (right)
-  - **Meta row**: invoice number, issue date, due date, payment terms
+- [x] Redesign `Pages/Invoices/Show.vue` to look like an actual printed invoice:
+  - **Header**: user's business name (from settings) + invoice number + status badge
+  - **Bill To section**: client name + address + TRN + contacts
+  - **Invoice details**: issue date, due date, payment terms (right-aligned)
   - **Line items table**: description, unit, quantity, unit price, amount — with column headers
   - **Totals section**: subtotal, GCT, total, withholding tax, contractors levy, net receivable
-  - **Notes/terms footer**: invoice notes + configurable payment terms (from settings)
-- [ ] Quick action buttons:
-  - **Update Status**: dropdown or button group to change status (draft → sent → paid)
-  - **Send by Email**: sends a professionally formatted email with PDF attachment to client contacts
-    - Email template configurable from system settings
-    - Includes invoice PDF as attachment
-    - Subject line: "Invoice {number} from {business_name}"
-  - **Print / Download PDF**: generates and downloads a PDF version via browser print or server-side
-  - **Duplicate**: create a new invoice pre-filled with the same line items and client
+  - **Notes/terms footer**: invoice notes + configurable payment instructions (from settings)
+  - **Print styles**: `@media print` CSS hides nav/actions, clean layout
+- [x] Quick action buttons:
+  - **Update Status**: Select dropdown to change status (draft/sent/paid/overdue/cancelled)
+  - **Send by Email**: opens recipient selection dialog (client email, contact emails, custom email input), sends email with PDF attachment
+    - Auto-updates status to "sent" if currently "draft"
+  - **Download PDF**: generates and downloads A4 PDF via `barryvdh/laravel-dompdf`
+  - **Print**: browser print with print-optimized styles
+  - **Duplicate**: creates new draft invoice with same line items and client
+  - **Edit / Delete**: existing actions preserved
 
 **Invoice Email System:**
-- [ ] Service: `InvoiceEmailService`
-  - Build email from configurable template (stored in `user_settings`)
-  - Attach generated invoice PDF
-  - Send to client's contacts (or specified email)
-  - Log sent emails on the invoice (optional: `invoice_emails` table tracking sent_at, recipient, status)
-- [ ] Mailable: `InvoiceEmail` — professionally structured email
+- [x] Service: `InvoiceEmailService`
+  - `sendTo()` — sends to user-selected recipients (validated email array)
+  - `getAvailableRecipients()` — returns client email + contact emails with labels/types for dialog
+  - Builds email from configurable template (stored in `user_settings`)
+  - Variable interpolation: `{invoice_number}`, `{business_name}`, `{client_name}`, `{total}`
+  - Includes payment instructions when configured
+  - Attaches generated invoice PDF
+- [x] Mailable: `InvoiceEmail` — markdown email template with PDF attachment
   - Configurable sections: greeting, body text, payment instructions, footer
-  - Uses user's business name and logo
-  - Responsive HTML email template
-- [ ] Controller action: `InvoiceController@send` (POST `/invoices/{invoice}/send`)
-  - Sends email, auto-updates status to "sent" if currently "draft"
+  - Line items table in email body
+  - View Invoice button linking to app
+  - PDF attachment via `attachments()` method
+- [x] Controller action: `InvoiceController@send` (POST `/invoices/{invoice}/send`)
+  - Accepts `recipients` array (required, validated as emails)
+  - Sends email with PDF, auto-updates status to "sent" if currently "draft"
+- [x] Routes: `PUT /invoices/{invoice}/status`, `POST /invoices/{invoice}/duplicate`, `POST /invoices/{invoice}/send`, `GET /invoices/{invoice}/pdf`
+- [ ] Email send logging (optional: `invoice_emails` table — deferred)
 
-**Tests:**
-- [ ] Unit field persists and displays correctly
-- [ ] Invoice number respects user's configured format
-- [ ] Invoice email sends with correct template and PDF attachment
-- [ ] Status quick-update works via API
-- [ ] Duplicate action creates a new draft with same items
+**PDF Generation:**
+- [x] Package: `barryvdh/laravel-dompdf` v3.1
+- [x] Service: `InvoicePdfService`
+  - `generate()` — renders `pdf.invoice` Blade template to A4 PDF with business settings
+  - `filename()` — returns `{invoice_number}.pdf`
+- [x] Blade template: `resources/views/pdf/invoice.blade.php`
+  - Professional layout matching Forest Ritual design tokens (colors, typography)
+  - Header with business name/address, invoice number, status badge
+  - Bill To section with client details
+  - Line items table with unit column
+  - Totals section with GCT, withholding, contractors levy, net receivable
+  - Notes and payment instructions footer
+- [x] Controller action: `InvoiceController@download` (GET `/invoices/{invoice}/pdf`)
+  - Downloads PDF with `Content-Disposition: attachment`
+- [x] Email attachment: PDF auto-attached to invoice emails
 
-### 1.3 Income Log (Non-Invoice Income)
-
-For income that doesn't come from a formal invoice (e.g., cash jobs, ad-hoc payments).
-
-- [x] Migration: `income_entries` table
-  ```
-  user_id (FK), source (string), description (text, nullable),
-  amount (decimal 15,2), date_received (date),
-  withholding_tax_applied (decimal 15,2, default 0),
-  created_at, updated_at
-  ```
-- [x] Model: `IncomeEntry` (belongsTo User)
-- [x] Service: `IncomeService`
-- [x] Controller: `IncomeEntryController` (index, create, store, edit, update, destroy)
-- [x] Pages: `Pages/Income/Index.vue`, `Pages/Income/Create.vue`, `Pages/Income/Edit.vue`
+**Tests (20 tests, 171 total, 742 assertions):**
+- [x] Unit field persists on create and update
+- [x] Invoice number respects user's configured format (prefix, separator, padding)
+- [x] Invoice number auto-increments via user settings
+- [x] Status quick-update works, rejects invalid status, enforces ownership
+- [x] Duplicate creates new draft with same items/unit/notes
+- [x] Duplicate enforces ownership
+- [x] Send email dispatches to selected recipients
+- [x] Send auto-updates draft to sent, preserves non-draft status
+- [x] Send includes client contacts when selected
+- [x] Send requires at least one recipient, validates email format
+- [x] Show page includes business settings, client contacts, and available recipients
+- [x] PDF download returns application/pdf with correct filename
+- [x] PDF download enforces ownership (403)
+- [x] Invoice email includes PDF attachment
 
 ### Verification
 
 - [x] User can create clients, marking some as designated entities
 - [x] Invoices auto-calculate GCT, withholding tax, and contractors levy based on profile + client
 - [x] Invoice list filters by status and date range
-- [x] Non-invoice income can be logged separately
 - [x] All amounts display as formatted JMD currency
 
 ---
 
-## Phase 2 — Expense Management
-
-Users offset gross revenue with business expenses to determine taxable income.
-
-### 2.1 Expense Categories
-
-- [x] Migration: `expense_categories` table
-  ```
-  user_id (FK, nullable — null = system default), name, description (nullable),
-  is_default (boolean), sort_order (int)
-  ```
-- [x] Seeder: default categories (Equipment, Fuel & Transport, Office Rent, Software & Subscriptions, Professional Services, Utilities, Other)
-- [x] Model: `ExpenseCategory` (hasMany Expenses, `forUser()` scope)
-
-### 2.2 Expenses
-
-- [x] Migration: `expenses` table
-  ```
-  user_id (FK), expense_category_id (FK), description (string),
-  amount (decimal 15,2), date_incurred (date),
-  receipt_path (string, nullable),
-  notes (text, nullable),
-  created_at, updated_at
-  ```
-- [x] Model: `Expense` (belongsTo User, belongsTo ExpenseCategory)
-- [x] Service: `ExpenseService`
-  - CRUD operations
-  - Handle file upload for receipts (store in `storage/app/private/receipts/{user_id}/`)
-  - Delete receipt file on expense deletion or receipt replacement
-- [x] Form Requests: `StoreExpenseRequest`
-  - Validate receipt file type (jpg, jpeg, png, pdf) and size (max 5MB)
-  - Validate category belongs to user or is system default
-- [x] Controller: `ExpenseController` (index with filters + totals, create, store, edit, update, destroy)
-- [x] Pages:
-  - `Pages/Expenses/Index.vue` — list with category filter, date range, totals by category summary
-  - `Pages/Expenses/Create.vue` — form with receipt file upload
-  - `Pages/Expenses/Edit.vue` — edit with receipt replacement
-
-### Verification
-
-- [x] User can log expenses with categories and receipt attachments
-- [x] Receipts upload and are accessible only to the owning user
-- [x] Expense totals aggregate correctly by category and date range
-- [x] Deleting an expense removes the associated receipt file
-
----
-
-## Phase 3 — Tax Calculation Engine
+## Phase 2 — Tax Calculation Engine
 
 The core intelligence of the application. Everything feeds into this.
 
-### 3.1 Tax Calculation Service
+### 2.1 Tax Calculation Service
 
 - [x] Service: `TaxCalculationService` — the central engine
-  - **Inputs:** user's total gross income (invoices + income entries), total expenses, withholding tax credits, tax profile
+  - **Inputs:** user's total gross income (paid invoices), withholding tax credits, tax profile
   - **Outputs:** structured tax breakdown
 
   ```
@@ -323,23 +288,22 @@ The core intelligence of the application. Everything feeds into this.
   ```
 
   **Calculation steps:**
-  1. Gross Income = sum of all paid invoices + income entries for the year
-  2. Total Expenses = sum of all expenses for the year
-  3. Net Income = Gross Income − Total Expenses
-  4. Income Tax (thresholds from `statutory_rates` table):
+  1. Gross Income = sum of all paid invoice subtotals for the year
+  2. Net Income = Gross Income
+  3. Income Tax (thresholds from `statutory_rates` table):
      - First JMD `tax_free_threshold` → 0%
      - Up to JMD `tax_bracket_25_limit` → 25%
      - Above `tax_bracket_25_limit` → 30%
-  5. NIS Contribution = Net Income × `nis_rate` (from `statutory_rates`)
-  6. Education Tax = Net Income × `education_tax_rate` (from `statutory_rates`)
-  7. Total Tax Liability = Income Tax + NIS + Education Tax
-  8. Withholding Tax Credits = sum of all withholding tax from invoices + income entries + manual credits
-  9. Net Tax Payable = Total Tax Liability − Withholding Tax Credits
+  4. NIS Contribution = Net Income × `nis_rate` (from `statutory_rates`)
+  5. Education Tax = Net Income × `education_tax_rate` (from `statutory_rates`)
+  6. Total Tax Liability = Income Tax + NIS + Education Tax
+  7. Withholding Tax Credits = sum of all withholding tax from invoices + manual credits
+  8. Net Tax Payable = Total Tax Liability − Withholding Tax Credits
 
 - [x] DTO: `TaxBreakdown` — structured object with all computed values
 - [x] DTO: `QuarterlyEstimate` — quarter, deadline, amountDue, isPast
 
-### 3.2 Quarterly Estimates
+### 2.2 Quarterly Estimates
 
 - [x] Service method: `calculateQuarterlyEstimates(User $user, int $year): array`
   - Divide net tax payable into 4 equal quarterly payments
@@ -347,7 +311,7 @@ The core intelligence of the application. Everything feeds into this.
   - Track which quarters have passed and which are upcoming
   - Factor in withholding credits already applied
 
-### 3.3 Withholding Tax Ledger
+### 2.3 Withholding Tax Ledger
 
 - [x] Migration: `withholding_credits` table
   ```
@@ -372,31 +336,30 @@ The core intelligence of the application. Everything feeds into this.
 
 ---
 
-## Phase 4 — Dashboard & Visualizations
+## Phase 3 — Dashboard & Visualizations
 
 The primary interface users see. Surfaces all the engine outputs.
 
-### 4.1 Main Dashboard
+### 3.1 Main Dashboard
 
 - [x] Controller: `DashboardController` — aggregates data via TaxCalculationService + GctMonitorService + monthly breakdowns
 - [x] Page: `Pages/Dashboard.vue` (replaced placeholder with full widget dashboard)
 - [x] Components:
-  - `Components/Domain/TaxSummaryCard.vue` — gross income, expenses, net income, net payable, income tax/NIS/education tax breakdown
+  - `Components/Domain/TaxSummaryCard.vue` — gross income, net payable, income tax/NIS/education tax breakdown
   - `Components/Domain/QuarterlyEstimatesTimeline.vue` — 4 quarterly blocks with amount due, past/due status, deadline dates
-  - `Components/Domain/IncomeVsExpenseChart.vue` — bar chart with monthly income vs expenses (12 months)
   - `Components/Domain/WithholdingCreditsWidget.vue` — total credits with link to ledger
   - `Components/Domain/GctThresholdTracker.vue` — progress bar toward threshold with percentage + warning at 80%+
 
-### 4.2 GCT Threshold Alert System
+### 3.2 GCT Threshold Alert System
 
 - [x] Service: `GctMonitorService`
-  - Calculate annual turnover from sent/paid invoices + income entries
+  - Calculate annual turnover from sent/paid invoices
   - Return percentage toward threshold (capped at 100%)
   - Reports isRegistered status from tax profile
 - [ ] Notification: `GctThresholdApproachingNotification` (database + mail channel) — deferred to Phase 6
 - [ ] Listener: check threshold after each invoice is created/paid — deferred to Phase 6
 
-### 4.3 Year Selector
+### 3.3 Year Selector
 
 - [x] Composable: `useFiscalYear.js` — manage selected tax year, navigate with query param
 - [x] All dashboard widgets filter by the selected year via DashboardController
@@ -411,11 +374,11 @@ The primary interface users see. Surfaces all the engine outputs.
 
 ---
 
-## Phase 5 — TAJ Form Generation
+## Phase 4 — TAJ Form Generation
 
 The final deliverable — bridging Kova data to official government forms.
 
-### 5.1 Form S04 / IT01 Data Mapping
+### 4.1 Form S04 / IT01 Data Mapping
 
 - [x] Service: `TajFormService`
   - Aggregates all data for a given tax year into S04/IT01 structure via `TaxCalculationService`
@@ -431,7 +394,7 @@ The final deliverable — bridging Kova data to official government forms.
     - Net Tax Payable / Refund Due
   - Returns structured data with taxpayer info, income, categorized expenses, and full computation
 
-### 5.2 PDF Generation
+### 4.2 PDF Generation
 
 - [x] Controller: `TaxFormController` (show preview with live data, generate snapshot, view saved snapshot)
 - [x] Page: `Pages/Tax/FormPreview.vue`
@@ -442,7 +405,7 @@ The final deliverable — bridging Kova data to official government forms.
   - Snapshot history list with ability to view any saved version
 - [ ] Server-side PDF generation (requires PDF library — deferred until package is approved)
 
-### 5.3 Tax Form History
+### 4.3 Tax Form History
 
 - [x] Migration: `tax_form_snapshots` table
   ```
@@ -462,11 +425,11 @@ The final deliverable — bridging Kova data to official government forms.
 
 ---
 
-## Phase 6 — Notifications & Scheduled Tasks
+## Phase 5 — Notifications & Scheduled Tasks
 
 Proactive reminders so users never miss a deadline.
 
-### 6.1 Notification System
+### 5.1 Notification System
 
 - [x] Notifications (database + mail via Mailpit in dev):
   - `QuarterlyPaymentReminderNotification` — 14 days and 3 days before each quarterly deadline
@@ -476,7 +439,7 @@ Proactive reminders so users never miss a deadline.
 - [x] Shared Inertia prop: `notifications.unreadCount` in nav with bell icon badge
 - [x] Controller: `NotificationController` (index, markAsRead, markAllRead)
 
-### 6.2 Scheduled Commands
+### 5.2 Scheduled Commands
 
 - [x] `app/Console/Commands/SendQuarterlyReminders.php`
   - Runs daily at 08:00, checks deadlines at 14 and 3 days out
@@ -498,9 +461,9 @@ Proactive reminders so users never miss a deadline.
 
 ---
 
-## Phase 7 — Polish & Production Readiness
+## Phase 6 — Polish & Production Readiness
 
-### 7.1 UI/UX Polish
+### 6.1 UI/UX Polish
 
 - [ ] Apply Bold Typography design system comprehensively across all pages
 - [ ] Responsive audit — ensure all pages work on mobile/tablet
@@ -509,7 +472,7 @@ Proactive reminders so users never miss a deadline.
 - [ ] Toast notifications for success/error feedback
 - [ ] Confirmation dialogs for destructive actions (delete invoice, expense)
 
-### 7.2 Data Integrity
+### 6.2 Data Integrity
 
 - [ ] Add database indexes on frequently queried columns (user_id, date fields, status)
 - [ ] Add cascading deletes or soft deletes where appropriate
@@ -521,7 +484,7 @@ Proactive reminders so users never miss a deadline.
   - Income exceeding JMD $6M bracket
   - Withholding credits exceeding tax liability (refund scenario)
 
-### 7.3 Security Audit
+### 6.3 Security Audit
 
 - [ ] Ensure all routes are authorized (Policies or Form Request `authorize()`)
 - [ ] Verify users can only access their own data (scoped queries)
@@ -529,7 +492,7 @@ Proactive reminders so users never miss a deadline.
 - [ ] Rate limiting on auth routes
 - [ ] CSRF protection on all forms (handled by Inertia)
 
-### 7.4 Performance
+### 6.4 Performance
 
 - [ ] Eager loading audit — no N+1 queries
 - [ ] Cache expensive tax calculations (invalidate on income/expense change)
@@ -543,11 +506,11 @@ Proactive reminders so users never miss a deadline.
 
 ---
 
-## Phase 8 — Admin Portal
+## Phase 7 — Admin Portal
 
 Separate subdomain (`admin.kova.zncn.app`) for platform administration. Controls statutory rates, user management, and subscription oversight.
 
-### 8.1 Admin Authentication & Authorization
+### 7.1 Admin Authentication & Authorization
 
 - [ ] Admin `role` column on `users` table (or separate `admins` table)
 - [ ] Admin auth middleware — separate guard or role-based check
@@ -555,7 +518,7 @@ Separate subdomain (`admin.kova.zncn.app`) for platform administration. Controls
 - [ ] Route group with admin middleware, served under admin subdomain
 - [ ] Separate Inertia entry point or route-based subdomain handling
 
-### 8.2 Statutory Rate Management
+### 7.2 Statutory Rate Management
 
 - [ ] Controller: `Admin\StatutoryRateController` (index, edit, update)
 - [ ] Form Request: `Admin\UpdateStatutoryRateRequest`
@@ -565,7 +528,7 @@ Separate subdomain (`admin.kova.zncn.app`) for platform administration. Controls
 - [ ] Audit log: track who changed what rate and when (optional `statutory_rate_audit_log` table)
 - [ ] Rate changes take effect for all users from `effective_from` date forward
 
-### 8.3 User Management
+### 7.3 User Management
 
 - [ ] Controller: `Admin\UserController` (index, show, suspend, reactivate)
 - [ ] Pages:
@@ -574,7 +537,7 @@ Separate subdomain (`admin.kova.zncn.app`) for platform administration. Controls
 - [ ] Ability to suspend/reactivate user accounts
 - [ ] View user's subscription status and history
 
-### 8.4 Platform Dashboard
+### 7.4 Platform Dashboard
 
 - [ ] Controller: `Admin\DashboardController`
 - [ ] Page: `Pages/Admin/Dashboard.vue`
@@ -589,11 +552,11 @@ Separate subdomain (`admin.kova.zncn.app`) for platform administration. Controls
 
 ---
 
-## Phase 9 — Subscription & Billing
+## Phase 8 — Subscription & Billing
 
 Subscription-based access model. Pricing structure and tiers are TBD — this phase defines the infrastructure.
 
-### 9.1 Subscription Infrastructure
+### 8.1 Subscription Infrastructure
 
 - [ ] Migration: `subscriptions` table
   ```
@@ -611,14 +574,14 @@ Subscription-based access model. Pricing structure and tiers are TBD — this ph
 - [ ] Middleware: `EnsureSubscribed` — gate access to premium features
 - [ ] Pricing page: display available plans (structure TBD)
 
-### 9.2 Billing Integration (TBD)
+### 8.2 Billing Integration (TBD)
 
 - [ ] Payment gateway integration (provider TBD — Stripe, PayPal, local JM gateway)
 - [ ] Webhook handling for payment events
 - [ ] Invoice generation for subscription payments
 - [ ] Billing history page for users
 
-### 9.3 Admin Plan Management
+### 8.3 Admin Plan Management
 
 - [ ] Controller: `Admin\PlanController` (index, create, store, edit, update)
 - [ ] Pages: admin CRUD for plans — name, price, features, active toggle
@@ -644,10 +607,7 @@ User
  ├── Client (1:N)
  │    ├── ClientContact (1:N)
  │    └── Invoice (1:N)
- │         └── InvoiceItem (1:N) — now includes `unit` field
- ├── IncomeEntry (1:N)
- ├── Expense (1:N)
- │    └── ExpenseCategory (N:1)
+ │         └── InvoiceItem (1:N) — includes `unit` field
  ├── WithholdingCredit (1:N)
  └── TaxFormSnapshot (1:N)
 
@@ -660,37 +620,26 @@ Plan (admin-managed, global)
 ## Implementation Order & Dependencies
 
 ```
-Phase 0 ─── Authentication, Tax Profile & System Settings
+Phase 0 ─── Authentication, Tax Profile & System Settings (done)
    │
-Phase 0.3 ── System Settings (required before Invoice Enhancements 1.2.1)
+Phase 1 ─── Clients & Invoicing (done)
+   │  ├── 1.1 Clients + 1.1.1 Client Enhancements (done)
+   │  └── 1.2 Invoices + 1.2.1 Invoice Enhancements (done)
    │
-Phase 1 ─── Income Tracking
-   │  ├── 1.1 Clients (done) + 1.1.1 Client Enhancements (pending)
-   │  ├── 1.2 Invoices (done) + 1.2.1 Invoice Enhancements (depends on 0.3 + 1.1.1)
-   │  └── 1.3 Income Log (done)
+Phase 2 ─── Tax Calculation Engine (done)
    │
-Phase 2 ─── Expense Management (done)
+Phase 3 ─── Dashboard & Visualizations (done)
    │
-Phase 3 ─── Tax Calculation Engine (done)
+Phase 4 ─── TAJ Form Generation (done)
    │
-Phase 4 ─── Dashboard & Visualizations (done)
+Phase 5 ─── Notifications & Scheduled Tasks (done)
    │
-Phase 5 ─── TAJ Form Generation (done)
+Phase 6 ─── Polish & Production Readiness (all phases)
    │
-Phase 6 ─── Notifications & Scheduled Tasks (done)
+Phase 7 ─── Admin Portal (can start after Phase 0, independent of Phases 1-5)
    │
-Phase 7 ─── Polish & Production Readiness (all phases)
-   │
-Phase 8 ─── Admin Portal (can start after Phase 0, independent of Phases 1-7)
-   │
-Phase 9 ─── Subscription & Billing (depends on Phase 8)
+Phase 8 ─── Subscription & Billing (depends on Phase 7)
 ```
 
-**Pending implementation order for enhancements:**
-1. Phase 0.3 (System Settings) — must come first, provides invoice numbering config and email templates
-2. Phase 1.1.1 (Client Enhancements) — addresses, contacts table
-3. Phase 1.2.1 (Invoice Enhancements) — depends on both 0.3 (settings) and 1.1.1 (client addresses/contacts for invoice view and email sending)
-
-Phases 4 and 5 can run in parallel after Phase 3 is complete.
-Phase 8 (Admin Portal) can be developed in parallel with Phases 1-7.
-Phase 9 (Subscriptions) requires Phase 8 for plan management.
+Phase 7 (Admin Portal) can be developed in parallel with Phases 1-6.
+Phase 8 (Subscriptions) requires Phase 7 for plan management.

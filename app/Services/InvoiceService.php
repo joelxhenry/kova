@@ -13,6 +13,7 @@ class InvoiceService
 {
     public function __construct(
         private readonly WithholdingCreditService $withholdingCreditService,
+        private readonly UserSettingService $userSettingService,
     ) {}
     /**
      * @param array<string, mixed> $data
@@ -20,7 +21,7 @@ class InvoiceService
      */
     public function create(User $user, array $data, array $items): Invoice
     {
-        $data['invoice_number'] = $this->generateInvoiceNumber($user);
+        $data['invoice_number'] = $this->userSettingService->generateInvoiceNumber($user);
 
         $client = Client::findOrFail($data['client_id']);
         $taxProfile = $user->taxProfile;
@@ -91,17 +92,40 @@ class InvoiceService
         $invoice->delete();
     }
 
-    private function generateInvoiceNumber(User $user): string
+    /**
+     * Update only the status of an invoice.
+     */
+    public function updateStatus(Invoice $invoice, string $status): Invoice
     {
-        $latest = $user->invoices()->max('invoice_number');
+        $invoice->update(['status' => $status]);
 
-        if ($latest === null) {
-            return 'INV-0001';
+        if ($status === 'paid') {
+            $this->withholdingCreditService->createFromInvoice($invoice);
         }
 
-        $number = (int) str_replace('INV-', '', $latest);
+        return $invoice->fresh(['items', 'client']);
+    }
 
-        return 'INV-' . str_pad((string) ($number + 1), 4, '0', STR_PAD_LEFT);
+    /**
+     * Duplicate an invoice as a new draft.
+     */
+    public function duplicate(Invoice $invoice): Invoice
+    {
+        $user = $invoice->user;
+        $items = $invoice->items->map(fn ($item) => [
+            'description' => $item->description,
+            'unit' => $item->unit,
+            'quantity' => (float) $item->quantity,
+            'unit_price' => (float) $item->unit_price,
+        ])->toArray();
+
+        return $this->create($user, [
+            'client_id' => $invoice->client_id,
+            'issue_date' => now()->toDateString(),
+            'due_date' => $invoice->due_date ? now()->addDays($invoice->issue_date->diffInDays($invoice->due_date))->toDateString() : null,
+            'status' => 'draft',
+            'notes' => $invoice->notes,
+        ], $items);
     }
 
     /**
@@ -172,6 +196,7 @@ class InvoiceService
         foreach ($items as $index => $item) {
             $invoice->items()->create([
                 'description' => $item['description'],
+                'unit' => $item['unit'] ?? null,
                 'quantity' => (float) $item['quantity'],
                 'unit_price' => (float) $item['unit_price'],
                 'amount' => round((float) $item['quantity'] * (float) $item['unit_price'], 2),

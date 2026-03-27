@@ -29,15 +29,9 @@ class GctMonitorService
 
     private function getAnnualTurnover(User $user, int $year): float
     {
-        $invoiceTurnover = (float) $user->invoices()
+        return (float) $user->invoices()
             ->whereIn('status', ['sent', 'paid'])
             ->whereYear('issue_date', $year)
             ->sum('subtotal');
-
-        $incomeTurnover = (float) $user->incomeEntries()
-            ->whereYear('date_received', $year)
-            ->sum('amount');
-
-        return $invoiceTurnover + $incomeTurnover;
     }
 }

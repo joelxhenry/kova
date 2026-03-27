@@ -3,9 +3,6 @@
 declare(strict_types=1);
 
 use App\Models\Client;
-use App\Models\Expense;
-use App\Models\ExpenseCategory;
-use App\Models\IncomeEntry;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\TaxProfile;
@@ -15,7 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-function setupUserWithIncome(float $invoiceSubtotal = 0, float $otherIncome = 0, float $expenses = 0, float $withholdingOnInvoice = 0, float $withholdingOnIncome = 0): User
+function setupUserWithIncome(float $invoiceSubtotal = 0, float $withholdingOnInvoice = 0): User
 {
     $user = User::factory()->create();
     TaxProfile::create(['user_id' => $user->id, 'business_type' => 'specified_services']);
@@ -38,22 +35,6 @@ function setupUserWithIncome(float $invoiceSubtotal = 0, float $otherIncome = 0,
         ]);
     }
 
-    if ($otherIncome > 0) {
-        IncomeEntry::create([
-            'user_id' => $user->id, 'source' => 'Cash',
-            'amount' => $otherIncome, 'date_received' => '2025-06-15',
-            'withholding_tax_applied' => $withholdingOnIncome,
-        ]);
-    }
-
-    if ($expenses > 0) {
-        $category = ExpenseCategory::whereNull('user_id')->first();
-        Expense::create([
-            'user_id' => $user->id, 'expense_category_id' => $category->id,
-            'description' => 'Expense', 'amount' => $expenses, 'date_incurred' => '2025-06-01',
-        ]);
-    }
-
     return $user;
 }
 
@@ -70,7 +51,6 @@ test('zero income produces zero tax', function () {
 });
 
 test('income below tax-free threshold pays no income tax', function () {
-    // Tax-free threshold is 1,700,088
     $user = setupUserWithIncome(invoiceSubtotal: 1500000);
     $service = app(TaxCalculationService::class);
     $result = $service->calculateAnnualTax($user, 2025);
@@ -81,7 +61,6 @@ test('income below tax-free threshold pays no income tax', function () {
         ->and($result->bracket25Amount)->toBe(0.0)
         ->and($result->totalIncomeTax)->toBe(0.0);
 
-    // But NIS, NHT, and education tax still apply
     // NIS: 1500000 * 0.03 = 45000
     // NHT: 1500000 * 0.02 = 30000
     // Education: 1500000 * 0.0225 = 33750
@@ -92,9 +71,6 @@ test('income below tax-free threshold pays no income tax', function () {
 });
 
 test('income in 25% bracket calculates correctly', function () {
-    // Net income of 4,000,000
-    // Tax-free: 1,700,088 at 0%
-    // 25% bracket: 4,000,000 - 1,700,088 = 2,299,912 at 25%
     $user = setupUserWithIncome(invoiceSubtotal: 4000000);
     $service = app(TaxCalculationService::class);
     $result = $service->calculateAnnualTax($user, 2025);
@@ -108,10 +84,6 @@ test('income in 25% bracket calculates correctly', function () {
 });
 
 test('income in 30% bracket calculates correctly', function () {
-    // Net income of 8,000,000
-    // Tax-free: 1,700,088
-    // 25% bracket: 6,000,000 - 1,700,088 = 4,299,912 at 25% = 1,074,978
-    // 30% bracket: 8,000,000 - 6,000,000 = 2,000,000 at 30% = 600,000
     $user = setupUserWithIncome(invoiceSubtotal: 8000000);
     $service = app(TaxCalculationService::class);
     $result = $service->calculateAnnualTax($user, 2025);
@@ -144,27 +116,6 @@ test('income exactly at 25% bracket limit', function () {
         ->and($result->bracket30Tax)->toBe(0.0);
 });
 
-test('expenses reduce taxable income', function () {
-    $user = setupUserWithIncome(invoiceSubtotal: 4000000, expenses: 1000000);
-    $service = app(TaxCalculationService::class);
-    $result = $service->calculateAnnualTax($user, 2025);
-
-    expect($result->grossIncome)->toBe(4000000.0)
-        ->and($result->totalExpenses)->toBe(1000000.0)
-        ->and($result->netIncome)->toBe(3000000.0);
-});
-
-test('expenses exceeding income result in zero net income', function () {
-    $user = setupUserWithIncome(invoiceSubtotal: 500000, expenses: 800000);
-    $service = app(TaxCalculationService::class);
-    $result = $service->calculateAnnualTax($user, 2025);
-
-    expect($result->netIncome)->toBe(0.0)
-        ->and($result->totalIncomeTax)->toBe(0.0)
-        ->and($result->nisContribution)->toBe(0.0)
-        ->and($result->totalTaxLiability)->toBe(0.0);
-});
-
 test('withholding credits reduce net tax payable', function () {
     $user = setupUserWithIncome(invoiceSubtotal: 4000000, withholdingOnInvoice: 120000);
     $service = app(TaxCalculationService::class);
@@ -175,7 +126,6 @@ test('withholding credits reduce net tax payable', function () {
 });
 
 test('withholding credits exceeding liability produce negative net payable (refund)', function () {
-    // Small income but large withholding
     $user = setupUserWithIncome(invoiceSubtotal: 1000000, withholdingOnInvoice: 500000);
     $service = app(TaxCalculationService::class);
     $result = $service->calculateAnnualTax($user, 2025);
@@ -183,33 +133,11 @@ test('withholding credits exceeding liability produce negative net payable (refu
     expect($result->netTaxPayable)->toBeLessThan(0);
 });
 
-test('both invoice and income sources are summed for gross income', function () {
-    $user = setupUserWithIncome(invoiceSubtotal: 2000000, otherIncome: 1000000);
-    $service = app(TaxCalculationService::class);
-    $result = $service->calculateAnnualTax($user, 2025);
-
-    expect($result->grossIncome)->toBe(3000000.0);
-});
-
-test('withholding from both invoices and income entries are summed', function () {
-    $user = setupUserWithIncome(
-        invoiceSubtotal: 2000000,
-        otherIncome: 1000000,
-        withholdingOnInvoice: 60000,
-        withholdingOnIncome: 30000,
-    );
-    $service = app(TaxCalculationService::class);
-    $result = $service->calculateAnnualTax($user, 2025);
-
-    expect($result->withholdingCredits)->toBe(90000.0);
-});
-
 test('only paid invoices count toward gross income', function () {
     $user = User::factory()->create();
     TaxProfile::create(['user_id' => $user->id, 'business_type' => 'other']);
     $client = Client::create(['user_id' => $user->id, 'name' => 'C', 'is_designated_entity' => false]);
 
-    // Paid invoice
     Invoice::create([
         'user_id' => $user->id, 'client_id' => $client->id,
         'invoice_number' => 'INV-0001', 'issue_date' => '2025-06-01',
@@ -217,7 +145,6 @@ test('only paid invoices count toward gross income', function () {
         'status' => 'paid',
     ]);
 
-    // Draft invoice (should NOT count)
     Invoice::create([
         'user_id' => $user->id, 'client_id' => $client->id,
         'invoice_number' => 'INV-0002', 'issue_date' => '2025-06-15',
@@ -243,7 +170,6 @@ test('quarterly estimates split evenly across 4 deadlines', function () {
         ->and($estimates[2]->deadline)->toBe('2025-09-15')
         ->and($estimates[3]->deadline)->toBe('2025-12-15');
 
-    // All amounts equal
     $amount = $estimates[0]->amountDue;
     expect($amount)->toBeGreaterThan(0);
     foreach ($estimates as $e) {

@@ -84,14 +84,10 @@ const deleteCredit = (credit) => {
             <!-- Summary -->
             <div class="bg-card rounded-2xl shadow-sm p-6 mb-8">
                 <h2 class="text-xs font-medium text-muted-foreground mb-4">{{ year }} Credit Summary</h2>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     <div>
                         <div class="text-xs font-medium text-muted-foreground">Invoice WHT</div>
                         <div class="tabular-nums text-base font-medium mt-0.5">{{ formatJMD(summary.invoiceCredits) }}</div>
-                    </div>
-                    <div>
-                        <div class="text-xs font-medium text-muted-foreground">Income WHT</div>
-                        <div class="tabular-nums text-base font-medium mt-0.5">{{ formatJMD(summary.incomeCredits) }}</div>
                     </div>
                     <div>
                         <div class="text-xs font-medium text-muted-foreground">Manual</div>

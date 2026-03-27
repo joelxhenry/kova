@@ -55,22 +55,6 @@ class User extends Authenticatable
     }
 
     /**
-     * @return HasMany<IncomeEntry, $this>
-     */
-    public function incomeEntries(): HasMany
-    {
-        return $this->hasMany(IncomeEntry::class);
-    }
-
-    /**
-     * @return HasMany<Expense, $this>
-     */
-    public function expenses(): HasMany
-    {
-        return $this->hasMany(Expense::class);
-    }
-
-    /**
      * @return HasMany<WithholdingCredit, $this>
      */
     public function withholdingCredits(): HasMany

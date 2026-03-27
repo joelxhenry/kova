@@ -3,9 +3,6 @@
 declare(strict_types=1);
 
 use App\Models\Client;
-use App\Models\Expense;
-use App\Models\ExpenseCategory;
-use App\Models\IncomeEntry;
 use App\Models\Invoice;
 use App\Models\TaxProfile;
 use App\Models\User;
@@ -66,18 +63,11 @@ test('dashboard tax breakdown reflects real data', function () {
         'status' => 'paid',
     ]);
 
-    $category = ExpenseCategory::whereNull('user_id')->first();
-    Expense::create([
-        'user_id' => $user->id, 'expense_category_id' => $category->id,
-        'description' => 'Expense', 'amount' => 500000, 'date_incurred' => '2025-06-01',
-    ]);
-
     $this->actingAs($user)
         ->get('/dashboard?year=2025')
         ->assertInertia(fn ($page) => $page
             ->where('taxBreakdown.grossIncome', 3000000)
-            ->where('taxBreakdown.totalExpenses', 500000)
-            ->where('taxBreakdown.netIncome', 2500000)
+            ->where('taxBreakdown.netIncome', 3000000)
         );
 });
 
@@ -94,10 +84,13 @@ test('dashboard monthly data has 12 months', function () {
 test('dashboard gct status reflects turnover', function () {
     $user = User::factory()->create();
     TaxProfile::create(['user_id' => $user->id, 'business_type' => 'other']);
+    $client = Client::create(['user_id' => $user->id, 'name' => 'Client', 'is_designated_entity' => false]);
 
-    IncomeEntry::create([
-        'user_id' => $user->id, 'source' => 'Cash',
-        'amount' => 7500000, 'date_received' => '2025-06-15',
+    Invoice::create([
+        'user_id' => $user->id, 'client_id' => $client->id,
+        'invoice_number' => 'INV-0001', 'issue_date' => '2025-06-15',
+        'subtotal' => 7500000, 'total' => 7500000, 'net_receivable' => 7500000,
+        'status' => 'paid',
     ]);
 
     $this->actingAs($user)

@@ -4,7 +4,6 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Select from 'primevue/select';
 import TaxSummaryCard from '@/Components/Domain/TaxSummaryCard.vue';
 import QuarterlyEstimatesTimeline from '@/Components/Domain/QuarterlyEstimatesTimeline.vue';
-import IncomeVsExpenseChart from '@/Components/Domain/IncomeVsExpenseChart.vue';
 import WithholdingCreditsWidget from '@/Components/Domain/WithholdingCreditsWidget.vue';
 import GctThresholdTracker from '@/Components/Domain/GctThresholdTracker.vue';
 import { useFiscalYear } from '@/Composables/useFiscalYear.js';
@@ -14,7 +13,6 @@ const props = defineProps({
     taxBreakdown: { type: Object, required: true },
     quarterlyEstimates: { type: Array, required: true },
     gctStatus: { type: Object, required: true },
-    monthlyData: { type: Array, required: true },
 });
 
 const page = usePage();
@@ -57,9 +55,6 @@ const { year: selectedYear, years, changeYear } = useFiscalYear(props.year);
                         <GctThresholdTracker :gctStatus="gctStatus" />
                     </div>
                 </div>
-
-                <!-- Income vs Expense Chart -->
-                <IncomeVsExpenseChart :monthlyData="monthlyData" />
             </div>
         </section>
     </AuthenticatedLayout>

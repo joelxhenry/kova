@@ -36,18 +36,13 @@ class WithholdingCreditController extends Controller
             ->whereYear('issue_date', $year)
             ->sum('withholding_tax_amount');
 
-        $incomeCredits = (float) $request->user()->incomeEntries()
-            ->whereYear('date_received', $year)
-            ->sum('withholding_tax_applied');
-
         return Inertia::render('Tax/WithholdingCredits', [
             'credits' => $credits,
             'year' => $year,
             'summary' => [
                 'invoiceCredits' => round($invoiceCredits, 2),
-                'incomeCredits' => round($incomeCredits, 2),
                 'manualCredits' => round((float) $totalCredits, 2),
-                'totalCredits' => round($invoiceCredits + $incomeCredits + (float) $totalCredits, 2),
+                'totalCredits' => round($invoiceCredits + (float) $totalCredits, 2),
             ],
         ]);
     }

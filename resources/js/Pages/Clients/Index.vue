@@ -48,8 +48,8 @@ const deleteClient = (client) => {
                     :key="client.id"
                     class="flex items-center justify-between py-4 border-b border-border"
                 >
-                    <div>
-                        <span class="text-base font-medium text-foreground">{{ client.name }}</span>
+                    <Link :href="`/clients/${client.id}`" class="flex-1">
+                        <span class="text-base font-medium text-foreground hover:text-accent transition-colors duration-200">{{ client.name }}</span>
                         <span v-if="client.is_designated_entity" class="ml-2 text-xs font-medium text-muted-foreground">
                             Designated
                         </span>
@@ -59,7 +59,7 @@ const deleteClient = (client) => {
                             <span v-if="client.phone">{{ client.phone }}</span>
                             <span v-if="client.invoices_count !== undefined" class="ml-2">· {{ client.invoices_count }} invoice{{ client.invoices_count !== 1 ? 's' : '' }}</span>
                         </div>
-                    </div>
+                    </Link>
                     <div class="flex items-center gap-2">
                         <Link :href="`/clients/${client.id}/edit`">
                             <Button label="Edit" text size="small" />

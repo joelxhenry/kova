@@ -26,7 +26,6 @@ const printForm = () => {
 };
 
 const comp = props.formData.computation;
-const expenses = props.formData.expenses;
 const taxpayer = props.formData.taxpayer;
 </script>
 
@@ -85,28 +84,11 @@ const taxpayer = props.formData.taxpayer;
                     <h3 class="text-sm font-medium text-muted-foreground mb-3">Section 1 — Income</h3>
                     <div class="flex justify-between py-2 border-b border-border/50">
                         <span>Gross Professional / Business Income</span>
-                        <span class="tabular-nums font-medium">{{ formatJMD(comp.net_statutory_income + expenses.total) }}</span>
+                        <span class="tabular-nums font-medium">{{ formatJMD(comp.net_statutory_income) }}</span>
                     </div>
                 </div>
 
-                <!-- Section 2: Expenses -->
-                <div class="mb-8">
-                    <h3 class="text-sm font-medium text-muted-foreground mb-3">Section 2 — Allowable Expenses</h3>
-                    <div
-                        v-for="(amount, category) in expenses.by_category"
-                        :key="category"
-                        class="flex justify-between py-1.5 text-sm"
-                    >
-                        <span class="text-muted-foreground">{{ category }}</span>
-                        <span class="tabular-nums">{{ formatJMD(amount) }}</span>
-                    </div>
-                    <div class="flex justify-between py-2 border-t border-border/50 mt-2 font-medium">
-                        <span>Total Expenses</span>
-                        <span class="tabular-nums">{{ formatJMD(expenses.total) }}</span>
-                    </div>
-                </div>
-
-                <!-- Section 3: Tax Computation -->
+                <!-- Section 2: Tax Computation -->
                 <div class="mb-8">
                     <h3 class="text-sm font-medium text-muted-foreground mb-3">Section 3 — Tax Computation</h3>
 

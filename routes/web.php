@@ -6,12 +6,10 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\TaxFormController;
 use App\Http\Controllers\WithholdingCreditController;
-use App\Http\Controllers\IncomeEntryController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\TaxProfileController;
 use Illuminate\Support\Facades\Route;
@@ -41,12 +39,14 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/tax-profile', fn () => redirect()->route('settings.index'))->name('tax-profile.edit');
     Route::put('/tax-profile', [SettingsController::class, 'updateTaxProfile'])->name('tax-profile.update');
 
-    Route::resource('clients', ClientController::class)->except(['show']);
+    Route::resource('clients', ClientController::class);
     Route::resource('invoices', InvoiceController::class);
-    Route::resource('income', IncomeEntryController::class)->except(['show'])->parameters(['income' => 'income_entry']);
-    Route::resource('expenses', ExpenseController::class)->except(['show']);
+    Route::put('/invoices/{invoice}/status', [InvoiceController::class, 'updateStatus'])->name('invoices.status');
+    Route::post('/invoices/{invoice}/duplicate', [InvoiceController::class, 'duplicate'])->name('invoices.duplicate');
+    Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'send'])->name('invoices.send');
+    Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'download'])->name('invoices.pdf');
 
-    Route::get('/withholding-credits', [WithholdingCreditController::class, 'index'])->name('withholding-credits.index');
+Route::get('/withholding-credits', [WithholdingCreditController::class, 'index'])->name('withholding-credits.index');
     Route::post('/withholding-credits', [WithholdingCreditController::class, 'store'])->name('withholding-credits.store');
     Route::delete('/withholding-credits/{withholding_credit}', [WithholdingCreditController::class, 'destroy'])->name('withholding-credits.destroy');
 

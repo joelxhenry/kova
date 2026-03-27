@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Models\Client;
-use App\Models\IncomeEntry;
 use App\Models\Invoice;
 use App\Models\TaxProfile;
 use App\Models\User;
@@ -59,9 +58,12 @@ test('check-gct-threshold sends alerts at correct levels', function () {
     TaxProfile::create(['user_id' => $user->id, 'business_type' => 'other', 'is_gct_registered' => false]);
 
     // 85% of 15M = 12.75M
-    IncomeEntry::create([
-        'user_id' => $user->id, 'source' => 'Big contract',
-        'amount' => 12750000, 'date_received' => now()->format('Y-m-d'),
+    $client = Client::create(['user_id' => $user->id, 'name' => 'Client', 'is_designated_entity' => false]);
+    Invoice::create([
+        'user_id' => $user->id, 'client_id' => $client->id,
+        'invoice_number' => 'INV-0001', 'issue_date' => now()->format('Y-m-d'),
+        'subtotal' => 12750000, 'total' => 12750000, 'net_receivable' => 12750000,
+        'status' => 'paid',
     ]);
 
     $this->artisan('kova:check-gct-threshold')
@@ -80,9 +82,12 @@ test('check-gct-threshold skips already registered users', function () {
         'is_gct_registered' => true, 'gct_registration_date' => '2024-01-01',
     ]);
 
-    IncomeEntry::create([
-        'user_id' => $user->id, 'source' => 'Revenue',
-        'amount' => 20000000, 'date_received' => now()->format('Y-m-d'),
+    $client = Client::create(['user_id' => $user->id, 'name' => 'Client', 'is_designated_entity' => false]);
+    Invoice::create([
+        'user_id' => $user->id, 'client_id' => $client->id,
+        'invoice_number' => 'INV-0001', 'issue_date' => now()->format('Y-m-d'),
+        'subtotal' => 20000000, 'total' => 20000000, 'net_receivable' => 20000000,
+        'status' => 'paid',
     ]);
 
     $this->artisan('kova:check-gct-threshold')

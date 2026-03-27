@@ -34,24 +34,11 @@ class DashboardController extends Controller
             ->groupBy(DB::raw('MONTH(issue_date)'))
             ->pluck('total', 'month');
 
-        $monthlyOtherIncome = $user->incomeEntries()
-            ->whereYear('date_received', $year)
-            ->select(DB::raw('MONTH(date_received) as month'), DB::raw('SUM(amount) as total'))
-            ->groupBy(DB::raw('MONTH(date_received)'))
-            ->pluck('total', 'month');
-
-        $monthlyExpenses = $user->expenses()
-            ->whereYear('date_incurred', $year)
-            ->select(DB::raw('MONTH(date_incurred) as month'), DB::raw('SUM(amount) as total'))
-            ->groupBy(DB::raw('MONTH(date_incurred)'))
-            ->pluck('total', 'month');
-
         $monthlyData = [];
         for ($m = 1; $m <= 12; $m++) {
             $monthlyData[] = [
                 'month' => $m,
-                'income' => round((float) ($monthlyIncome[$m] ?? 0) + (float) ($monthlyOtherIncome[$m] ?? 0), 2),
-                'expenses' => round((float) ($monthlyExpenses[$m] ?? 0), 2),
+                'income' => round((float) ($monthlyIncome[$m] ?? 0), 2),
             ];
         }
 

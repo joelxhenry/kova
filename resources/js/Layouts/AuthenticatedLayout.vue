@@ -11,9 +11,7 @@ const navigation = [
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Clients', href: '/clients' },
     { name: 'Invoices', href: '/invoices' },
-    { name: 'Income', href: '/income' },
-    { name: 'Expenses', href: '/expenses' },
-    { name: 'Settings', href: '/settings' },
+{ name: 'Settings', href: '/settings' },
 ];
 
 const isActive = (href) => {

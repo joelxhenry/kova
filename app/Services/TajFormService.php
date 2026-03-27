@@ -23,15 +23,6 @@ class TajFormService
         $breakdown = $this->taxCalculationService->calculateAnnualTax($user, $year);
         $taxProfile = $user->taxProfile;
 
-        $expensesByCategory = $user->expenses()
-            ->whereYear('date_incurred', $year)
-            ->with('category:id,name')
-            ->get()
-            ->groupBy(fn ($e) => $e->category->name ?? 'Other')
-            ->map(fn ($group) => round((float) $group->sum('amount'), 2))
-            ->sortKeys()
-            ->toArray();
-
         return [
             'taxpayer' => [
                 'name' => $user->name,
@@ -43,10 +34,6 @@ class TajFormService
             'form_type' => 'S04',
             'income' => [
                 'gross_professional_income' => $breakdown->grossIncome,
-            ],
-            'expenses' => [
-                'by_category' => $expensesByCategory,
-                'total' => $breakdown->totalExpenses,
             ],
             'computation' => [
                 'net_statutory_income' => $breakdown->netIncome,
