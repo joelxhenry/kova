@@ -56,22 +56,22 @@ Core data entry. Users log the money coming in.
 
 ### 1.1 Clients
 
-- [ ] Migration: `clients` table
+- [x] Migration: `clients` table
   ```
   user_id (FK), name, email (nullable), phone (nullable),
   trn (nullable), is_designated_entity (boolean, default false),
   created_at, updated_at
   ```
-- [ ] Model: `Client` (belongsTo User, hasMany Invoices)
-- [ ] Service: `ClientService`
-- [ ] Form Requests: `StoreClientRequest` / `UpdateClientRequest`
-- [ ] Controller: `ClientController` (index, create, store, edit, update, destroy)
-- [ ] Pages: `Pages/Clients/Index.vue`, `Pages/Clients/Create.vue`, `Pages/Clients/Edit.vue`
-- [ ] `is_designated_entity` flag triggers withholding tax logic on invoices
+- [x] Model: `Client` (belongsTo User, hasMany Invoices)
+- [x] Service: `ClientService`
+- [x] Form Requests: `StoreClientRequest`
+- [x] Controller: `ClientController` (index, create, store, edit, update, destroy)
+- [x] Pages: `Pages/Clients/Index.vue`, `Pages/Clients/Create.vue`, `Pages/Clients/Edit.vue`
+- [x] `is_designated_entity` flag triggers withholding tax logic on invoices
 
 ### 1.2 Invoices
 
-- [ ] Migration: `invoices` table
+- [x] Migration: `invoices` table
   ```
   user_id (FK), client_id (FK), invoice_number (unique per user),
   issue_date, due_date (nullable),
@@ -84,51 +84,51 @@ Core data entry. Users log the money coming in.
   notes (text, nullable),
   created_at, updated_at
   ```
-- [ ] Migration: `invoice_items` table
+- [x] Migration: `invoice_items` table
   ```
   invoice_id (FK), description, quantity (decimal), unit_price (decimal 15,2),
   amount (decimal 15,2), sort_order (int)
   ```
-- [ ] Models: `Invoice` (belongsTo User, belongsTo Client, hasMany InvoiceItems), `InvoiceItem`
-- [ ] Service: `InvoiceService`
-  - Auto-generate sequential invoice numbers per user
+- [x] Models: `Invoice` (belongsTo User, belongsTo Client, hasMany InvoiceItems), `InvoiceItem`
+- [x] Service: `InvoiceService`
+  - Auto-generate sequential invoice numbers per user (INV-0001, INV-0002...)
   - Calculate subtotal from line items
-  - If user is GCT-registered → append 15% GCT line
-  - If client `is_designated_entity` && subtotal > JMD $50,000 → calculate 3% withholding tax
-  - If user `business_type` is construction/haulage/tillage → calculate 2% contractors levy
+  - If user is GCT-registered → apply GCT rate from `statutory_rates`
+  - If client `is_designated_entity` && subtotal ≥ withholding threshold → apply withholding rate
+  - If user `business_type` is construction/haulage/tillage → apply contractors levy rate
   - Compute `net_receivable = total - withholding_tax - contractors_levy`
-- [ ] Form Requests: `StoreInvoiceRequest` / `UpdateInvoiceRequest`
-- [ ] Controller: `InvoiceController` (index, create, store, show, edit, update, destroy)
-- [ ] Pages:
-  - `Pages/Invoices/Index.vue` — list with filters (status, date range, client)
-  - `Pages/Invoices/Create.vue` — dynamic line items form
-  - `Pages/Invoices/Show.vue` — invoice detail view
-  - `Pages/Invoices/Edit.vue`
-- [ ] Composable: `useCurrencyFormatter.js` — format JMD amounts consistently
+- [x] Form Requests: `StoreInvoiceRequest` (validates client belongs to user)
+- [x] Controller: `InvoiceController` (index with filters, create, store, show, edit, update, destroy)
+- [x] Pages:
+  - `Pages/Invoices/Index.vue` — list with filters (status, date range, client), pagination
+  - `Pages/Invoices/Create.vue` — dynamic line items form with live subtotal
+  - `Pages/Invoices/Show.vue` — invoice detail with itemized breakdown
+  - `Pages/Invoices/Edit.vue` — edit with status change
+- [x] Composable: `useCurrencyFormatter.js` — format JMD amounts consistently
 
 ### 1.3 Income Log (Non-Invoice Income)
 
 For income that doesn't come from a formal invoice (e.g., cash jobs, ad-hoc payments).
 
-- [ ] Migration: `income_entries` table
+- [x] Migration: `income_entries` table
   ```
   user_id (FK), source (string), description (text, nullable),
   amount (decimal 15,2), date_received (date),
   withholding_tax_applied (decimal 15,2, default 0),
   created_at, updated_at
   ```
-- [ ] Model: `IncomeEntry` (belongsTo User)
-- [ ] Service: `IncomeService`
-- [ ] Controller: `IncomeEntryController` (index, create, store, edit, update, destroy)
-- [ ] Pages: `Pages/Income/Index.vue`, `Pages/Income/Create.vue`
+- [x] Model: `IncomeEntry` (belongsTo User)
+- [x] Service: `IncomeService`
+- [x] Controller: `IncomeEntryController` (index, create, store, edit, update, destroy)
+- [x] Pages: `Pages/Income/Index.vue`, `Pages/Income/Create.vue`, `Pages/Income/Edit.vue`
 
 ### Verification
 
-- [ ] User can create clients, marking some as designated entities
-- [ ] Invoices auto-calculate GCT, withholding tax, and contractors levy based on profile + client
-- [ ] Invoice list filters by status and date range
-- [ ] Non-invoice income can be logged separately
-- [ ] All amounts display as formatted JMD currency
+- [x] User can create clients, marking some as designated entities
+- [x] Invoices auto-calculate GCT, withholding tax, and contractors levy based on profile + client
+- [x] Invoice list filters by status and date range
+- [x] Non-invoice income can be logged separately
+- [x] All amounts display as formatted JMD currency
 
 ---
 

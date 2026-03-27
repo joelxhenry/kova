@@ -1,6 +1,7 @@
 import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import PrimeVue from 'primevue/config';
+import KovaPreset from './primevue-preset.js';
 import '../css/app.css';
 
 createInertiaApp({
@@ -13,7 +14,13 @@ createInertiaApp({
         createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(PrimeVue, {
-                unstyled: true,
+                theme: {
+                    preset: KovaPreset,
+                    options: {
+                        darkModeSelector: false,
+                        cssLayer: false,
+                    },
+                },
             })
             .mount(el);
     },

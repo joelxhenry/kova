@@ -26,7 +26,19 @@
 * **Inertia Forms:** Always use Inertia's `useForm()` helper for form submissions to automatically handle loading states, progress bars, and error mapping.
 * **Routing:** Never use standard `<a>` tags for internal app navigation. Always use Inertia's `<Link>` component to maintain the SPA experience.
 * **Props Typing:** Use `defineProps()` with clear type definitions (TypeScript interfaces or verbose JSDoc) to document what data the server is providing to the page.
-* **PrimeVue Styling:** The project uses PrimeVue in **unstyled mode** via Tailwind CSS. Do not apply inline styles. Use Tailwind utility classes via the `pt` (pass-through) property if a PrimeVue component's internal elements need specific styling.
+* **PrimeVue Components Mandatory:** Always use PrimeVue components for form fields and UI elements instead of raw HTML. This ensures consistent theming via the Kova preset.
+  - `<InputText>` instead of `<input type="text">` or custom `<TextInput>`
+  - `<Textarea>` instead of `<textarea>`
+  - `<Select>` instead of `<select>`
+  - `<Checkbox>` instead of `<input type="checkbox">`
+  - `<DatePicker>` instead of `<input type="date">`
+  - `<InputNumber>` instead of `<input type="number">`
+  - `<Button>` instead of `<button>`
+  - `<DataTable>` for tabular data listings
+  - `<Dialog>` for confirmation modals
+  - `<Message>` / `<Toast>` for flash messages and notifications
+  - Use the `pt` (pass-through) property for any additional Tailwind styling on PrimeVue component internals.
+* **DO NOT** use raw HTML `<input>`, `<select>`, `<textarea>`, `<button>`, or `<table>` elements when a PrimeVue equivalent exists.
 
 ## 5. Security & Best Practices
 * **Authorization First:** Always verify user authorization in the Form Request's `authorize()` method or via Laravel Policies before executing any controller logic.

@@ -3,7 +3,7 @@
 ## Tech Stack
 - **Backend:** Laravel 13, PHP 8.4 (strict types)
 - **Frontend:** Vue 3 (Composition API, `<script setup>`), Inertia.js
-- **UI:** PrimeVue 4 (unstyled mode), Tailwind CSS 4
+- **UI:** PrimeVue 4 (Aura theme + custom Kova preset), Tailwind CSS 4
 - **Package Manager:** pnpm (never npm/yarn)
 - **Database:** SQLite (local dev)
 - **Testing:** Pest
@@ -31,7 +31,8 @@
 - Always use `declare(strict_types=1);` in PHP files
 - Always use `<script setup>` in Vue components
 - Use Inertia's `useForm()` for form submissions
-- Use PrimeVue `pt` prop for styling (unstyled mode + Tailwind)
+- **Always use PrimeVue components** for form fields and UI (InputText, Select, Checkbox, DatePicker, InputNumber, Button, Textarea, DataTable, Dialog, Toast) — never raw HTML equivalents
+- Use PrimeVue `pt` prop for additional Tailwind styling on component internals
 - No inline CSS, no new UI libraries without permission
 - No new dependencies without permission
 - **Every task must include passing Pest tests before it can be marked complete** — feature tests for controllers/routes, unit tests for services/business logic. Run `make test` to verify.

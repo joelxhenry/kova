@@ -7,6 +7,9 @@ const user = computed(() => page.props.auth.user);
 
 const navigation = [
     { name: 'Dashboard', href: '/dashboard' },
+    { name: 'Clients', href: '/clients' },
+    { name: 'Invoices', href: '/invoices' },
+    { name: 'Income', href: '/income' },
     { name: 'Tax Profile', href: '/tax-profile' },
 ];
 

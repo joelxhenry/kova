@@ -4,7 +4,10 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\IncomeEntryController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\TaxProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,6 +34,10 @@ Route::middleware('auth')->group(function (): void {
 
     Route::get('/tax-profile', [TaxProfileController::class, 'edit'])->name('tax-profile.edit');
     Route::put('/tax-profile', [TaxProfileController::class, 'update'])->name('tax-profile.update');
+
+    Route::resource('clients', ClientController::class)->except(['show']);
+    Route::resource('invoices', InvoiceController::class);
+    Route::resource('income', IncomeEntryController::class)->except(['show'])->parameters(['income' => 'income_entry']);
 
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 });
