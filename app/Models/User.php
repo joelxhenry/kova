@@ -77,4 +77,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(WithholdingCredit::class);
     }
+
+    /**
+     * @return HasMany<TaxFormSnapshot, $this>
+     */
+    public function taxFormSnapshots(): HasMany
+    {
+        return $this->hasMany(TaxFormSnapshot::class);
+    }
 }

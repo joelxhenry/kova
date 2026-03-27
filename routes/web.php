@@ -7,6 +7,8 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\TaxFormController;
 use App\Http\Controllers\WithholdingCreditController;
 use App\Http\Controllers\IncomeEntryController;
 use App\Http\Controllers\InvoiceController;
@@ -45,6 +47,14 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/withholding-credits', [WithholdingCreditController::class, 'index'])->name('withholding-credits.index');
     Route::post('/withholding-credits', [WithholdingCreditController::class, 'store'])->name('withholding-credits.store');
     Route::delete('/withholding-credits/{withholding_credit}', [WithholdingCreditController::class, 'destroy'])->name('withholding-credits.destroy');
+
+    Route::get('/tax-form', [TaxFormController::class, 'show'])->name('tax-form.show');
+    Route::post('/tax-form/generate', [TaxFormController::class, 'generate'])->name('tax-form.generate');
+    Route::get('/tax-form/snapshot/{snapshot}', [TaxFormController::class, 'snapshot'])->name('tax-form.snapshot');
+
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
 
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 });

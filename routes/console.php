@@ -1,8 +1,7 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+Schedule::command('kova:send-quarterly-reminders')->daily()->at('08:00');
+Schedule::command('kova:check-overdue-invoices')->daily()->at('06:00');
+Schedule::command('kova:check-gct-threshold')->weekly()->mondays()->at('09:00');

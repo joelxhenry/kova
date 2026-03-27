@@ -49,6 +49,9 @@ class HandleInertiaRequests extends Middleware
                     'is_gct_registered' => $request->user()->taxProfile->is_gct_registered,
                 ] : null,
             ],
+            'notifications' => [
+                'unreadCount' => $request->user()?->unreadNotifications()->count() ?? 0,
+            ],
             'flash' => [
                 'status' => $request->session()->get('status'),
             ],
