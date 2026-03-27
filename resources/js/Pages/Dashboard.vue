@@ -1,9 +1,25 @@
 <script setup>
 import { Head, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import Select from 'primevue/select';
+import TaxSummaryCard from '@/Components/Domain/TaxSummaryCard.vue';
+import QuarterlyEstimatesTimeline from '@/Components/Domain/QuarterlyEstimatesTimeline.vue';
+import IncomeVsExpenseChart from '@/Components/Domain/IncomeVsExpenseChart.vue';
+import WithholdingCreditsWidget from '@/Components/Domain/WithholdingCreditsWidget.vue';
+import GctThresholdTracker from '@/Components/Domain/GctThresholdTracker.vue';
+import { useFiscalYear } from '@/Composables/useFiscalYear.js';
+
+const props = defineProps({
+    year: { type: Number, required: true },
+    taxBreakdown: { type: Object, required: true },
+    quarterlyEstimates: { type: Array, required: true },
+    gctStatus: { type: Object, required: true },
+    monthlyData: { type: Array, required: true },
+});
 
 const page = usePage();
 const user = page.props.auth.user;
+const { year: selectedYear, years, changeYear } = useFiscalYear(props.year);
 </script>
 
 <template>
@@ -11,14 +27,41 @@ const user = page.props.auth.user;
 
     <AuthenticatedLayout>
         <section class="py-12 md:py-20">
-            <div class="h-1 w-16 bg-accent mb-6" />
-            <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tighter leading-none">
-                Welcome back,<br>
-                <span class="text-accent">{{ user.name }}.</span>
-            </h1>
-            <p class="mt-4 max-w-2xl text-muted-foreground text-base md:text-lg leading-normal">
-                Your financial dashboard will appear here as you add income and expenses.
-            </p>
+            <div class="flex items-center justify-between mb-10">
+                <div>
+                    <div class="h-1 w-16 bg-accent mb-6" />
+                    <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tighter leading-none">
+                        Welcome back,<br>
+                        <span class="text-accent">{{ user.name }}.</span>
+                    </h1>
+                </div>
+                <Select
+                    v-model="selectedYear"
+                    :options="years"
+                    optionLabel="label"
+                    optionValue="value"
+                    @change="changeYear(selectedYear)"
+                />
+            </div>
+
+            <div class="space-y-6">
+                <!-- Tax Summary -->
+                <TaxSummaryCard :breakdown="taxBreakdown" />
+
+                <!-- Quarterly + Withholding + GCT row -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2">
+                        <QuarterlyEstimatesTimeline :estimates="quarterlyEstimates" />
+                    </div>
+                    <div class="space-y-6">
+                        <WithholdingCreditsWidget :credits="taxBreakdown.withholdingCredits" :year="year" />
+                        <GctThresholdTracker :gctStatus="gctStatus" />
+                    </div>
+                </div>
+
+                <!-- Income vs Expense Chart -->
+                <IncomeVsExpenseChart :monthlyData="monthlyData" />
+            </div>
         </section>
     </AuthenticatedLayout>
 </template>

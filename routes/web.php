@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\WithholdingCreditController;
 use App\Http\Controllers\IncomeEntryController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\TaxProfileController;
@@ -40,6 +41,10 @@ Route::middleware('auth')->group(function (): void {
     Route::resource('invoices', InvoiceController::class);
     Route::resource('income', IncomeEntryController::class)->except(['show'])->parameters(['income' => 'income_entry']);
     Route::resource('expenses', ExpenseController::class)->except(['show']);
+
+    Route::get('/withholding-credits', [WithholdingCreditController::class, 'index'])->name('withholding-credits.index');
+    Route::post('/withholding-credits', [WithholdingCreditController::class, 'store'])->name('withholding-credits.store');
+    Route::delete('/withholding-credits/{withholding_credit}', [WithholdingCreditController::class, 'destroy'])->name('withholding-credits.destroy');
 
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 });

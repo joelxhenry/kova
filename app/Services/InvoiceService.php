@@ -11,6 +11,9 @@ use App\Models\User;
 
 class InvoiceService
 {
+    public function __construct(
+        private readonly WithholdingCreditService $withholdingCreditService,
+    ) {}
     /**
      * @param array<string, mixed> $data
      * @param list<array{description: string, quantity: float|string, unit_price: float|string}> $items
@@ -73,7 +76,14 @@ class InvoiceService
 
         $this->syncItems($invoice, $items);
 
-        return $invoice->fresh(['items', 'client']);
+        $invoice = $invoice->fresh(['items', 'client']);
+
+        // Auto-create withholding credit when invoice is marked as paid
+        if ($invoice->status === 'paid') {
+            $this->withholdingCreditService->createFromInvoice($invoice);
+        }
+
+        return $invoice;
     }
 
     public function delete(Invoice $invoice): void

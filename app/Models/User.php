@@ -69,4 +69,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Expense::class);
     }
+
+    /**
+     * @return HasMany<WithholdingCredit, $this>
+     */
+    public function withholdingCredits(): HasMany
+    {
+        return $this->hasMany(WithholdingCredit::class);
+    }
 }
