@@ -18,6 +18,13 @@ class DemoSeeder extends Seeder
 {
     public function run(): void
     {
+        // ── Admin User ─────────────────────────────────────────────
+        User::factory()->create([
+            'name' => 'Admin',
+            'email' => 'admin@kova.test',
+            'is_admin' => true,
+        ]);
+
         // ── Demo User ──────────────────────────────────────────────
         $user = User::factory()->create([
             'name' => 'Marcus Brown',

@@ -15,7 +15,7 @@ class GctMonitorService
     public function getStatus(User $user, int $year): array
     {
         $turnover = $this->getAnnualTurnover($user, $year);
-        $threshold = StatutoryRate::getValue('gct_registration_threshold');
+        $threshold = StatutoryRate::getValue('gct_registration_threshold', "{$year}-01-01");
         $percentage = $threshold > 0 ? round(($turnover / $threshold) * 100, 1) : 0.0;
         $isRegistered = (bool) $user->taxProfile?->is_gct_registered;
 

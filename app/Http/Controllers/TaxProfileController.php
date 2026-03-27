@@ -22,7 +22,10 @@ class TaxProfileController extends Controller
     {
         $taxProfile = $request->user()->taxProfile;
 
-        $statutoryRates = StatutoryRate::all(['key', 'label', 'value', 'effective_from'])
+        $statutoryRates = StatutoryRate::where('effective_from', '<=', now())
+            ->orderByDesc('effective_from')
+            ->get(['key', 'label', 'value', 'effective_from'])
+            ->unique('key')
             ->keyBy('key');
 
         return Inertia::render('Profile/TaxProfile', [

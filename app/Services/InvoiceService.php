@@ -26,11 +26,12 @@ class InvoiceService
         $client = Client::findOrFail($data['client_id']);
         $taxProfile = $user->taxProfile;
 
+        $issueDate = $data['issue_date'] ?? now()->toDateString();
         $subtotal = $this->calculateSubtotal($items);
-        $gctAmount = $this->calculateGct($user, $subtotal);
+        $gctAmount = $this->calculateGct($user, $subtotal, $issueDate);
         $total = $subtotal + $gctAmount;
-        $withholdingTax = $this->calculateWithholdingTax($client, $subtotal, $taxProfile?->business_type);
-        $contractorsLevy = $this->calculateContractorsLevy($subtotal, $taxProfile?->business_type);
+        $withholdingTax = $this->calculateWithholdingTax($client, $subtotal, $taxProfile?->business_type, $issueDate);
+        $contractorsLevy = $this->calculateContractorsLevy($subtotal, $taxProfile?->business_type, $issueDate);
         $netReceivable = $total - $withholdingTax - $contractorsLevy;
 
         $invoice = $user->invoices()->create([
@@ -58,11 +59,12 @@ class InvoiceService
         $client = Client::findOrFail($data['client_id'] ?? $invoice->client_id);
         $taxProfile = $user->taxProfile;
 
+        $issueDate = $data['issue_date'] ?? $invoice->issue_date;
         $subtotal = $this->calculateSubtotal($items);
-        $gctAmount = $this->calculateGct($user, $subtotal);
+        $gctAmount = $this->calculateGct($user, $subtotal, $issueDate);
         $total = $subtotal + $gctAmount;
-        $withholdingTax = $this->calculateWithholdingTax($client, $subtotal, $taxProfile?->business_type);
-        $contractorsLevy = $this->calculateContractorsLevy($subtotal, $taxProfile?->business_type);
+        $withholdingTax = $this->calculateWithholdingTax($client, $subtotal, $taxProfile?->business_type, $issueDate);
+        $contractorsLevy = $this->calculateContractorsLevy($subtotal, $taxProfile?->business_type, $issueDate);
         $netReceivable = $total - $withholdingTax - $contractorsLevy;
 
         $invoice->update([
@@ -141,7 +143,7 @@ class InvoiceService
         return round($subtotal, 2);
     }
 
-    private function calculateGct(User $user, float $subtotal): float
+    private function calculateGct(User $user, float $subtotal, string $rateDate): float
     {
         $taxProfile = $user->taxProfile;
 
@@ -149,18 +151,18 @@ class InvoiceService
             return 0.0;
         }
 
-        $gctRate = StatutoryRate::getValue('gct_rate');
+        $gctRate = StatutoryRate::getValue('gct_rate', $rateDate);
 
         return round($subtotal * $gctRate / 100, 2);
     }
 
-    private function calculateWithholdingTax(Client $client, float $subtotal, ?string $businessType): float
+    private function calculateWithholdingTax(Client $client, float $subtotal, ?string $businessType, string $rateDate): float
     {
         if (! $client->is_designated_entity) {
             return 0.0;
         }
 
-        $threshold = StatutoryRate::getValue('withholding_tax_invoice_threshold');
+        $threshold = StatutoryRate::getValue('withholding_tax_invoice_threshold', $rateDate);
 
         if ($subtotal < $threshold) {
             return 0.0;
@@ -170,18 +172,18 @@ class InvoiceService
             return 0.0;
         }
 
-        $rate = StatutoryRate::getValue('withholding_tax_rate');
+        $rate = StatutoryRate::getValue('withholding_tax_rate', $rateDate);
 
         return round($subtotal * $rate / 100, 2);
     }
 
-    private function calculateContractorsLevy(float $subtotal, ?string $businessType): float
+    private function calculateContractorsLevy(float $subtotal, ?string $businessType, string $rateDate): float
     {
         if (! in_array($businessType, ['construction', 'haulage', 'tillage'], true)) {
             return 0.0;
         }
 
-        $rate = StatutoryRate::getValue('contractors_levy_rate');
+        $rate = StatutoryRate::getValue('contractors_levy_rate', $rateDate);
 
         return round($subtotal * $rate / 100, 2);
     }

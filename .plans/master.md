@@ -514,21 +514,40 @@ Separate subdomain (`admin.kova.zncn.app`) for platform administration. Controls
 
 ### 7.1 Admin Authentication & Authorization
 
-- [ ] Admin `role` column on `users` table (or separate `admins` table)
-- [ ] Admin auth middleware — separate guard or role-based check
-- [ ] Admin login page on admin subdomain
-- [ ] Route group with admin middleware, served under admin subdomain
-- [ ] Separate Inertia entry point or route-based subdomain handling
+- [x] Migration: `is_admin` boolean column on `users` table (default false)
+- [x] User model: `is_admin` cast to boolean, shared in Inertia props
+- [x] Middleware: `EnsureAdmin` — checks `is_admin` flag, aborts 403
+- [x] Admin routes: `routes/admin.php` registered via `bootstrap/app.php` with `web + auth + EnsureAdmin` middleware stack, `/admin` prefix
+- [x] Admin layout: `AdminLayout.vue` — dark nav bar (`bg-dark-surface`), accent "Admin" badge, nav links (Dashboard, Statutory Rates, Users), "User App" link back to main app
+- [x] Admin dashboard: `Pages/Admin/Dashboard.vue` — total users stat card, recent signups list
+- [x] Controller: `Admin\DashboardController` — aggregates user count and recent signups
+- [x] Demo seeder: `admin@kova.test` / `password` admin user
+- [x] Tests (7 tests): guests blocked, regular users get 403, admin access works, user count correct, recent signups shown, `is_admin` shared in props
 
 ### 7.2 Statutory Rate Management
 
-- [ ] Controller: `Admin\StatutoryRateController` (index, edit, update)
-- [ ] Form Request: `Admin\UpdateStatutoryRateRequest`
-- [ ] Pages:
-  - `Pages/Admin/StatutoryRates/Index.vue` — list all rates with current values
-  - `Pages/Admin/StatutoryRates/Edit.vue` — update value and effective date
-- [ ] Audit log: track who changed what rate and when (optional `statutory_rate_audit_log` table)
-- [ ] Rate changes take effect for all users from `effective_from` date forward
+**Versioned rates** — each key maintains a full history of values by effective date, enabling historical tax calculations for any past year.
+
+- [x] Migration: drop unique constraint on `key`, add unique on `[key, effective_from]` to support multiple versions per rate
+- [x] `StatutoryRate::getValue($key, $date)` — resolves the rate effective at a given date (`effective_from <= $date`, most recent first). Defaults to today if no date provided.
+- [x] `StatutoryRate::current($key)` — returns the latest version record for a key
+- [x] All service callers updated to pass contextual dates:
+  - `TaxCalculationService` — uses Jan 1 of the tax year
+  - `InvoiceService` — uses the invoice's `issue_date`
+  - `GctMonitorService` — uses Jan 1 of the year
+- [x] Settings/TaxProfile controllers — display current effective rates (most recent where `effective_from <= now`)
+- [x] Controller: `Admin\StatutoryRateController` (index, show by key, store new version)
+  - Index groups versions by key, shows current value + version count
+  - Show displays version history timeline + add new version form + audit log
+  - Store creates a new version row (does not overwrite), rejects duplicate effective dates
+- [x] Form Request: `Admin\UpdateStatutoryRateRequest` — validates value (numeric, min 0) and effective_from (required date)
+- [x] Pages:
+  - `Pages/Admin/StatutoryRates/Index.vue` — table grouped by key with current value, effective date, version count
+  - `Pages/Admin/StatutoryRates/Show.vue` — current value card, add version form, version history timeline, audit change log
+- [x] Migration: `statutory_rate_audit_log` table (statutory_rate_id, user_id, old/new value, old/new effective_from, changed_at)
+- [x] Model: `StatutoryRateAuditLog` with relationships to StatutoryRate and User
+- [x] Routes: `GET /admin/statutory-rates`, `GET /admin/statutory-rates/{key}`, `POST /admin/statutory-rates/{key}`
+- [x] Tests (14 tests): access control, index grouping, show with versions, add new version, audit log created, duplicate date rejected, validation, negative rejected, getValue with date resolution, historical rate preservation, 404 for invalid key
 
 ### 7.3 User Management
 

@@ -28,7 +28,10 @@ class SettingsController extends Controller
         $user = $request->user();
         $setting = $this->settingService->getOrCreate($user);
 
-        $statutoryRates = StatutoryRate::all(['key', 'label', 'value', 'effective_from'])
+        $statutoryRates = StatutoryRate::where('effective_from', '<=', now())
+            ->orderByDesc('effective_from')
+            ->get(['key', 'label', 'value', 'effective_from'])
+            ->unique('key')
             ->keyBy('key');
 
         return Inertia::render('Settings/Index', [

@@ -17,11 +17,14 @@ class TaxCalculationService
         $grossIncome = $this->getGrossIncome($user, $year);
         $netIncome = max(0.0, $grossIncome);
 
-        $taxFreeThreshold = StatutoryRate::getValue('tax_free_threshold');
-        $bracket25Limit = StatutoryRate::getValue('tax_bracket_25_limit');
-        $nisRate = StatutoryRate::getValue('nis_rate') / 100;
-        $nhtRate = StatutoryRate::getValue('nht_rate') / 100;
-        $educationTaxRate = StatutoryRate::getValue('education_tax_rate') / 100;
+        // Use rates effective at the start of the tax year
+        $rateDate = "{$year}-01-01";
+
+        $taxFreeThreshold = StatutoryRate::getValue('tax_free_threshold', $rateDate);
+        $bracket25Limit = StatutoryRate::getValue('tax_bracket_25_limit', $rateDate);
+        $nisRate = StatutoryRate::getValue('nis_rate', $rateDate) / 100;
+        $nhtRate = StatutoryRate::getValue('nht_rate', $rateDate) / 100;
+        $educationTaxRate = StatutoryRate::getValue('education_tax_rate', $rateDate) / 100;
 
         // Progressive tax calculation
         $taxFreeAmount = min($netIncome, $taxFreeThreshold);

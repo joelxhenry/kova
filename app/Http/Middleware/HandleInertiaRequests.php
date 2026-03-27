@@ -43,6 +43,7 @@ class HandleInertiaRequests extends Middleware
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
                     'has_tax_profile' => $request->user()->taxProfile !== null,
+                    'is_admin' => $request->user()->is_admin,
                 ] : null,
                 'taxProfile' => $request->user()?->taxProfile ? [
                     'business_type' => $request->user()->taxProfile->business_type,
