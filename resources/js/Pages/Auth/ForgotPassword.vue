@@ -22,14 +22,13 @@ const submit = () => {
 
     <GuestLayout>
         <template #nav>
-            <Link href="/login" class="text-sm text-muted-foreground hover:text-foreground transition-colors duration-150 uppercase tracking-wider">
+            <Link href="/login" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200">
                 Login
             </Link>
         </template>
 
         <div>
             <div class="mb-10">
-                <div class="h-1 w-16 bg-accent mb-6" />
                 <h1 class="text-3xl md:text-4xl font-bold tracking-tighter leading-none">
                     Reset password
                 </h1>
@@ -40,24 +39,26 @@ const submit = () => {
 
             <div
                 v-if="page.props.flash.status"
-                class="mb-6 border border-accent/30 bg-accent/5 px-4 py-3 text-sm text-foreground"
+                class="mb-6 bg-accent/10 rounded-xl px-4 py-3 text-sm text-foreground"
             >
                 {{ page.props.flash.status }}
             </div>
 
-            <form @submit.prevent="submit" class="space-y-6">
-                <div>
-                    <InputLabel value="Email" />
-                    <InputText v-model="form.email" type="email" autocomplete="username" autofocus fluid :invalid="!!form.errors.email" />
-                    <InputError :message="form.errors.email" />
-                </div>
+            <div class="bg-card rounded-2xl shadow-sm p-8">
+                <form @submit.prevent="submit" class="space-y-6">
+                    <div>
+                        <InputLabel value="Email" />
+                        <InputText v-model="form.email" type="email" autocomplete="username" autofocus fluid :invalid="!!form.errors.email" />
+                        <InputError :message="form.errors.email" />
+                    </div>
 
-                <div class="pt-2">
-                    <Button type="submit" label="Send reset link" :loading="form.processing" text />
-                </div>
-            </form>
+                    <div class="pt-2">
+                        <Button type="submit" label="Send reset link" :loading="form.processing" text />
+                    </div>
+                </form>
+            </div>
 
-            <p class="mt-8 text-sm text-muted-foreground border-t border-border pt-6">
+            <p class="mt-8 text-sm text-muted-foreground pt-8">
                 Remember your password?
                 <Link href="/login" class="text-foreground hover:text-accent transition-colors duration-150">
                     Sign in

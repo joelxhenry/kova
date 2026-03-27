@@ -29,8 +29,7 @@ const { year: selectedYear, years, changeYear } = useFiscalYear(props.year);
         <section class="py-12 md:py-20">
             <div class="flex items-center justify-between mb-10">
                 <div>
-                    <div class="h-1 w-16 bg-accent mb-6" />
-                    <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tighter leading-none">
+                    <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
                         Welcome back,<br>
                         <span class="text-accent">{{ user.name }}.</span>
                     </h1>

@@ -69,7 +69,6 @@ const deleteCredit = (credit) => {
         <section class="py-12 md:py-20 max-w-3xl">
             <div class="flex items-center justify-between mb-10">
                 <div>
-                    <div class="h-1 w-16 bg-accent mb-6" />
                     <h1 class="text-3xl md:text-4xl font-bold tracking-tighter leading-none">Withholding Credits</h1>
                 </div>
                 <Select v-model="selectedYear" :options="yearOptions" optionLabel="label" optionValue="value" @change="changeYear" />
@@ -77,29 +76,29 @@ const deleteCredit = (credit) => {
 
             <div
                 v-if="page.props.flash.status"
-                class="mb-6 border border-accent/30 bg-accent/5 px-4 py-3 text-sm text-foreground"
+                class="mb-6 bg-accent/10 rounded-xl px-4 py-3 text-sm text-foreground"
             >
                 {{ page.props.flash.status }}
             </div>
 
             <!-- Summary -->
-            <div class="border border-border p-6 mb-8">
-                <h2 class="text-xs uppercase tracking-wider text-muted-foreground mb-4">{{ year }} Credit Summary</h2>
+            <div class="bg-card rounded-2xl shadow-sm p-6 mb-8">
+                <h2 class="text-xs font-medium text-muted-foreground mb-4">{{ year }} Credit Summary</h2>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div>
-                        <div class="text-xs text-muted-foreground uppercase tracking-wider">Invoice WHT</div>
+                        <div class="text-xs font-medium text-muted-foreground">Invoice WHT</div>
                         <div class="font-mono text-base font-medium mt-0.5">{{ formatJMD(summary.invoiceCredits) }}</div>
                     </div>
                     <div>
-                        <div class="text-xs text-muted-foreground uppercase tracking-wider">Income WHT</div>
+                        <div class="text-xs font-medium text-muted-foreground">Income WHT</div>
                         <div class="font-mono text-base font-medium mt-0.5">{{ formatJMD(summary.incomeCredits) }}</div>
                     </div>
                     <div>
-                        <div class="text-xs text-muted-foreground uppercase tracking-wider">Manual</div>
+                        <div class="text-xs font-medium text-muted-foreground">Manual</div>
                         <div class="font-mono text-base font-medium mt-0.5">{{ formatJMD(summary.manualCredits) }}</div>
                     </div>
                     <div>
-                        <div class="text-xs text-muted-foreground uppercase tracking-wider">Total</div>
+                        <div class="text-xs font-medium text-muted-foreground">Total</div>
                         <div class="font-mono text-lg font-bold text-accent mt-0.5">{{ formatJMD(summary.totalCredits) }}</div>
                     </div>
                 </div>
@@ -109,8 +108,8 @@ const deleteCredit = (credit) => {
             <div class="mb-8">
                 <Button v-if="!showForm" label="+ Add manual credit" text size="small" @click="showForm = true" />
 
-                <div v-if="showForm" class="border border-border p-6 mt-4">
-                    <h3 class="text-sm font-semibold uppercase tracking-wider mb-4">Manual Withholding Credit</h3>
+                <div v-if="showForm" class="bg-card rounded-2xl shadow-sm p-6 mt-4">
+                    <h3 class="text-sm font-semibold mb-4">Manual Withholding Credit</h3>
                     <form @submit.prevent="submit" class="space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
@@ -144,7 +143,7 @@ const deleteCredit = (credit) => {
             </div>
 
             <div v-else class="border-t border-border">
-                <div class="text-xs uppercase tracking-wider text-muted-foreground py-3 border-b border-border">
+                <div class="text-xs font-medium text-muted-foreground py-3 border-b border-border">
                     Manual Credits Ledger
                 </div>
                 <div
@@ -156,7 +155,7 @@ const deleteCredit = (credit) => {
                         <span class="text-sm font-medium text-foreground">{{ credit.description }}</span>
                         <div class="text-xs text-muted-foreground mt-0.5">
                             {{ credit.date_withheld?.split('T')[0] }}
-                            <span class="ml-2 font-mono uppercase tracking-wider" :class="credit.source_type === 'invoice' ? 'text-accent' : ''">
+                            <span class="ml-2 font-mono text-xs font-medium" :class="credit.source_type === 'invoice' ? 'text-accent' : ''">
                                 {{ credit.source_type }}
                             </span>
                         </div>

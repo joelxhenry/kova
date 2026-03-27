@@ -9,32 +9,32 @@ const { formatJMD } = useCurrencyFormatter();
 </script>
 
 <template>
-    <div class="border border-border p-6 md:p-8">
-        <h2 class="text-xs uppercase tracking-wider text-muted-foreground mb-6">Tax Summary</h2>
+    <div class="bg-card rounded-2xl shadow-sm p-6 md:p-8">
+        <h2 class="text-sm font-medium text-muted-foreground mb-6">Tax Summary</h2>
 
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">
             <div>
-                <div class="text-xs text-muted-foreground uppercase tracking-wider">Gross Income</div>
+                <div class="text-xs text-muted-foreground">Gross Income</div>
                 <div class="font-mono text-lg font-bold mt-1">{{ formatJMD(breakdown.grossIncome) }}</div>
             </div>
             <div>
-                <div class="text-xs text-muted-foreground uppercase tracking-wider">Expenses</div>
+                <div class="text-xs text-muted-foreground">Expenses</div>
                 <div class="font-mono text-lg font-bold mt-1">{{ formatJMD(breakdown.totalExpenses) }}</div>
             </div>
             <div>
-                <div class="text-xs text-muted-foreground uppercase tracking-wider">Net Income</div>
+                <div class="text-xs text-muted-foreground">Net Income</div>
                 <div class="font-mono text-lg font-bold mt-1">{{ formatJMD(breakdown.netIncome) }}</div>
             </div>
             <div>
-                <div class="text-xs text-muted-foreground uppercase tracking-wider">Net Payable</div>
+                <div class="text-xs text-muted-foreground">Net Payable</div>
                 <div class="font-mono text-lg font-bold mt-1" :class="breakdown.netTaxPayable < 0 ? 'text-accent' : ''">
                     {{ formatJMD(breakdown.netTaxPayable) }}
                 </div>
-                <div v-if="breakdown.netTaxPayable < 0" class="text-xs text-accent uppercase tracking-wider mt-0.5">Refund due</div>
+                <div v-if="breakdown.netTaxPayable < 0" class="text-xs text-accent mt-0.5">Refund due</div>
             </div>
         </div>
 
-        <div class="mt-6 pt-6 border-t border-border grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+        <div class="mt-6 pt-6 border-t border-border/50 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
             <div class="flex justify-between">
                 <span class="text-muted-foreground">Income Tax</span>
                 <span class="font-mono">{{ formatJMD(breakdown.totalIncomeTax) }}</span>
@@ -42,6 +42,10 @@ const { formatJMD } = useCurrencyFormatter();
             <div class="flex justify-between">
                 <span class="text-muted-foreground">NIS</span>
                 <span class="font-mono">{{ formatJMD(breakdown.nisContribution) }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-muted-foreground">NHT</span>
+                <span class="font-mono">{{ formatJMD(breakdown.nhtContribution) }}</span>
             </div>
             <div class="flex justify-between">
                 <span class="text-muted-foreground">Education Tax</span>

@@ -66,7 +66,6 @@ const formatCurrency = (key) => {
 
     <AuthenticatedLayout>
         <section class="py-12 md:py-20 max-w-2xl">
-            <div class="h-1 w-16 bg-accent mb-6" />
             <h1 class="text-3xl md:text-4xl font-bold tracking-tighter leading-none">
                 Tax Profile
             </h1>
@@ -76,7 +75,7 @@ const formatCurrency = (key) => {
 
             <div
                 v-if="page.props.flash.status"
-                class="mt-8 border border-accent/30 bg-accent/5 px-4 py-3 text-sm text-foreground"
+                class="mt-8 bg-accent/10 rounded-xl px-4 py-3 text-sm text-foreground"
             >
                 {{ page.props.flash.status }}
             </div>
@@ -109,7 +108,7 @@ const formatCurrency = (key) => {
                 </div>
 
                 <!-- GCT Registration -->
-                <div class="border-t border-border pt-8">
+                <div class="pt-6">
                     <div class="flex items-start gap-3">
                         <Checkbox v-model="form.is_gct_registered" :binary="true" />
                         <div>
@@ -128,7 +127,7 @@ const formatCurrency = (key) => {
                 </div>
 
                 <!-- Fiscal Year -->
-                <div class="border-t border-border pt-8">
+                <div class="pt-6">
                     <InputLabel value="Fiscal Year Start" />
                     <DatePicker v-model="form.fiscal_year_start" dateFormat="yy-mm-dd" showIcon fluid :invalid="!!form.errors.fiscal_year_start" />
                     <InputError :message="form.errors.fiscal_year_start" />
@@ -143,7 +142,7 @@ const formatCurrency = (key) => {
             </form>
 
             <!-- Statutory Rates (read-only) -->
-            <div class="mt-16 border-t border-border pt-8">
+            <div class="mt-16 pt-6">
                 <h2 class="text-lg font-semibold tracking-tight mb-1">Current Statutory Rates</h2>
                 <p class="text-xs text-muted-foreground mb-6">
                     These rates are set by the system administrator and apply to all calculations.

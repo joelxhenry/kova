@@ -21,6 +21,7 @@ class TaxCalculationService
         $taxFreeThreshold = StatutoryRate::getValue('tax_free_threshold');
         $bracket25Limit = StatutoryRate::getValue('tax_bracket_25_limit');
         $nisRate = StatutoryRate::getValue('nis_rate') / 100;
+        $nhtRate = StatutoryRate::getValue('nht_rate') / 100;
         $educationTaxRate = StatutoryRate::getValue('education_tax_rate') / 100;
 
         // Progressive tax calculation
@@ -38,9 +39,10 @@ class TaxCalculationService
 
         // Statutory contributions on net income
         $nisContribution = round($netIncome * $nisRate, 2);
+        $nhtContribution = round($netIncome * $nhtRate, 2);
         $educationTax = round($netIncome * $educationTaxRate, 2);
 
-        $totalTaxLiability = $totalIncomeTax + $nisContribution + $educationTax;
+        $totalTaxLiability = $totalIncomeTax + $nisContribution + $nhtContribution + $educationTax;
 
         $withholdingCredits = $this->getWithholdingCredits($user, $year);
 
@@ -57,6 +59,7 @@ class TaxCalculationService
             bracket30Tax: $bracket30Tax,
             totalIncomeTax: round($totalIncomeTax, 2),
             nisContribution: $nisContribution,
+            nhtContribution: $nhtContribution,
             educationTax: $educationTax,
             totalTaxLiability: round($totalTaxLiability, 2),
             withholdingCredits: round($withholdingCredits, 2),

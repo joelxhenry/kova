@@ -23,17 +23,16 @@ const deleteClient = (client) => {
         <section class="py-12 md:py-20">
             <div class="flex items-center justify-between mb-10">
                 <div>
-                    <div class="h-1 w-16 bg-accent mb-6" />
                     <h1 class="text-3xl md:text-4xl font-bold tracking-tighter leading-none">Clients</h1>
                 </div>
-                <Link href="/clients/create" class="inline-flex items-center gap-2 py-3 px-6 border border-foreground text-foreground font-semibold text-sm uppercase tracking-wider transition-all duration-150 hover:bg-foreground hover:text-background">
+                <Link href="/clients/create" class="inline-flex items-center gap-2 px-5 py-2.5 bg-accent/10 text-accent font-medium text-sm rounded-full hover:bg-accent/20 transition-all duration-200">
                     Add client
                 </Link>
             </div>
 
             <div
                 v-if="page.props.flash.status"
-                class="mb-6 border border-accent/30 bg-accent/5 px-4 py-3 text-sm text-foreground"
+                class="mb-6 bg-accent/10 rounded-xl px-4 py-3 text-sm text-foreground"
             >
                 {{ page.props.flash.status }}
             </div>
@@ -43,7 +42,7 @@ const deleteClient = (client) => {
                 <p class="mt-2 text-sm">Add your first client to start creating invoices.</p>
             </div>
 
-            <div v-else class="border-t border-border">
+            <div v-else class="rounded-2xl">
                 <div
                     v-for="client in clients"
                     :key="client.id"
@@ -51,7 +50,7 @@ const deleteClient = (client) => {
                 >
                     <div>
                         <span class="text-base font-medium text-foreground">{{ client.name }}</span>
-                        <span v-if="client.is_designated_entity" class="ml-2 text-xs font-mono uppercase tracking-wider text-accent">
+                        <span v-if="client.is_designated_entity" class="ml-2 text-xs font-medium text-muted-foreground">
                             Designated
                         </span>
                         <div class="mt-0.5 text-sm text-muted-foreground">

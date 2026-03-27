@@ -6,7 +6,7 @@
         <title inertia>Kova</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=inter-tight:400,500,600,700,800,900|playfair-display:400,700|jetbrains-mono:400,500" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|jetbrains-mono:400,500" rel="stylesheet" />
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @inertiaHead

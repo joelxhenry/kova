@@ -8,8 +8,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 test('statutory rates are seeded with defaults', function () {
-    expect(StatutoryRate::count())->toBeGreaterThanOrEqual(9);
+    expect(StatutoryRate::count())->toBeGreaterThanOrEqual(10);
     expect(StatutoryRate::where('key', 'nis_rate')->exists())->toBeTrue();
+    expect(StatutoryRate::where('key', 'nht_rate')->exists())->toBeTrue();
     expect(StatutoryRate::where('key', 'education_tax_rate')->exists())->toBeTrue();
     expect(StatutoryRate::where('key', 'gct_rate')->exists())->toBeTrue();
     expect(StatutoryRate::where('key', 'tax_free_threshold')->exists())->toBeTrue();

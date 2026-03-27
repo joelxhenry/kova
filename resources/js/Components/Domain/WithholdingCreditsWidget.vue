@@ -11,11 +11,11 @@ const { formatJMD } = useCurrencyFormatter();
 </script>
 
 <template>
-    <div class="border border-border p-6 md:p-8">
-        <h2 class="text-xs uppercase tracking-wider text-muted-foreground mb-2">Withholding Credits</h2>
+    <div class="bg-card rounded-2xl shadow-sm p-6">
+        <h2 class="text-sm font-medium text-muted-foreground mb-2">Withholding Credits</h2>
         <div class="font-mono text-2xl font-bold">{{ formatJMD(credits) }}</div>
         <p class="text-xs text-muted-foreground mt-1">Applied against {{ year }} tax liability</p>
-        <Link :href="`/withholding-credits?year=${year}`" class="inline-block mt-3 text-xs text-accent uppercase tracking-wider hover:underline">
+        <Link :href="`/withholding-credits?year=${year}`" class="inline-block mt-3 text-sm text-accent font-medium hover:underline">
             View ledger
         </Link>
     </div>

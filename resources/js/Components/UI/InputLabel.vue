@@ -5,7 +5,7 @@ defineProps({
 </script>
 
 <template>
-    <label class="block text-sm font-medium tracking-wider uppercase text-muted-foreground mb-2">
+    <label class="block text-sm font-medium text-foreground/70 mb-1.5">
         <slot>{{ value }}</slot>
     </label>
 </template>

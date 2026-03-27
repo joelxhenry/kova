@@ -16,20 +16,20 @@ const formatDeadline = (date) => {
 </script>
 
 <template>
-    <div class="border border-border p-6 md:p-8">
-        <h2 class="text-xs uppercase tracking-wider text-muted-foreground mb-6">Quarterly Estimated Payments</h2>
+    <div class="bg-card rounded-2xl shadow-sm p-6 md:p-8">
+        <h2 class="text-sm font-medium text-muted-foreground mb-6">Quarterly Estimated Payments</h2>
 
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div
                 v-for="(est, i) in estimates"
                 :key="est.quarter"
-                class="border border-border p-4 transition-colors duration-150"
-                :class="est.isPast ? 'bg-muted' : ''"
+                class="rounded-xl p-4 transition-all duration-200"
+                :class="est.isPast ? 'bg-muted/40' : 'bg-muted/20 border border-border'"
             >
                 <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-bold tracking-tight">{{ quarterLabels[i] }}</span>
-                    <span v-if="est.isPast" class="text-xs font-mono uppercase tracking-wider text-muted-foreground">Past</span>
-                    <span v-else class="text-xs font-mono uppercase tracking-wider text-accent">Due</span>
+                    <span class="text-sm font-bold">{{ quarterLabels[i] }}</span>
+                    <span v-if="est.isPast" class="text-xs text-muted-foreground">Past</span>
+                    <span v-else class="text-xs text-accent font-medium">Due</span>
                 </div>
                 <div class="font-mono text-base font-medium">{{ formatJMD(est.amountDue) }}</div>
                 <div class="text-xs text-muted-foreground mt-1">{{ formatDeadline(est.deadline) }}</div>

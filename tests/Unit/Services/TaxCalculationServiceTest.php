@@ -81,12 +81,14 @@ test('income below tax-free threshold pays no income tax', function () {
         ->and($result->bracket25Amount)->toBe(0.0)
         ->and($result->totalIncomeTax)->toBe(0.0);
 
-    // But NIS and education tax still apply
+    // But NIS, NHT, and education tax still apply
     // NIS: 1500000 * 0.03 = 45000
+    // NHT: 1500000 * 0.02 = 30000
     // Education: 1500000 * 0.0225 = 33750
     expect($result->nisContribution)->toBe(45000.0)
+        ->and($result->nhtContribution)->toBe(30000.0)
         ->and($result->educationTax)->toBe(33750.0)
-        ->and($result->totalTaxLiability)->toBe(78750.0);
+        ->and($result->totalTaxLiability)->toBe(108750.0);
 });
 
 test('income in 25% bracket calculates correctly', function () {

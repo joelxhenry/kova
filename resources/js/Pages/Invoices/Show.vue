@@ -32,7 +32,6 @@ const deleteInvoice = () => {
         <section class="py-12 md:py-20 max-w-3xl">
             <div class="flex items-center justify-between mb-10">
                 <div>
-                    <div class="h-1 w-16 bg-accent mb-6" />
                     <h1 class="text-3xl md:text-4xl font-bold tracking-tighter leading-none font-mono">
                         {{ invoice.invoice_number }}
                     </h1>
@@ -40,25 +39,25 @@ const deleteInvoice = () => {
                         {{ invoice.client?.name }}
                     </p>
                 </div>
-                <span class="text-xs uppercase tracking-widest font-mono border px-3 py-1" :class="statusColors[invoice.status]">
+                <span class="text-xs font-medium text-muted-foreground border px-3 py-1" :class="statusColors[invoice.status]">
                     {{ invoice.status }}
                 </span>
             </div>
 
             <div class="grid grid-cols-2 gap-6 mb-10 text-sm">
                 <div>
-                    <span class="text-muted-foreground uppercase tracking-wider text-xs">Issue Date</span>
+                    <span class="text-xs font-medium text-muted-foreground">Issue Date</span>
                     <div class="mt-1 font-mono">{{ invoice.issue_date?.split('T')[0] }}</div>
                 </div>
                 <div v-if="invoice.due_date">
-                    <span class="text-muted-foreground uppercase tracking-wider text-xs">Due Date</span>
+                    <span class="text-xs font-medium text-muted-foreground">Due Date</span>
                     <div class="mt-1 font-mono">{{ invoice.due_date?.split('T')[0] }}</div>
                 </div>
             </div>
 
             <!-- Line Items -->
-            <div class="border-t border-border">
-                <div class="grid grid-cols-12 py-3 text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
+            <div class="rounded-2xl">
+                <div class="grid grid-cols-12 py-3 text-xs font-medium text-muted-foreground border-b border-border">
                     <div class="col-span-6">Description</div>
                     <div class="col-span-2 text-right">Qty</div>
                     <div class="col-span-2 text-right">Unit Price</div>
@@ -105,7 +104,7 @@ const deleteInvoice = () => {
             </div>
 
             <div v-if="invoice.notes" class="mt-10 border-t border-border pt-6">
-                <span class="text-xs uppercase tracking-wider text-muted-foreground">Notes</span>
+                <span class="text-xs font-medium text-muted-foreground">Notes</span>
                 <p class="mt-2 text-sm text-muted-foreground">{{ invoice.notes }}</p>
             </div>
 

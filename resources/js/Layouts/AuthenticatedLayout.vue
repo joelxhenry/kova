@@ -27,11 +27,11 @@ const logout = () => {
 <template>
     <div class="min-h-screen bg-background text-foreground">
         <!-- Top navbar -->
-        <nav class="border-b border-border">
+        <nav class="bg-card shadow-sm">
             <div class="mx-auto max-w-7xl px-6 md:px-12 lg:px-16">
                 <div class="flex h-16 items-center justify-between">
-                    <div class="flex items-center gap-10">
-                        <Link href="/dashboard" class="text-xl font-bold tracking-tighter uppercase">
+                    <div class="flex items-center gap-8">
+                        <Link href="/dashboard" class="text-xl font-bold text-foreground">
                             Kova
                         </Link>
 
@@ -40,19 +40,15 @@ const logout = () => {
                                 v-for="item in navigation"
                                 :key="item.name"
                                 :href="item.href"
-                                class="relative px-4 py-2 text-sm uppercase tracking-wider transition-colors duration-150"
-                                :class="isActive(item.href) ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'"
+                                class="px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+                                :class="isActive(item.href) ? 'text-foreground bg-muted/50' : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'"
                             >
                                 {{ item.name }}
-                                <span
-                                    v-if="isActive(item.href)"
-                                    class="absolute bottom-0 left-4 right-4 h-0.5 bg-accent"
-                                />
                             </Link>
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-4">
                         <span class="text-sm text-muted-foreground hidden sm:block">
                             {{ user.name }}
                         </span>
@@ -63,20 +59,16 @@ const logout = () => {
         </nav>
 
         <!-- Mobile navigation -->
-        <div class="md:hidden border-b border-border">
+        <div class="md:hidden bg-card shadow-sm">
             <div class="flex items-center gap-1 px-6 py-2 overflow-x-auto">
                 <Link
                     v-for="item in navigation"
                     :key="item.name"
                     :href="item.href"
-                    class="relative px-3 py-2 text-xs uppercase tracking-wider whitespace-nowrap transition-colors duration-150"
-                    :class="isActive(item.href) ? 'text-foreground' : 'text-muted-foreground'"
+                    class="px-3 py-1.5 text-xs font-medium whitespace-nowrap rounded-full transition-all duration-200"
+                    :class="isActive(item.href) ? 'text-foreground bg-muted' : 'text-muted-foreground'"
                 >
                     {{ item.name }}
-                    <span
-                        v-if="isActive(item.href)"
-                        class="absolute bottom-0 left-3 right-3 h-0.5 bg-accent"
-                    />
                 </Link>
             </div>
         </div>

@@ -47,7 +47,6 @@ const submit = () => {
 
     <AuthenticatedLayout>
         <section class="py-12 md:py-20 max-w-2xl">
-            <div class="h-1 w-16 bg-accent mb-6" />
             <h1 class="text-3xl md:text-4xl font-bold tracking-tighter leading-none">Add Expense</h1>
 
             <form @submit.prevent="submit" class="mt-10 space-y-6">
@@ -82,7 +81,7 @@ const submit = () => {
                         type="file"
                         accept=".jpg,.jpeg,.png,.pdf"
                         @change="onFileChange"
-                        class="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:border file:border-border file:text-sm file:font-semibold file:bg-input file:text-foreground file:uppercase file:tracking-wider hover:file:bg-muted file:transition-colors file:duration-150 file:cursor-pointer"
+                        class="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:border file:border-border file:text-sm file:font-semibold file:bg-input file:text-foreground file:rounded-lg hover:file:bg-muted file:transition-colors file:duration-150 file:cursor-pointer"
                     />
                     <InputError :message="form.errors.receipt" />
                     <p class="mt-1.5 text-xs text-muted-foreground">JPG, PNG, or PDF. Max 5MB.</p>

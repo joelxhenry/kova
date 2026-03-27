@@ -57,17 +57,16 @@ const deleteExpense = (expense) => {
         <section class="py-12 md:py-20">
             <div class="flex items-center justify-between mb-10">
                 <div>
-                    <div class="h-1 w-16 bg-accent mb-6" />
                     <h1 class="text-3xl md:text-4xl font-bold tracking-tighter leading-none">Expenses</h1>
                 </div>
-                <Link href="/expenses/create" class="inline-flex items-center gap-2 py-3 px-6 border border-foreground text-foreground font-semibold text-sm uppercase tracking-wider transition-all duration-150 hover:bg-foreground hover:text-background">
+                <Link href="/expenses/create" class="inline-flex items-center gap-2 px-5 py-2.5 bg-accent/10 text-accent font-medium text-sm rounded-full hover:bg-accent/20 transition-all duration-200">
                     Add expense
                 </Link>
             </div>
 
             <div
                 v-if="page.props.flash.status"
-                class="mb-6 border border-accent/30 bg-accent/5 px-4 py-3 text-sm text-foreground"
+                class="mb-6 bg-accent/10 rounded-xl px-4 py-3 text-sm text-foreground"
             >
                 {{ page.props.flash.status }}
             </div>
@@ -80,16 +79,16 @@ const deleteExpense = (expense) => {
             </div>
 
             <!-- Totals by Category -->
-            <div v-if="Object.keys(totals).length > 0" class="mb-8 border border-border p-6">
-                <h2 class="text-xs uppercase tracking-wider text-muted-foreground mb-4">Totals by Category</h2>
+            <div v-if="Object.keys(totals).length > 0" class="mb-8 bg-card rounded-2xl shadow-sm p-6">
+                <h2 class="text-xs font-medium text-muted-foreground mb-4">Totals by Category</h2>
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                     <div v-for="(total, catId) in totals" :key="catId">
-                        <div class="text-xs text-muted-foreground uppercase tracking-wider">{{ getCategoryName(Number(catId)) }}</div>
+                        <div class="text-xs font-medium text-muted-foreground">{{ getCategoryName(Number(catId)) }}</div>
                         <div class="font-mono text-base font-medium mt-0.5">{{ formatJMD(total) }}</div>
                     </div>
                 </div>
-                <div class="mt-4 pt-4 border-t border-border flex justify-between items-center">
-                    <span class="text-sm font-medium uppercase tracking-wider">Total</span>
+                <div class="mt-4 pt-4 flex justify-between items-center">
+                    <span class="text-xs font-medium text-muted-foreground">Total</span>
                     <span class="font-mono text-lg font-bold">{{ formatJMD(grandTotal) }}</span>
                 </div>
             </div>
@@ -108,10 +107,10 @@ const deleteExpense = (expense) => {
                     <div>
                         <span class="text-base font-medium text-foreground">{{ expense.description }}</span>
                         <div class="mt-0.5 text-sm text-muted-foreground">
-                            <span class="font-mono text-xs uppercase tracking-wider">{{ expense.category?.name }}</span>
+                            <span class="text-xs font-medium text-muted-foreground">{{ expense.category?.name }}</span>
                             <span class="mx-2">·</span>
                             {{ expense.date_incurred?.split('T')[0] }}
-                            <span v-if="expense.receipt_path" class="ml-2 text-accent text-xs uppercase tracking-wider">Receipt</span>
+                            <span v-if="expense.receipt_path" class="ml-2 text-accent text-xs font-medium">Receipt</span>
                         </div>
                     </div>
                     <div class="flex items-center gap-4">

@@ -62,17 +62,16 @@ const statusColors = {
         <section class="py-12 md:py-20">
             <div class="flex items-center justify-between mb-10">
                 <div>
-                    <div class="h-1 w-16 bg-accent mb-6" />
                     <h1 class="text-3xl md:text-4xl font-bold tracking-tighter leading-none">Invoices</h1>
                 </div>
-                <Link href="/invoices/create" class="inline-flex items-center gap-2 py-3 px-6 border border-foreground text-foreground font-semibold text-sm uppercase tracking-wider transition-all duration-150 hover:bg-foreground hover:text-background">
+                <Link href="/invoices/create" class="inline-flex items-center gap-2 px-5 py-2.5 bg-accent/10 text-accent font-medium text-sm rounded-full hover:bg-accent/20 transition-all duration-200">
                     New invoice
                 </Link>
             </div>
 
             <div
                 v-if="page.props.flash.status"
-                class="mb-6 border border-accent/30 bg-accent/5 px-4 py-3 text-sm text-foreground"
+                class="mb-6 bg-accent/10 rounded-xl px-4 py-3 text-sm text-foreground"
             >
                 {{ page.props.flash.status }}
             </div>
@@ -90,7 +89,7 @@ const statusColors = {
                 <p class="mt-2 text-sm">Create your first invoice to start tracking income.</p>
             </div>
 
-            <div v-else class="border-t border-border">
+            <div v-else class="rounded-2xl">
                 <Link
                     v-for="inv in invoices.data"
                     :key="inv.id"
@@ -106,7 +105,7 @@ const statusColors = {
                     </div>
                     <div class="text-right">
                         <div class="font-mono text-base font-medium">{{ formatJMD(inv.total) }}</div>
-                        <div class="text-xs uppercase tracking-wider font-mono" :class="statusColors[inv.status]">
+                        <div class="text-xs font-medium text-muted-foreground" :class="statusColors[inv.status]">
                             {{ inv.status }}
                         </div>
                     </div>

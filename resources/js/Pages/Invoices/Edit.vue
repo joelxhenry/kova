@@ -76,7 +76,6 @@ const submit = () => {
 
     <AuthenticatedLayout>
         <section class="py-12 md:py-20 max-w-3xl">
-            <div class="h-1 w-16 bg-accent mb-6" />
             <h1 class="text-3xl md:text-4xl font-bold tracking-tighter leading-none">
                 Edit <span class="font-mono">{{ invoice.invoice_number }}</span>
             </h1>

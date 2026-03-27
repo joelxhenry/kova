@@ -9,10 +9,10 @@ const { formatJMD } = useCurrencyFormatter();
 </script>
 
 <template>
-    <div class="border border-border p-6 md:p-8">
+    <div class="bg-card rounded-2xl shadow-sm p-6">
         <div class="flex items-center justify-between mb-2">
-            <h2 class="text-xs uppercase tracking-wider text-muted-foreground">GCT Threshold</h2>
-            <span v-if="gctStatus.isRegistered" class="text-xs font-mono uppercase tracking-wider text-accent">Registered</span>
+            <h2 class="text-sm font-medium text-muted-foreground">GCT Threshold</h2>
+            <span v-if="gctStatus.isRegistered" class="text-xs font-medium text-accent bg-accent/10 px-2 py-0.5 rounded-full">Registered</span>
         </div>
 
         <div class="font-mono text-2xl font-bold">{{ gctStatus.percentage }}%</div>
@@ -21,10 +21,10 @@ const { formatJMD } = useCurrencyFormatter();
         </p>
 
         <!-- Progress bar -->
-        <div class="mt-4 h-2 bg-muted w-full">
+        <div class="mt-4 h-2 bg-muted rounded-full w-full overflow-hidden">
             <div
-                class="h-full transition-all duration-300"
-                :class="gctStatus.percentage >= 80 ? 'bg-accent' : 'bg-foreground'"
+                class="h-full rounded-full transition-all duration-300"
+                :class="gctStatus.percentage >= 80 ? 'bg-accent' : 'bg-muted-foreground'"
                 :style="{ width: Math.min(gctStatus.percentage, 100) + '%' }"
             ></div>
         </div>

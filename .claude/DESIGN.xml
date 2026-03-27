@@ -31,35 +31,34 @@ Always aim to:
 </role>
 
 <design-system>
-# Bold Typography Design System
+# Forest Ritual Design System
 
 ## Design Philosophy
 
-Bold Typography is **poster design translated to web**. Typography isn't decoration—it's the entire visual language. Every design decision serves the type: color exists to create contrast, space exists to frame letterforms, and interaction exists to reveal typographic details.
+The Forest Ritual design system is built around **organic warmth and approachability**. It moves away from stark, aggressive contrasts and embraces smooth transitions, rounded geometry, and a natural, grounded color palette. Every design decision aims to make the user feel welcomed, guided, and relaxed.
 
 ### Core Principles
 
-1. **Type as Hero**: Headlines aren't just labels—they're the visual centerpiece. A well-set 80pt headline is more compelling than any stock photo.
+1. **Organic Flow**: Harsh lines and sharp corners are replaced by generous border radii and soft, diffused shadows. Elements should feel like they naturally belong together.
 
-2. **Extreme Scale Contrast**: The gap between headline and body creates drama. Think 6:1 or greater ratio between H1 and paragraph text.
+2. **Harmonious Hierarchy**: Instead of extreme scale contrast, typography scales smoothly. The difference between headings and body text is clear but gentle, avoiding visual shouting.
 
-3. **Deliberate Negative Space**: White space isn't empty—it's the canvas that frames your type. Generous margins make headlines feel intentional, not cramped.
+3. **Comfortable Negative Space**: White space acts as breathing room. Margins and padding are generous, creating a spacious, uncluttered environment that reduces cognitive load.
 
-4. **Strict Hierarchy**: Every element has a clear rank. No two elements compete for attention. The eye flows naturally: headline → subhead → body → action.
+4. **Gentle Guidance**: Color and subtle elevation (shadows) do the heavy lifting for hierarchy. The eye is guided by warmth and softness: background → elevated card → vibrant action.
 
-5. **Restrained Palette**: White, black, and one accent. Maybe two. More colors dilute the typographic impact. Let the type shapes do the work.
+5. **Earthy Palette**: Deep forest greens anchor the design, pale sage provides soothing surfaces, and a vibrant warm orange acts as the energetic focal point for interactions.
 
 ### The Vibe
 
-**Confident. Editorial. Deliberate.** This isn't friendly SaaS—it's a design manifesto. The page feels like a high-end gallery exhibition or a pristine luxury magazine spread. Every word earns its place.
+**Welcoming. Natural. Polished.** This feels like a modern, human-centric application. It balances professional reliability with an inviting, tactile softness. 
 
 Visual signatures:
-- Massive headlines that make you scroll
-- Tight letter-spacing on display text (`-0.04em` to `-0.06em`)
-- Wide letter-spacing on labels (`0.1em` to `0.2em`)
-- Text that bleeds to edge on mobile
-- Underlines as the primary interactive affordance
-- No rounded corners—sharp edges match sharp typography
+- Softly rounded corners on all elements (cards, buttons, inputs)
+- Natural, earthy color palette with a vibrant pop of orange
+- Subtle, diffused drop shadows to create gentle depth
+- Smooth, eased animations that feel natural, not robotic
+- Friendly, highly readable typography with balanced letter-spacing
 
 ---
 
@@ -68,98 +67,75 @@ Visual signatures:
 ### Colors (Light Mode)
 
 ```
-background:        #FAFAFA    // Warm, crisp white (gallery wall)
-foreground:        #0A0A0A    // Near-black, absolute contrast
-muted:             #F0F0F0    // Subtle surface elevation/contrast
-mutedForeground:   #525252    // Secondary text (WCAG AA on light)
-accent:            #FF3D00    // Vermillion—warm, urgent, visible
-accentForeground:  #FAFAFA    // Light text on accent
-border:            #E5E5E5    // Barely-there dividers
-input:             #F0F0F0    // Input backgrounds
-card:              #FFFFFF    // Pure white for slight pop from bg
-cardForeground:    #0A0A0A
-ring:              #FF3D00    // Focus states match accent
+background:        #FAFAFA    // Warm, clean off-white
+foreground:        #172726    // Deep forest green-black (softer than pure black)
+muted:             #D3E2DE    // Pale icy sage (Color 4) - surface elevation
+mutedForeground:   #476664    // Muted teal/sage (Color 3) - secondary text
+accent:            #F95831    // Vibrant warm orange (Color 5) - primary actions
+accentForeground:  #FFFFFF    // White text on accent
+border:            #D3E2DE    // Pale sage for soft dividers
+input:             #FFFFFF    // White input backgrounds
+card:              #FFFFFF    // Pure white cards for gentle contrast against bg
+cardForeground:    #172726
+ring:              #476664    // Focus states use the mid-teal for elegant accessibility
+darkSurface:       #243F3D    // Dark teal (Color 2) - used for inverted footer/hero sections
 ```
 
-The accent is deliberate: vermillion/red-orange creates urgency and warmth against the crisp, stark background. It's used sparingly—headlines, key CTAs, and underlines only.
+The accent (`#F95831`) is deliberate: it provides a burst of warm, human energy against the cool, calming forest greens. It is used for primary buttons, active states, and key notifications.
 
 ### Typography
 
-**Primary Stack**: `"Inter Tight", "Inter", system-ui, sans-serif`
-- Inter Tight for headlines (tighter default spacing)
-- Clean, geometric, professional
-
-**Display Stack**: `"Playfair Display", Georgia, serif`
-- For pull quotes and testimonials only
-- Creates elegant contrast with sans headlines
-
-**Mono Stack**: `"JetBrains Mono", "Fira Code", monospace`
-- Labels, stats, technical details
+**Primary Stack**: `"Figtree", "Inter", system-ui, sans-serif`
+- Friendly, geometric, and highly readable. (If Figtree is unavailable, rounded sans-serifs like DM Sans or standard Inter work well).
 
 **Scale System**:
 ```
 xs:    0.75rem    // 12px - fine print
-sm:    0.875rem   // 14px - captions
-base:  1rem       // 16px - body
+sm:    0.875rem   // 14px - captions, secondary labels
+base:  1rem       // 16px - body text
 lg:    1.125rem   // 18px - lead paragraphs
 xl:    1.25rem    // 20px - subheads
 2xl:   1.5rem     // 24px - section intros
-3xl:   2rem       // 32px - H3
-4xl:   2.5rem     // 40px - H2
-5xl:   3.5rem     // 56px - H1 mobile
-6xl:   4.5rem     // 72px - H1 tablet
-7xl:   6rem       // 96px - H1 desktop
-8xl:   8rem       // 128px - Hero statement
-9xl:   10rem      // 160px - Decorative numbers
+3xl:   1.875rem   // 30px - H3
+4xl:   2.25rem    // 36px - H2
+5xl:   3rem       // 48px - H1 mobile
+6xl:   3.75rem    // 60px - H1 desktop
 ```
 
-**Tracking**:
+**Tracking (Letter-Spacing)**:
 ```
-tighter:  -0.06em   // Display headlines
-tight:    -0.04em   // Large headings
-normal:   -0.01em   // Body (slightly tightened)
-wide:     0.05em    // Small labels
-wider:    0.1em     // All-caps labels
-widest:   0.2em     // Sparse emphasis
+tight:    -0.02em   // Display headlines (gentle tightening, not extreme)
+normal:   0em       // Body text
+wide:     0.02em    // Small uppercase labels
 ```
 
 **Line Heights**:
 ```
-none:     1         // Single-line headlines
-tight:    1.1       // Multi-line headlines
-snug:     1.25      // Subheads
-normal:   1.6       // Body text
-relaxed:  1.75      // Long-form reading
+tight:    1.15      // Multi-line headlines
+snug:     1.3       // Subheads
+normal:   1.6       // Body text (optimized for reading comfort)
 ```
 
 ### Radius & Border
 
+Smooth, friendly geometry is key to this system.
 ```
-radius:   0px       // No border-radius anywhere. Sharp edges only.
-border:   1px       // Thin, precise dividers
-borderThick: 2px    // Accent underlines
+radius-sm: 8px      // Small UI elements (checkboxes, badges)
+radius-md: 12px     // Inputs, smaller buttons
+radius-lg: 16px     // Standard cards, primary buttons
+radius-xl: 24px     // Large feature containers, modals
+radius-full: 9999px // Pill-shaped buttons
 ```
 
 ### Shadows & Effects
 
-No traditional drop shadows. Depth comes from:
-- **Layered type**: Large muted text behind smaller stark text
-- **Underlines**: 2-3px accent lines under interactive elements
-- **Dividers**: Full-width horizontal rules
+Depth is created through soft, diffused shadows, mimicking natural ambient light.
 
 ```
-shadow: none
-textShadow: none
+shadow-sm: 0 2px 8px rgba(23, 39, 38, 0.04)   // Buttons, dropdowns
+shadow-md: 0 8px 24px rgba(23, 39, 38, 0.08)  // Hover states, cards
+shadow-lg: 0 16px 32px rgba(23, 39, 38, 0.12) // Modals, popovers
 ```
-
-### Textures & Patterns
-
-**Subtle noise grain texture**: A very subtle fractal noise pattern at 1.5% opacity overlays the entire page, adding tactile quality to the light background without looking muddy. Implemented via inline SVG data URL with feTurbulence filter.
-
-**Typographic layering for depth**:
-- Decorative oversized numbers/text behind content with low opacity (text-muted)
-- Text shadow technique: duplicate text offset 1-2px in border color creates depth without traditional shadows
-- Accent bars: thin horizontal accent-colored bars (h-1, w-16) as visual anchors on key elements
 
 ---
 
@@ -167,106 +143,61 @@ textShadow: none
 
 ### Buttons
 
-Primary button is **text-only with animated underline**:
+Primary button uses a ghost accent background — visible but not heavy:
 ```
-- No background fill
-- Text in accent color
-- Animated underline: absolute positioned span, h-0.5, bg-accent
-- Base state: scale-x-100, on hover: scale-x-110
-- Uppercase, wide tracking (tracking-wider: 0.1em)
-- Font-weight: 600 (semibold)
-- Padding: py-2/3/4 based on size (sm/default/lg), px-0
-- Gap between children: gap-2/2.5/3
-- Active state: translate-y-px for press feedback
-- Transition: 150ms all
+- Background: bg-accent/10 (translucent orange, ~10% opacity)
+- Text: text-accent (#F95831), font-medium
+- Radius: rounded-full (pill shape)
+- Padding: px-5 py-2.5 (standard)
+- No shadow at rest
+- Hover: bg-accent/20 (deepen to ~20% opacity)
+- Transition: all 200ms ease-out
+- DO NOT use solid bg-accent or fully transparent backgrounds for primary buttons
 ```
 
 Secondary/outline button:
 ```
-- Border: 1px solid foreground
-- Text: foreground
-- No background fill initially
-- On hover: bg-foreground, text becomes background color (full inversion)
-- Sharp corners (0px radius)
-- Padding: px-6 (needs horizontal padding unlike primary)
-- Uppercase, tracking-wider
+- Background: bg-white
+- Border: 1.5px solid border (#D3E2DE)
+- Text: text-foreground (#172726)
+- Radius: rounded-full
+- Hover: border-mutedForeground (#476664), bg-gray-50
+- Transition: all 250ms ease-out
 ```
 
 Ghost button:
 ```
-- No border, no fill
-- Text: mutedForeground
-- Padding: px-4
-- On hover: text becomes foreground
-- Underline appears via scale-x-0 to scale-x-100 transition
-- Underline is h-px (thinner than primary)
-```
-
-All buttons:
-```
-- Focus-visible: 2px ring in accent, 2px offset
-- Disabled: pointer-events-none, opacity-50
-- Inline-flex for proper alignment
-- Whitespace-nowrap to prevent wrapping
+- Background: transparent
+- Text: text-mutedForeground (#476664)
+- Radius: rounded-lg
+- Hover: bg-muted (#D3E2DE) / 30% opacity, text-foreground
 ```
 
 ### Cards/Containers
 
-**Minimal card usage.** Content is primarily separated by:
-- Generous section padding (py-20 to py-40)
-- Full-width horizontal borders (border-t/border-b)
-- Typography scale changes
-- Background color alternation (background ↔ muted)
-
-When a "card" is necessary (pricing, testimonials):
+Cards look like soft sheets of paper resting gently on the background.
 ```
-- Border: 1px solid border (controlled by `bordered` prop)
-- Background: transparent (bg-transparent) or card (bg-white)
-- No radius (0px, sharp corners)
-- No shadow
+- Background: bg-card (#FFFFFF)
+- Border: 1px solid border (#D3E2DE) OR border-none with shadow
+- Radius: rounded-2xl (16px) or rounded-3xl (24px)
+- Shadow: shadow-sm (default)
 - Padding: p-6 (mobile) to p-8 (desktop)
-- Transition on hover: border-foreground color (150ms)
-```
-
-Highlighted cards (featured pricing tier):
-```
-- Border: 2px solid accent (overrides default 1px)
-- Small accent badge above content (bg-accent, px-3 py-1, text-accentForeground, uppercase mono text)
-- No background change, border is the differentiator
-```
-
-Special depth technique (Product Detail card):
-```
-- Add accent top border: absolute h-1 w-16 bg-accent
-- Layered text: duplicate text element offset with -z-10 and border color
-- Creates subtle dimensionality without shadows
+- Hover (if interactive): shadow-md, transform -translate-y-1
+- Transition: all 300ms ease-out
 ```
 
 ### Inputs
 
 ```
-- Background: input color (#F0F0F0)
-- Border: 1px solid border
-- Border-radius: 0px (rounded-none, sharp corners)
-- Height: h-12 (mobile) to h-14 (desktop), responsive
-- Font-size: text-base (16px, prevents zoom on iOS)
-- Padding: px-4
-- Text color: foreground
-- Placeholder: mutedForeground
-- Focus: border-accent, no ring, no glow, outline-none
-- Transition: colors 150ms
-- Disabled: cursor-not-allowed, opacity-50
-- File input: special styling for file upload elements
-```
-
-Special case (Final CTA inverted section):
-```
-- Background: foreground (#0A0A0A)
-- Text: background (#FAFAFA)
-- Input Background: transparent 
-- Border: border-background/20 (semi-transparent dark)
-- Placeholder: background/50 (semi-transparent)
-- Focus border: accent 
+- Background: bg-white
+- Border: 1px solid border (#D3E2DE)
+- Radius: rounded-xl (12px)
+- Padding: px-4 py-3
+- Text: text-foreground (#172726)
+- Placeholder: text-mutedForeground/60
+- Focus: border-mutedForeground (#476664), ring-2 ring-muted (#D3E2DE), outline-none
+- Shadow: inset 0 1px 2px rgba(0,0,0,0.02)
+- Transition: all 200ms ease
 ```
 
 ---
@@ -281,62 +212,27 @@ padding: 24px mobile, 48px tablet, 64px desktop
 
 ### Section Spacing
 ```
-py-20 (80px) - tight sections
-py-28 (112px) - standard sections
-py-40 (160px) - hero/CTA sections
+py-16 (64px) - tight sections
+py-24 (96px) - standard sections
+py-32 (128px) - hero/CTA sections
 ```
 
 ### Grid Philosophy
-- **Asymmetric grids**: 7/5 or 8/4 splits instead of 6/6
-- **Staggered alignment**: Elements don't always align top
-- **Text columns**: max-w-2xl for readability, but headlines can span full width
+- **Balanced grids**: 6/6 or 4/4/4 splits for harmonious, predictable layouts.
+- **Centered alignment**: Frequently used for headers and heroes to feel grounded and stable.
 
 ---
 
 ## Effects & Animation
 
 ### Motion Philosophy
-**Fast and decisive.** No bouncy easing. No playful delays. Movement is confident and direct.
+**Smooth, organic, and natural.** Movement should feel like objects shifting in the real world—accelerating gently and decelerating softly.
 
 ```
-duration: 150ms - micro-interactions (buttons, underlines)
-duration: 200ms - standard transitions (FAQ accordion, colors)
-duration: 500ms - image hover effects
-easing: cubic-bezier(0.25, 0, 0, 1) - fast-out, crisp stop
+duration: 200ms - micro-interactions (colors, borders)
+duration: 300ms - spatial transitions (hover lifts, accordions)
+easing: cubic-bezier(0.4, 0, 0.2, 1) - standard smooth ease-in-out
 ```
-
-### Specific Effects
-
-**Link/Button interactions**:
-- Underline scale animation (scale-x-0 to scale-x-100 on hover for ghost, scale-x-100 to scale-x-110 for primary)
-- Text color transition (150ms)
-- Active press feedback: translate-y-px for tactile response
-- No scale, no glow, no bounce
-
-**Card hover**:
-- Border color darkens (border-foreground token)
-- Background color change on feature cards (transparent → card)
-- No lift, no shadow, no scale
-
-**Image hover** (blog posts):
-- Scale transform (scale-105) over 500ms
-- Image only, not container
-- Overflow hidden on container
-
-**Page scroll animations** (Framer Motion):
-- Fade in + slide up (opacity 0→1, translateY 20px→0) over 500ms
-- Stagger children by 80ms with 100ms delay before first
-- Viewport trigger: once only, 15% threshold, -50px margin
-- Container stagger, individual fadeInUp variants
-
-**FAQ accordion**:
-- Height auto-animate with opacity fade
-- 200ms duration with ease-out
-- Icons swap (Plus ↔ Minus) instantly
-
-**Step number hover** (How It Works):
-- Color transition from border color to accent (fast, 150ms)
-- No movement, pure color change
 
 ---
 
@@ -344,88 +240,29 @@ easing: cubic-bezier(0.25, 0, 0, 1) - fast-out, crisp stop
 
 From `lucide-react`:
 ```
-- Stroke width: 1.5px (thinner than default 2px for elegance)
+- Stroke width: 2px (standard, friendly weight)
 - Sizes by context:
-  - 16px: inline with small text (arrows in buttons)
-  - 18px: FAQ toggle, footer social icons
-  - 20px: standard navbar icons
-  - 24px: feature section icons (28px on desktop)
-- Color: currentColor (inherits from parent text color)
-- Accent icons: explicitly text-[var(--accent)] class
-- Style: Use sparingly—text labels are preferred
-- Positioning: icons sit left of text in buttons, above text in feature cards
-- Never use filled icons, always outline/stroke style
+  - 18px: inline with buttons
+  - 24px: standard UI icons
+  - 32px: feature section icons inside soft circular containers
+- Container: Feature icons often sit inside a w-12 h-12 rounded-full bg-muted (#D3E2DE) container, with text-mutedForeground (#476664)
+- Accent icons: explicitly text-accent (#F95831) when drawing attention
 ```
-
-Icon mapping by section:
-```
-Features: Users, Zap, BarChart3, Link, Shield, Headphones, Globe (from data.icon field)
-Social: Twitter, Linkedin, Github
-UI controls: Plus, Minus (FAQ), ArrowRight (CTAs), Check (pricing features)
-```
-
----
-
-## Responsive Strategy
-
-**Mobile-first typography scaling**:
-- Headlines: text-3xl (mobile) → text-4xl/5xl (tablet) → text-6xl/7xl/8xl (desktop)
-- Hero headline specifically: text-4xl → text-5xl → text-6xl → text-7xl → text-8xl (progressive enhancement)
-- Body text: text-base (16px) throughout with md:text-lg on key sections
-- Maintain hierarchy ratio at all sizes
-- Icon sizes: 16px-18px inline, 24px standard, scaling down on mobile
-
-**Layout shifts**:
-- Stats: 1 column → 2 columns (sm) → 4 columns (md)
-- Features: 1 column → 2 columns (sm) → 3 columns (lg)
-- Blog/Testimonials/Pricing: 1 column → 2 columns (sm) → 3 columns (lg)
-- How It Works: stacked → 3-column grid with number|title|description (lg)
-- Benefits: stacked → 2-column side-by-side (lg)
-- Footer: 2 columns → 4 columns (md) → 5 columns (lg)
-- Asymmetric grids collapse to stacked on mobile
-
-**Spacing adjustments**:
-- Section padding: py-20 (mobile) → py-28 (md) → py-32/40 (lg)
-- Container padding: px-6 (mobile) → px-12 (md) → px-16 (lg)
-- Gap spacing: gap-4 → gap-6 → gap-8 progression
-- Internal card padding: p-6 (mobile) → p-8 (md+)
-
-**Mobile-specific fixes**:
-- Hide decorative overflow elements (large "01", "ACME" text) on mobile to prevent horizontal scroll
-- Reduce decorative number sizes to prevent layout breaking
-- Ensure touch targets are minimum 44x44px (buttons h-12 on mobile, h-14 on desktop)
-- Stack email input + button on mobile, side-by-side on tablet+
-- Adjust navigation gaps to be tighter on smaller screens
-
-**Typography integrity**:
-- Headlines scale smoothly with responsive classes (never one size for all)
-- Keep letter-spacing consistent across breakpoints
-- Ensure underlines remain visible and touchable (2px minimum)
-- Line-height increases slightly for smaller screens for readability
-- Max-width constraints on body text prevent overly long lines (max-w-xl, max-w-2xl, max-w-3xl)
 
 ---
 
 ## Accessibility
 
 **Contrast**:
-- foreground (#0A0A0A) on background (#FAFAFA) = 18.1:1 ✓ (AAA)
-- mutedForeground (#525252) on background = 7.1:1 ✓ (AAA)
-- accent (#FF3D00) on background = 3.9:1 ✓ (AA for large text, must be 18pt+ or 14pt+ bold)
+- foreground (#172726) on background (#FAFAFA) = 13.5:1 ✓ (AAA)
+- mutedForeground (#476664) on background = 5.2:1 ✓ (AA)
+- accent (#F95831) on white = 3.1:1 (Suitable for large text or bold buttons, but ensure icons/text *on* the accent color are white for AAA contrast).
 
 **Focus states**:
-- 2px accent outline
-- 2px offset from element
-- No glow, no fill change
-- Visible on all interactive elements
-
-**Typography**:
-- Body text minimum 16px
-- Line-height minimum 1.5 for body
-- No thin weights below 400
+- 2px focus rings using the highly visible `#476664` or `#D3E2DE`.
+- Visible on all interactive elements.
 
 **Interaction**:
-- Touch targets minimum 44x44px
-- Underlines are 2px+ for visibility
-- Color is never the only indicator
+- Minimum 44x44px touch targets.
+- Soft visual cues (shadows lifting, color deepening) assist users in recognizing interactive elements without relying solely on harsh outlines.
 </design-system>

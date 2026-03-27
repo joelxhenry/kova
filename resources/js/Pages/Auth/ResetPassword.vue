@@ -31,7 +31,6 @@ const submit = () => {
     <GuestLayout>
         <div>
             <div class="mb-10">
-                <div class="h-1 w-16 bg-accent mb-6" />
                 <h1 class="text-3xl md:text-4xl font-bold tracking-tighter leading-none">
                     New password
                 </h1>
@@ -40,29 +39,31 @@ const submit = () => {
                 </p>
             </div>
 
-            <form @submit.prevent="submit" class="space-y-6">
-                <div>
-                    <InputLabel value="Email" />
-                    <InputText v-model="form.email" type="email" autocomplete="username" fluid :invalid="!!form.errors.email" />
-                    <InputError :message="form.errors.email" />
-                </div>
+            <div class="bg-card rounded-2xl shadow-sm p-8">
+                <form @submit.prevent="submit" class="space-y-6">
+                    <div>
+                        <InputLabel value="Email" />
+                        <InputText v-model="form.email" type="email" autocomplete="username" fluid :invalid="!!form.errors.email" />
+                        <InputError :message="form.errors.email" />
+                    </div>
 
-                <div>
-                    <InputLabel value="Password" />
-                    <InputText v-model="form.password" type="password" autocomplete="new-password" autofocus fluid :invalid="!!form.errors.password" />
-                    <InputError :message="form.errors.password" />
-                </div>
+                    <div>
+                        <InputLabel value="Password" />
+                        <InputText v-model="form.password" type="password" autocomplete="new-password" autofocus fluid :invalid="!!form.errors.password" />
+                        <InputError :message="form.errors.password" />
+                    </div>
 
-                <div>
-                    <InputLabel value="Confirm Password" />
-                    <InputText v-model="form.password_confirmation" type="password" autocomplete="new-password" fluid :invalid="!!form.errors.password_confirmation" />
-                    <InputError :message="form.errors.password_confirmation" />
-                </div>
+                    <div>
+                        <InputLabel value="Confirm Password" />
+                        <InputText v-model="form.password_confirmation" type="password" autocomplete="new-password" fluid :invalid="!!form.errors.password_confirmation" />
+                        <InputError :message="form.errors.password_confirmation" />
+                    </div>
 
-                <div class="pt-2">
-                    <Button type="submit" label="Reset password" :loading="form.processing" text />
-                </div>
-            </form>
+                    <div class="pt-2">
+                        <Button type="submit" label="Reset password" :loading="form.processing" text />
+                    </div>
+                </form>
+            </div>
         </div>
     </GuestLayout>
 </template>
