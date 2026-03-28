@@ -72,13 +72,39 @@
     }
 }
 
-/* ── Mobile dialogs — inset from edges ── */
+/* ── Mobile dialogs & toast — inset from edges ── */
 @media (max-width: 640px) {
     .p-dialog {
-        width: calc(100% - 2rem) !important;
-        max-width: calc(100% - 2rem) !important;
+        width: calc(100vw - 2rem) !important;
+        max-width: calc(100vw - 2rem) !important;
         margin: 1rem !important;
     }
+
+    .p-toast.p-component {
+        width: calc(100vw - 2rem) !important;
+        max-width: calc(100vw - 2rem) !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+    }
+}
+
+/* ── Select dropdown panel ── */
+.p-select-overlay {
+    max-width: calc(100vw - 2rem) !important;
+    min-width: 0 !important;
+    width: auto !important;
+}
+
+.p-select-option {
+    font-size: 14px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+}
+
+/* ── Prevent page-level horizontal overflow ── */
+html, body {
+    overflow-x: hidden;
 }
 
 /* ── NProgress bar ── */

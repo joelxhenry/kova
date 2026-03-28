@@ -73,14 +73,10 @@ const deleteClient = () => {
             </div>
 
             <!-- Financial Summary -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
+            <div class="grid grid-cols-2 gap-3 md:gap-4 mb-6 md:mb-8">
                 <div class="bg-card rounded-2xl shadow-sm p-4 md:p-5">
                     <div class="text-xs text-muted-foreground">Total Invoiced</div>
                     <div class="text-lg md:text-xl font-bold tabular-nums mt-1">{{ formatJMD(summary.totalInvoiced) }}</div>
-                </div>
-                <div class="bg-card rounded-2xl shadow-sm p-4 md:p-5">
-                    <div class="text-xs text-muted-foreground">Total Paid</div>
-                    <div class="text-lg md:text-xl font-bold tabular-nums mt-1">{{ formatJMD(summary.totalPaid) }}</div>
                 </div>
                 <div class="bg-card rounded-2xl shadow-sm p-4 md:p-5">
                     <div class="text-xs text-muted-foreground">Balance Due</div>

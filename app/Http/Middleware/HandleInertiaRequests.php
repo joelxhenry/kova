@@ -52,6 +52,14 @@ class HandleInertiaRequests extends Middleware
             ],
             'notifications' => [
                 'unreadCount' => $request->user()?->unreadNotifications()->count() ?? 0,
+                'recent' => $request->user()
+                    ? $request->user()->notifications()->orderByDesc('created_at')->limit(5)->get()->map(fn ($n) => [
+                        'id' => $n->id,
+                        'message' => $n->data['message'] ?? '',
+                        'read_at' => $n->read_at,
+                        'created_at' => $n->created_at->diffForHumans(),
+                    ])
+                    : [],
             ],
             'settings' => $request->user()?->settings ? [
                 'business_name' => $request->user()->settings->get('business_name'),

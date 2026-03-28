@@ -121,33 +121,34 @@ const clientAddress = [
 
     <AuthenticatedLayout>
         <section class="py-8 md:py-16 lg:py-20 max-w-4xl">
-            <!-- Back + Status -->
-            <div class="flex items-center justify-between mb-4">
-                <Link href="/invoices" class="text-sm text-muted-foreground hover:text-foreground transition-colors duration-150">
-                    &larr; <span class="hidden sm:inline">Invoices</span>
+            <!-- Back + Status + Delete -->
+            <div class="flex items-center justify-between mb-4 min-w-0">
+                <Link href="/invoices" class="text-sm text-muted-foreground hover:text-foreground transition-colors duration-150 shrink-0">
+                    &larr; Back
                 </Link>
-                <Select
-                    v-model="selectedStatus"
-                    :options="statusOptions"
-                    optionLabel="label"
-                    optionValue="value"
-                    @change="updateStatus"
-                    class="w-28 sm:w-36"
-                />
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <Select
+                        v-model="selectedStatus"
+                        :options="statusOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        @change="updateStatus"
+                        class="w-28"
+                    />
+                    <Button icon="pi pi-trash" text severity="danger" size="small" @click="deleteInvoice" v-tooltip.bottom="'Delete'" />
+                </div>
             </div>
 
             <!-- Actions -->
-            <div class="flex items-center gap-1 mb-6 md:mb-8">
-                <Button icon="pi pi-send" label="Send" text size="small" @click="openSendDialog" />
+            <div class="flex flex-wrap items-center gap-2 mb-6 md:mb-8">
+                <Button icon="pi pi-send" label="Send" size="small" @click="openSendDialog" />
                 <a :href="`/invoices/${invoice.id}/pdf`" target="_blank">
-                    <Button icon="pi pi-file-pdf" label="PDF" text size="small" />
+                    <Button icon="pi pi-file-pdf" label="PDF" outlined severity="secondary" size="small" />
                 </a>
-                <Button icon="pi pi-copy" label="Duplicate" text size="small" @click="duplicateInvoice" />
+                <Button icon="pi pi-copy" label="Duplicate" outlined severity="secondary" size="small" @click="duplicateInvoice" />
                 <Link :href="`/invoices/${invoice.id}/edit`">
-                    <Button icon="pi pi-pencil" label="Edit" text size="small" />
+                    <Button icon="pi pi-pencil" label="Edit" text severity="secondary" size="small" />
                 </Link>
-                <div class="flex-1"></div>
-                <Button icon="pi pi-trash" text severity="danger" size="small" @click="deleteInvoice" v-tooltip.bottom="'Delete'" />
             </div>
 
             <!-- Invoice Document -->
