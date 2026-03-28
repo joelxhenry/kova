@@ -58,16 +58,15 @@ test('admin dashboard shows recent signups', function () {
         );
 });
 
-test('admin dashboard includes signup chart and invoice stats', function () {
+test('admin dashboard includes user stats', function () {
     $admin = User::factory()->create(['is_admin' => true]);
 
     $this->actingAs($admin)
         ->get('/admin')
         ->assertInertia(fn ($page) => $page
-            ->has('signupChart', 12)
-            ->has('year')
-            ->has('stats.invoiceCount')
-            ->has('stats.totalInvoiced')
+            ->has('stats.totalUsers')
+            ->has('stats.activeUsers')
+            ->has('stats.suspendedUsers')
         );
 });
 

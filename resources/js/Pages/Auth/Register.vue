@@ -32,7 +32,7 @@ const submit = () => {
 
         <div>
             <div class="mb-10">
-                <h1 class="text-3xl md:text-4xl font-bold tracking-tighter leading-none">
+                <h1 class="text-xl md:text-2xl font-bold tracking-tighter leading-none">
                     Create account
                 </h1>
                 <p class="mt-3 text-muted-foreground text-base">

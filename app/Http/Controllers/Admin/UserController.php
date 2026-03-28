@@ -42,12 +42,11 @@ class UserController extends Controller
 
     public function show(User $user): Response
     {
-        $user->load('taxProfile', 'settings');
+        $user->load('settings');
 
         $stats = [
             'clientCount' => $user->clients()->count(),
             'invoiceCount' => $user->invoices()->count(),
-            'totalInvoiced' => (float) $user->invoices()->where('status', 'paid')->sum('total'),
         ];
 
         return Inertia::render('Admin/Users/Show', [
@@ -58,11 +57,6 @@ class UserController extends Controller
                 'is_admin' => $user->is_admin,
                 'suspended_at' => $user->suspended_at,
                 'created_at' => $user->created_at,
-                'tax_profile' => $user->taxProfile ? [
-                    'trn' => $user->taxProfile->trn,
-                    'business_type' => $user->taxProfile->business_type,
-                    'is_gct_registered' => $user->taxProfile->is_gct_registered,
-                ] : null,
                 'business_name' => $user->settings?->get('business_name'),
             ],
             'stats' => $stats,

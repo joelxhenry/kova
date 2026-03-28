@@ -60,7 +60,7 @@ const submit = () => {
 
     <AuthenticatedLayout>
         <section class="py-12 md:py-20 max-w-3xl">
-            <h1 class="text-3xl md:text-4xl font-bold tracking-tighter leading-none">New Invoice</h1>
+            <h1 class="text-xl md:text-2xl font-bold tracking-tighter leading-none">New Invoice</h1>
 
             <form @submit.prevent="submit" class="mt-10 space-y-8">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">

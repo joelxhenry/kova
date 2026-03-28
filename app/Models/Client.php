@@ -32,6 +32,7 @@ class Client extends Model
     protected function casts(): array
     {
         return [
+            'trn' => 'encrypted',
             'is_designated_entity' => 'boolean',
         ];
     }

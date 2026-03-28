@@ -77,7 +77,7 @@ const submit = () => {
 
     <AuthenticatedLayout>
         <section class="py-12 md:py-20 max-w-3xl">
-            <h1 class="text-3xl md:text-4xl font-bold tracking-tighter leading-none">
+            <h1 class="text-xl md:text-2xl font-bold tracking-tighter leading-none">
                 Edit <span class="tabular-nums">{{ invoice.invoice_number }}</span>
             </h1>
 

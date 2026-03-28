@@ -15,14 +15,11 @@ const unreadCount = computed(() => page.props.notifications?.unreadCount ?? 0);
 const recentNotifications = computed(() => page.props.notifications?.recent ?? []);
 const { canInstall, showIosPrompt, showBanner, install, dismiss } = usePwaInstall();
 
-const subscription = computed(() => page.props.subscription);
-const showTrialBanner = computed(() => {
-    return subscription.value?.onTrial && subscription.value?.trialDaysLeft !== null && subscription.value?.trialDaysLeft >= 0;
-});
-
 const navigation = [
     { name: 'Clients', href: '/clients' },
     { name: 'Invoices', href: '/invoices' },
+    { name: 'Expenses', href: '/expenses' },
+    { name: 'Reports', href: '/reports' },
     { name: 'Settings', href: '/settings' },
 ];
 
@@ -83,7 +80,7 @@ watch(() => page.props.flash.status, (message) => {
             leave-to-class="opacity-0 -translate-y-full"
         >
             <div v-if="showBanner" class="bg-dark-surface text-white">
-                <div class="mx-auto max-w-7xl px-4 sm:px-6 md:px-12 lg:px-16 py-3">
+                <div class="mx-auto max-w-7xl px-3 sm:px-6 md:px-12 lg:px-16 py-3">
                     <div v-if="canInstall" class="flex items-center gap-3">
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-medium">Install Kova</p>
@@ -111,22 +108,9 @@ watch(() => page.props.flash.status, (message) => {
             </div>
         </Transition>
 
-        <!-- Trial Banner -->
-        <div v-if="showTrialBanner" class="bg-accent/10 border-b border-accent/20">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 md:px-12 lg:px-16 py-2 flex items-center justify-between gap-3">
-                <p class="text-sm text-foreground">
-                    <span class="font-medium">{{ subscription.trialDaysLeft }}</span>
-                    {{ subscription.trialDaysLeft === 1 ? 'day' : 'days' }} left on your free trial
-                </p>
-                <Link href="/billing/pricing" class="text-sm text-accent font-medium hover:underline shrink-0">
-                    Subscribe now
-                </Link>
-            </div>
-        </div>
-
         <!-- Top navbar -->
         <nav class="bg-card shadow-sm">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 md:px-12 lg:px-16">
+            <div class="mx-auto max-w-7xl px-3 sm:px-6 md:px-12 lg:px-16">
                 <div class="flex h-16 items-center justify-between">
                     <div class="flex items-center gap-6 md:gap-8">
                         <Link href="/dashboard" class="text-xl font-bold text-foreground">
@@ -189,7 +173,7 @@ watch(() => page.props.flash.status, (message) => {
         </div>
 
         <!-- Page content -->
-        <main class="mx-auto max-w-7xl px-4 sm:px-6 md:px-12 lg:px-16">
+        <main class="mx-auto max-w-7xl px-3 sm:px-6 md:px-12 lg:px-16">
             <slot />
         </main>
 
@@ -258,14 +242,6 @@ watch(() => page.props.flash.status, (message) => {
                     <i class="pi pi-home text-muted-foreground"></i>
                     Dashboard
                 </Link>
-                <Link
-                    href="/billing"
-                    class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg hover:bg-muted/30 transition-colors"
-                >
-                    <i class="pi pi-credit-card text-muted-foreground"></i>
-                    Billing
-                </Link>
-
                 <div class="border-t border-border mt-1 pt-1">
                     <button
                         @click="logout"

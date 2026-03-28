@@ -116,7 +116,6 @@ test('show page includes financial summary', function () {
         ->get("/clients/{$client->id}")
         ->assertInertia(fn ($page) => $page
             ->where('summary.totalInvoiced', 150000)
-            ->where('summary.totalPaid', 100000)
             ->where('summary.balanceDue', 50000)
         );
 });

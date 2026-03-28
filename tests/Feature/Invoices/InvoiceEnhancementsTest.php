@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Models\Client;
 use App\Models\ClientContact;
 use App\Models\Invoice;
-use App\Models\TaxProfile;
 use App\Models\User;
 use App\Models\UserSetting;
 use App\Mail\InvoiceEmail;
@@ -17,16 +16,10 @@ uses(RefreshDatabase::class);
 function createTestUserWithClient(array $profileOverrides = [], array $clientOverrides = []): array
 {
     $user = User::factory()->create();
-    TaxProfile::create([
-        'user_id' => $user->id,
-        'business_type' => 'specified_services',
-        ...$profileOverrides,
-    ]);
     $client = Client::create([
         'user_id' => $user->id,
         'name' => 'Test Client',
         'email' => 'client@test.com',
-        'is_designated_entity' => false,
         ...$clientOverrides,
     ]);
 
@@ -141,7 +134,6 @@ test('user can update invoice status', function () {
         'issue_date' => '2025-06-01',
         'subtotal' => 10000,
         'total' => 10000,
-        'net_receivable' => 10000,
         'status' => 'draft',
     ]);
 
@@ -162,7 +154,6 @@ test('status update rejects invalid status', function () {
         'issue_date' => '2025-06-01',
         'subtotal' => 10000,
         'total' => 10000,
-        'net_receivable' => 10000,
         'status' => 'draft',
     ]);
 
@@ -182,7 +173,6 @@ test('user cannot update another users invoice status', function () {
         'issue_date' => '2025-06-01',
         'subtotal' => 10000,
         'total' => 10000,
-        'net_receivable' => 10000,
         'status' => 'draft',
     ]);
 
@@ -234,7 +224,6 @@ test('user cannot duplicate another users invoice', function () {
         'issue_date' => '2025-06-01',
         'subtotal' => 1000,
         'total' => 1000,
-        'net_receivable' => 1000,
     ]);
 
     $this->actingAs($user)
@@ -256,7 +245,6 @@ test('user can send invoice by email', function () {
         'issue_date' => '2025-06-01',
         'subtotal' => 10000,
         'total' => 10000,
-        'net_receivable' => 10000,
         'status' => 'draft',
     ]);
     $invoice->items()->create([
@@ -293,7 +281,6 @@ test('send does not change status if already sent', function () {
         'issue_date' => '2025-06-01',
         'subtotal' => 10000,
         'total' => 10000,
-        'net_receivable' => 10000,
         'status' => 'paid',
     ]);
     $invoice->items()->create([
@@ -329,7 +316,6 @@ test('send email includes client contacts', function () {
         'issue_date' => '2025-06-01',
         'subtotal' => 5000,
         'total' => 5000,
-        'net_receivable' => 5000,
         'status' => 'draft',
     ]);
     $invoice->items()->create([
@@ -361,7 +347,6 @@ test('send requires at least one recipient', function () {
         'issue_date' => '2025-06-01',
         'subtotal' => 5000,
         'total' => 5000,
-        'net_receivable' => 5000,
         'status' => 'draft',
     ]);
     $invoice->items()->create([
@@ -391,7 +376,6 @@ test('send validates recipient emails', function () {
         'issue_date' => '2025-06-01',
         'subtotal' => 5000,
         'total' => 5000,
-        'net_receivable' => 5000,
         'status' => 'draft',
     ]);
     $invoice->items()->create([
@@ -429,7 +413,6 @@ test('show page includes business settings', function () {
         'issue_date' => '2025-06-01',
         'subtotal' => 1000,
         'total' => 1000,
-        'net_receivable' => 1000,
     ]);
 
     $this->actingAs($user)
@@ -453,7 +436,6 @@ test('show page loads client contacts', function () {
         'issue_date' => '2025-06-01',
         'subtotal' => 1000,
         'total' => 1000,
-        'net_receivable' => 1000,
     ]);
 
     $this->actingAs($user)
@@ -475,7 +457,6 @@ test('user can download invoice PDF', function () {
         'issue_date' => '2025-06-01',
         'subtotal' => 10000,
         'total' => 10000,
-        'net_receivable' => 10000,
         'status' => 'sent',
     ]);
     $invoice->items()->create([
@@ -506,7 +487,6 @@ test('user cannot download another users invoice PDF', function () {
         'issue_date' => '2025-06-01',
         'subtotal' => 1000,
         'total' => 1000,
-        'net_receivable' => 1000,
     ]);
 
     $this->actingAs($user)
@@ -526,7 +506,6 @@ test('invoice email includes PDF attachment', function () {
         'issue_date' => '2025-06-01',
         'subtotal' => 5000,
         'total' => 5000,
-        'net_receivable' => 5000,
         'status' => 'draft',
     ]);
     $invoice->items()->create([
@@ -568,7 +547,6 @@ test('show page includes available recipients', function () {
         'issue_date' => '2025-06-01',
         'subtotal' => 1000,
         'total' => 1000,
-        'net_receivable' => 1000,
     ]);
 
     $this->actingAs($user)

@@ -4,25 +4,17 @@ declare(strict_types=1);
 
 use App\Models\Client;
 use App\Models\Invoice;
-use App\Models\TaxProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-function createUserWithClientAndProfile(array $profileOverrides = [], array $clientOverrides = []): array
+function createUserWithClient(): array
 {
     $user = User::factory()->create();
-    TaxProfile::create([
-        'user_id' => $user->id,
-        'business_type' => 'specified_services',
-        ...$profileOverrides,
-    ]);
     $client = Client::create([
         'user_id' => $user->id,
         'name' => 'Test Client',
-        'is_designated_entity' => false,
-        ...$clientOverrides,
     ]);
 
     return [$user, $client];
@@ -42,7 +34,7 @@ test('user can view invoices index', function () {
 });
 
 test('user can create an invoice', function () {
-    [$user, $client] = createUserWithClientAndProfile();
+    [$user, $client] = createUserWithClient();
 
     $this->actingAs($user)
         ->post('/invoices', [
@@ -62,7 +54,7 @@ test('user can create an invoice', function () {
 });
 
 test('invoice auto-increments number', function () {
-    [$user, $client] = createUserWithClientAndProfile();
+    [$user, $client] = createUserWithClient();
 
     $this->actingAs($user)->post('/invoices', [
         'client_id' => $client->id, 'issue_date' => '2025-01-01',
@@ -77,67 +69,8 @@ test('invoice auto-increments number', function () {
     expect($numbers)->toContain('INV-0001', 'INV-0002');
 });
 
-test('invoice calculates GCT when user is registered', function () {
-    [$user, $client] = createUserWithClientAndProfile(['is_gct_registered' => true, 'gct_registration_date' => '2024-01-01']);
-
-    $this->actingAs($user)->post('/invoices', [
-        'client_id' => $client->id, 'issue_date' => '2025-06-01',
-        'items' => [['description' => 'Service', 'quantity' => 1, 'unit_price' => 100000]],
-    ]);
-
-    $invoice = $user->invoices()->first();
-    expect((float) $invoice->gct_amount)->toBe(15000.00)
-        ->and((float) $invoice->total)->toBe(115000.00);
-});
-
-test('invoice calculates withholding tax for designated entity', function () {
-    [$user, $client] = createUserWithClientAndProfile(
-        ['business_type' => 'specified_services'],
-        ['is_designated_entity' => true],
-    );
-
-    $this->actingAs($user)->post('/invoices', [
-        'client_id' => $client->id, 'issue_date' => '2025-06-01',
-        'items' => [['description' => 'IT Consulting', 'quantity' => 1, 'unit_price' => 100000]],
-    ]);
-
-    $invoice = $user->invoices()->first();
-    // 3% of 100000 = 3000
-    expect((float) $invoice->withholding_tax_amount)->toBe(3000.00)
-        ->and((float) $invoice->net_receivable)->toBe(97000.00);
-});
-
-test('no withholding tax for invoices below threshold', function () {
-    [$user, $client] = createUserWithClientAndProfile(
-        ['business_type' => 'specified_services'],
-        ['is_designated_entity' => true],
-    );
-
-    $this->actingAs($user)->post('/invoices', [
-        'client_id' => $client->id, 'issue_date' => '2025-06-01',
-        'items' => [['description' => 'Small job', 'quantity' => 1, 'unit_price' => 40000]],
-    ]);
-
-    $invoice = $user->invoices()->first();
-    expect((float) $invoice->withholding_tax_amount)->toBe(0.00);
-});
-
-test('invoice calculates contractors levy for construction', function () {
-    [$user, $client] = createUserWithClientAndProfile(['business_type' => 'construction']);
-
-    $this->actingAs($user)->post('/invoices', [
-        'client_id' => $client->id, 'issue_date' => '2025-06-01',
-        'items' => [['description' => 'Foundation work', 'quantity' => 1, 'unit_price' => 200000]],
-    ]);
-
-    $invoice = $user->invoices()->first();
-    // 2% of 200000 = 4000
-    expect((float) $invoice->contractors_levy_amount)->toBe(4000.00)
-        ->and((float) $invoice->withholding_tax_amount)->toBe(0.00);
-});
-
 test('items are required', function () {
-    [$user, $client] = createUserWithClientAndProfile();
+    [$user, $client] = createUserWithClient();
 
     $this->actingAs($user)
         ->post('/invoices', [
@@ -150,19 +83,19 @@ test('items are required', function () {
 
 test('user cannot view another users invoice', function () {
     $user = User::factory()->create();
-    [$other, $client] = createUserWithClientAndProfile();
+    [$other, $client] = createUserWithClient();
 
     $invoice = Invoice::create([
         'user_id' => $other->id, 'client_id' => $client->id,
         'invoice_number' => 'INV-0001', 'issue_date' => '2025-01-01',
-        'subtotal' => 1000, 'total' => 1000, 'net_receivable' => 1000,
+        'subtotal' => 1000, 'total' => 1000,
     ]);
 
     $this->actingAs($user)->get("/invoices/{$invoice->id}")->assertStatus(403);
 });
 
 test('user can delete an invoice', function () {
-    [$user, $client] = createUserWithClientAndProfile();
+    [$user, $client] = createUserWithClient();
 
     $this->actingAs($user)->post('/invoices', [
         'client_id' => $client->id, 'issue_date' => '2025-06-01',
@@ -178,7 +111,7 @@ test('user can delete an invoice', function () {
 test('client_id must belong to authenticated user', function () {
     $user = User::factory()->create();
     $other = User::factory()->create();
-    $client = Client::create(['user_id' => $other->id, 'name' => 'Other', 'is_designated_entity' => false]);
+    $client = Client::create(['user_id' => $other->id, 'name' => 'Other']);
 
     $this->actingAs($user)
         ->post('/invoices', [

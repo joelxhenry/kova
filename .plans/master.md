@@ -1,788 +1,135 @@
 # Kova — Master Implementation Plan
 
-**Product:** Contractor Income & Tax Management Tool (SaaS)
-**Market:** Jamaica (TAJ compliance)
-**Stack:** Laravel 13 · Vue 3 · Inertia.js · PrimeVue · Tailwind CSS
-**Model:** Subscription-based (pricing TBD) with admin portal on separate subdomain
+**Product:** Free Invoice & Expense Management Platform
+**Stack:** Laravel 13 · Vue 3 · Inertia.js · PrimeVue · Tailwind CSS 4
 
 ---
 
-## Phase 0 — Authentication & User Profile
+## Phase 0 — Foundation
 
-Foundation layer. Nothing else works without users and their tax context.
+### 0.1 Authentication
+- [x] Login, Register, Forgot Password, Reset Password
+- [x] Session-based auth with CSRF protection
+- [x] Rate limiting on auth routes (5/min login, 3/min forgot-password)
 
-### 0.1 Authentication System
-
-- [x] Install and configure Laravel Breeze (Inertia + Vue stack) or build auth manually
-- [x] Pages: Login, Register, Forgot Password, Reset Password
-- [x] Middleware: redirect unauthenticated users, guest-only gates for login/register
-- [x] `AuthenticatedLayout.vue` — persistent sidebar/nav layout for logged-in users
-- [x] Style all auth pages to the Bold Typography design system
-
-### 0.2 Tax Profile (Onboarding)
-
-After registration, the user must configure their tax identity. This drives all downstream calculations.
-Statutory contribution rates (NIS, education tax, etc.) are **not** user-configurable — they are managed centrally via the admin portal and displayed read-only to users.
-
-- [x] Migration: `tax_profiles` table
-  ```
-  user_id (FK), trn (Tax Registration Number), business_type enum (specified_services, construction, haulage, tillage, other),
-  is_gct_registered (boolean, default false), gct_registration_date (nullable date),
-  fiscal_year_start (date), created_at, updated_at
-  ```
-- [x] Migration: `statutory_rates` table (admin-managed, seeded with defaults)
-  ```
-  key (unique), label, value (decimal 15,4), description, effective_from (date)
-  ```
-  Seeded keys: `nis_rate`, `education_tax_rate`, `gct_rate`, `withholding_tax_rate`, `contractors_levy_rate`, `tax_free_threshold`, `tax_bracket_25_limit`, `gct_registration_threshold`, `withholding_tax_invoice_threshold`
-- [x] Model: `TaxProfile` (belongsTo User), `StatutoryRate` (admin-managed lookup)
-- [x] Service: `TaxProfileService` — create/update profile, validate TRN format
-- [x] Form Request: `StoreTaxProfileRequest`
-- [x] Controller: `TaxProfileController` (edit, update) — passes statutory rates as read-only props
-- [x] Page: `Pages/Profile/TaxProfile.vue` — user edits their profile, statutory rates displayed read-only
-- [x] The `business_type` determines which withholding logic applies (3% vs 2%)
-
-### Verification
-
-- [x] User can register, log in, and complete their tax profile
-- [x] `business_type` selection persists and is accessible in session/shared Inertia props
-- [x] Unauthenticated users are redirected to login
-
-### 0.3 System Settings
-
-User-configurable settings stored as a JSON column per user, organized by group.
-
-**Migration & Model:**
-- [x] Migration: `user_settings` table (`user_id FK unique, settings json`)
-- [x] Model: `UserSetting` — `get(key, default)`, `set(key, value)`, `getGroup(group)` with `DEFAULTS` constant
-- [x] User relationship: `hasOne UserSetting`
-
-**Setting Groups:**
-
-1. **Business Profile** (`business`)
-   - [x] `business_name`, `business_logo_path` (stored in `storage/app/public/logos/{user_id}/`)
-   - [x] `business_address_*` — line 1, line 2, city, state/parish, postal code, country (default Jamaica)
-   - [x] `business_phone`, `business_email`
-   - [x] `payment_terms`, `payment_instructions`
-
-2. **Invoice Settings** (`invoicing`)
-   - [x] `invoice_prefix` (default "INV"), `invoice_separator` (default "-")
-   - [x] `invoice_next_number` (auto-incrementing), `invoice_padding` (default 4)
-   - [x] Live preview of next invoice number in settings page
-
-3. **Email Templates** (`email`)
-   - [x] `invoice_email_subject`, `invoice_email_greeting`, `invoice_email_body`, `invoice_email_footer`
-   - [x] Variables: `{invoice_number}`, `{business_name}`, `{client_name}`, `{total}`
-   - [x] `invoice_email_include_payment_instructions` toggle
-
-**Controller & Pages:**
-- [x] Service: `UserSettingService` — get/set with defaults, logo upload/remove, `generateInvoiceNumber()`, `previewInvoiceNumber()`
-- [x] Controller: `SettingsController` (index, updateBusiness, updateInvoicing, updateEmail, removeLogo)
-- [x] Form Requests: `UpdateBusinessSettingsRequest`, `UpdateInvoiceSettingsRequest`, `UpdateEmailSettingsRequest`
-- [x] Page: `Pages/Settings/Index.vue` — tabbed layout (Business Profile, Invoice Settings, Email Templates)
-- [x] Routes: `GET /settings`, `PUT /settings/{group}`, `DELETE /settings/logo`
-- [x] Shared Inertia props: `settings.business_name`, `settings.business_logo_path`
-
-**Verification:**
-- [x] Business profile settings persist (12 tests)
-- [x] Invoice numbering generates and increments correctly
-- [x] Logo uploads, displays, and removes
-- [x] Default values work when no settings configured
-- [x] Settings shared in Inertia props for nav/layouts
+### 0.2 System Settings
+- [x] UserSetting model with JSON settings column
+- [x] Settings groups: business profile, invoicing, email templates
+- [x] Business profile: name, address, phone, email, payment terms, payment instructions
+- [x] Invoice numbering: prefix, separator, next number, padding with live preview
+- [x] Email templates with variable interpolation ({invoice_number}, {business_name}, {client_name}, {total})
 
 ---
 
-## Phase 1 — Income Tracking & Invoicing
-
-Core data entry. Users log the money coming in.
+## Phase 1 — Clients & Invoicing
 
 ### 1.1 Clients
-
-- [x] Migration: `clients` table
-  ```
-  user_id (FK), name, email (nullable), phone (nullable),
-  trn (nullable), is_designated_entity (boolean, default false),
-  created_at, updated_at
-  ```
-- [x] Model: `Client` (belongsTo User, hasMany Invoices)
-- [x] Service: `ClientService`
-- [x] Form Requests: `StoreClientRequest`
-- [x] Controller: `ClientController` (index, create, store, edit, update, destroy)
-- [x] Pages: `Pages/Clients/Index.vue`, `Pages/Clients/Create.vue`, `Pages/Clients/Edit.vue`
-- [x] `is_designated_entity` flag triggers withholding tax logic on invoices
-
-#### 1.1.1 Client Enhancements
-
-- [x] Migration: add address columns to `clients` table (international-friendly)
-  ```
-  address_line_1, address_line_2, city, state_or_parish, postal_code, country (default 'Jamaica')
-  ```
-- [x] Migration: `client_contacts` table (`client_id FK cascadeOnDelete, first_name, last_name, email, phone`)
-- [x] Model: `ClientContact` (belongsTo Client)
-- [x] Updated `Client` model: `hasMany contacts`, `formattedAddress` accessor, address fields in `$fillable`
-- [x] Updated `StoreClientRequest`: validates address fields + nested `contacts.*` array with first/last name required
-- [x] Updated `ClientService`: `syncContacts()` — keeps existing by id, creates new, deletes removed
-- [x] Updated `ClientController`: added `show` action with contacts, invoices, and financial summary
-- [x] Page: `Pages/Clients/Show.vue` — client detail with:
-  - Client info header (name, email, phone, address, TRN, designated badge)
-  - Financial summary cards (total invoiced, total paid, balance due)
-  - Contacts grid with name/email/phone per contact
-  - Invoice list linked to invoice detail pages
-- [x] Updated `Pages/Clients/Create.vue` and `Edit.vue`:
-  - Address section (line 1, line 2, city, state/parish, postal code, country)
-  - Dynamic contacts section (add/remove with first name, last name, email, phone per contact)
-- [x] Updated route: full resource (removed `except(['show'])`)
-- [x] Updated `Clients/Index.vue`: client names link to show page
-- [x] Tests (12 tests):
-  - Show page renders with invoices, summary, and contacts
-  - Financial summary totals accurate (invoiced, paid, balance)
-  - Contacts CRUD (create with client, sync on update, delete cascade)
-  - Address fields persist
-  - Contact validation (first/last name required)
-  - Ownership auth on show + edit
-  - Creating without contacts works
+- [x] Client CRUD with name, email, phone, TRN (encrypted), address fields
+- [x] Client contacts (1:N) with first/last name, email, phone
+- [x] Client show page with financial summary and invoice history
 
 ### 1.2 Invoices
-
-- [x] Migration: `invoices` table
-  ```
-  user_id (FK), client_id (FK), invoice_number (unique per user),
-  issue_date, due_date (nullable),
-  subtotal (decimal 15,2), gct_amount (decimal 15,2, default 0),
-  total (decimal 15,2),
-  withholding_tax_amount (decimal 15,2, default 0),
-  contractors_levy_amount (decimal 15,2, default 0),
-  net_receivable (decimal 15,2),
-  status enum (draft, sent, paid, overdue, cancelled),
-  notes (text, nullable),
-  created_at, updated_at
-  ```
-- [x] Migration: `invoice_items` table
-  ```
-  invoice_id (FK), description, quantity (decimal), unit_price (decimal 15,2),
-  amount (decimal 15,2), sort_order (int)
-  ```
-- [x] Models: `Invoice` (belongsTo User, belongsTo Client, hasMany InvoiceItems), `InvoiceItem`
-- [x] Service: `InvoiceService`
-  - Auto-generate sequential invoice numbers per user (INV-0001, INV-0002...)
-  - Calculate subtotal from line items
-  - If user is GCT-registered → apply GCT rate from `statutory_rates`
-  - If client `is_designated_entity` && subtotal ≥ withholding threshold → apply withholding rate
-  - If user `business_type` is construction/haulage/tillage → apply contractors levy rate
-  - Compute `net_receivable = total - withholding_tax - contractors_levy`
-- [x] Form Requests: `StoreInvoiceRequest` (validates client belongs to user)
-- [x] Controller: `InvoiceController` (index with filters, create, store, show, edit, update, destroy)
-- [x] Pages:
-  - `Pages/Invoices/Index.vue` — list with filters (status, date range, client), pagination
-  - `Pages/Invoices/Create.vue` — dynamic line items form with live subtotal
-  - `Pages/Invoices/Show.vue` — invoice detail with itemized breakdown
-  - `Pages/Invoices/Edit.vue` — edit with status change
-- [x] Composable: `useCurrencyFormatter.js` — format JMD amounts consistently
-
-#### 1.2.1 Invoice Enhancements
-
-**Invoice Items — Unit Field:**
-- [x] Migration: add `unit` column (string, nullable) to `invoice_items` table
-  - Stores what the quantity represents: "hours", "items", "days", "units", "sessions", etc.
-- [x] Update `InvoiceItem` model, `StoreInvoiceRequest`, and `InvoiceService` to handle the `unit` field
-- [x] Update Create/Edit forms to include a unit field per line item (text input)
-- [x] Display unit in Show page line items table
-
-**Invoice Number Configuration:**
-- [x] Invoice numbering is configurable per user via Settings (see Phase 0.3)
-  - Prefix (default "INV"), separator (default "-"), next number, zero-padding width
-  - Example formats: `INV-0001`, `KV/2025/001`, `001`
-- [x] Update `InvoiceService` to delegate to `UserSettingService.generateInvoiceNumber()`
-- [x] Settings page shows current format preview and next number
-
-**Invoice View Page — Professional Layout:**
-- [x] Redesign `Pages/Invoices/Show.vue` to look like an actual printed invoice:
-  - **Header**: user's business name (from settings) + invoice number + status badge
-  - **Bill To section**: client name + address + TRN + contacts
-  - **Invoice details**: issue date, due date, payment terms (right-aligned)
-  - **Line items table**: description, unit, quantity, unit price, amount — with column headers
-  - **Totals section**: subtotal, GCT, total, withholding tax, contractors levy, net receivable
-  - **Notes/terms footer**: invoice notes + configurable payment instructions (from settings)
-  - **Print styles**: `@media print` CSS hides nav/actions, clean layout
-- [x] Quick action buttons:
-  - **Update Status**: Select dropdown to change status (draft/sent/paid/overdue/cancelled)
-  - **Send by Email**: opens recipient selection dialog (client email, contact emails, custom email input), sends email with PDF attachment
-    - Auto-updates status to "sent" if currently "draft"
-  - **Download PDF**: generates and downloads A4 PDF via `barryvdh/laravel-dompdf`
-  - **Print**: browser print with print-optimized styles
-  - **Duplicate**: creates new draft invoice with same line items and client
-  - **Edit / Delete**: existing actions preserved
-
-**Invoice Email System:**
-- [x] Service: `InvoiceEmailService`
-  - `sendTo()` — sends to user-selected recipients (validated email array)
-  - `getAvailableRecipients()` — returns client email + contact emails with labels/types for dialog
-  - Builds email from configurable template (stored in `user_settings`)
-  - Variable interpolation: `{invoice_number}`, `{business_name}`, `{client_name}`, `{total}`
-  - Includes payment instructions when configured
-  - Attaches generated invoice PDF
-- [x] Mailable: `InvoiceEmail` — markdown email template with PDF attachment
-  - Configurable sections: greeting, body text, payment instructions, footer
-  - Line items table in email body
-  - View Invoice button linking to app
-  - PDF attachment via `attachments()` method
-- [x] Controller action: `InvoiceController@send` (POST `/invoices/{invoice}/send`)
-  - Accepts `recipients` array (required, validated as emails)
-  - Sends email with PDF, auto-updates status to "sent" if currently "draft"
-- [x] Routes: `PUT /invoices/{invoice}/status`, `POST /invoices/{invoice}/duplicate`, `POST /invoices/{invoice}/send`, `GET /invoices/{invoice}/pdf`
-- [ ] Email send logging (optional: `invoice_emails` table — deferred)
-
-**PDF Generation:**
-- [x] Package: `barryvdh/laravel-dompdf` v3.1
-- [x] Service: `InvoicePdfService`
-  - `generate()` — renders `pdf.invoice` Blade template to A4 PDF with business settings
-  - `filename()` — returns `{invoice_number}.pdf`
-- [x] Blade template: `resources/views/pdf/invoice.blade.php`
-  - Professional layout matching Forest Ritual design tokens (colors, typography)
-  - Header with business name/address, invoice number, status badge
-  - Bill To section with client details
-  - Line items table with unit column
-  - Totals section with GCT, withholding, contractors levy, net receivable
-  - Notes and payment instructions footer
-- [x] Controller action: `InvoiceController@download` (GET `/invoices/{invoice}/pdf`)
-  - Downloads PDF with `Content-Disposition: attachment`
-- [x] Email attachment: PDF auto-attached to invoice emails
-
-**Tests (20 tests, 171 total, 742 assertions):**
-- [x] Unit field persists on create and update
-- [x] Invoice number respects user's configured format (prefix, separator, padding)
-- [x] Invoice number auto-increments via user settings
-- [x] Status quick-update works, rejects invalid status, enforces ownership
-- [x] Duplicate creates new draft with same items/unit/notes
-- [x] Duplicate enforces ownership
-- [x] Send email dispatches to selected recipients
-- [x] Send auto-updates draft to sent, preserves non-draft status
-- [x] Send includes client contacts when selected
-- [x] Send requires at least one recipient, validates email format
-- [x] Show page includes business settings, client contacts, and available recipients
-- [x] PDF download returns application/pdf with correct filename
-- [x] PDF download enforces ownership (403)
-- [x] Invoice email includes PDF attachment
-
-### Verification
-
-- [x] User can create clients, marking some as designated entities
-- [x] Invoices auto-calculate GCT, withholding tax, and contractors levy based on profile + client
-- [x] Invoice list filters by status and date range
-- [x] All amounts display as formatted JMD currency
+- [x] Invoice CRUD with line items (description, unit, quantity, unit price)
+- [x] Configurable invoice numbering via UserSettingService
+- [x] Invoice statuses: draft, sent, paid, overdue, cancelled
+- [x] Quick actions: status update, duplicate (→ edit page), send email, download PDF
+- [x] Professional invoice view page with business info, bill-to, line items, totals
+- [x] PDF generation via barryvdh/laravel-dompdf
+- [x] Email sending with recipient selection dialog and PDF attachment
+- [x] Automatic overdue detection via scheduled command
 
 ---
 
-## Phase 2 — Tax Calculation Engine
+## Phase 2 — Expense Tracking
 
-The core intelligence of the application. Everything feeds into this.
-
-### 2.1 Tax Calculation Service
-
-- [x] Service: `TaxCalculationService` — the central engine
-  - **Inputs:** user's total gross income (paid invoices), withholding tax credits, tax profile
-  - **Outputs:** structured tax breakdown
-
-  ```
-  calculateAnnualTax(User $user, int $year): TaxBreakdown
-  ```
-
-  **Calculation steps:**
-  1. Gross Income = sum of all paid invoice subtotals for the year
-  2. Net Income = Gross Income
-  3. Income Tax (thresholds from `statutory_rates` table):
-     - First JMD `tax_free_threshold` → 0%
-     - Up to JMD `tax_bracket_25_limit` → 25%
-     - Above `tax_bracket_25_limit` → 30%
-  4. NIS Contribution = Net Income × `nis_rate` (from `statutory_rates`)
-  5. Education Tax = Net Income × `education_tax_rate` (from `statutory_rates`)
-  6. Total Tax Liability = Income Tax + NIS + Education Tax
-  7. Withholding Tax Credits = sum of all withholding tax from invoices + manual credits
-  8. Net Tax Payable = Total Tax Liability − Withholding Tax Credits
-
-- [x] DTO: `TaxBreakdown` — structured object with all computed values
-- [x] DTO: `QuarterlyEstimate` — quarter, deadline, amountDue, isPast
-
-### 2.2 Quarterly Estimates
-
-- [x] Service method: `calculateQuarterlyEstimates(User $user, int $year): array`
-  - Divide net tax payable into 4 equal quarterly payments
-  - Map to statutory deadlines: March 15, June 15, September 15, December 15
-  - Track which quarters have passed and which are upcoming
-  - Factor in withholding credits already applied
-
-### 2.3 Withholding Tax Ledger
-
-- [x] Migration: `withholding_credits` table
-  ```
-  user_id (FK), source_type (invoice/manual), source_id (nullable),
-  amount (decimal 15,2), tax_year (int), date_withheld (date),
-  description (string), created_at, updated_at
-  ```
-- [x] Model: `WithholdingCredit`
-- [x] Service: `WithholdingCreditService`
-  - Auto-create entries when invoices are marked as paid (duplicate prevention)
-  - Manual entries for non-invoice withholding
-  - Aggregate credits by tax year
-- [x] Controller: `WithholdingCreditController` (index with year filter + summary, store, destroy)
-- [x] Page: `Pages/Tax/WithholdingCredits.vue` — ledger view with summary, year selector, manual credit form
-
-### Verification
-
-- [x] Tax engine accurately applies progressive brackets to test scenarios (16 unit tests)
-- [x] Withholding credits deduct from total liability
-- [x] Quarterly estimates split correctly across 4 deadlines
-- [x] Withholding credits auto-created on invoice payment, no duplicates
+- [x] ExpenseCategory model with 7 system defaults (Equipment, Fuel & Transport, Office Rent, Software & Subscriptions, Professional Services, Utilities, Other)
+- [x] Expense CRUD with category, description, amount, date, notes
+- [x] Expense list with category filter and date range filter
+- [x] Paginated expense list
 
 ---
 
-## Phase 3 — Dashboard & Visualizations
+## Phase 3 — Dashboard
 
-The primary interface users see. Surfaces all the engine outputs.
-
-### 3.1 Main Dashboard
-
-- [x] Controller: `DashboardController` — aggregates data via TaxCalculationService + GctMonitorService + monthly breakdowns
-- [x] Page: `Pages/Dashboard.vue` (replaced placeholder with full widget dashboard)
-- [x] Components:
-  - `Components/Domain/TaxSummaryCard.vue` — gross income, net payable, income tax/NIS/education tax breakdown
-  - `Components/Domain/QuarterlyEstimatesTimeline.vue` — 4 quarterly blocks with amount due, past/due status, deadline dates
-  - `Components/Domain/WithholdingCreditsWidget.vue` — total credits with link to ledger
-  - `Components/Domain/GctThresholdTracker.vue` — progress bar toward threshold with percentage + warning at 80%+
-
-### 3.2 GCT Threshold Alert System
-
-- [x] Service: `GctMonitorService`
-  - Calculate annual turnover from sent/paid invoices
-  - Return percentage toward threshold (capped at 100%)
-  - Reports isRegistered status from tax profile
-- [ ] Notification: `GctThresholdApproachingNotification` (database + mail channel) — deferred to Phase 6
-- [ ] Listener: check threshold after each invoice is created/paid — deferred to Phase 6
-
-### 3.3 Year Selector
-
-- [x] Composable: `useFiscalYear.js` — manage selected tax year, navigate with query param
-- [x] All dashboard widgets filter by the selected year via DashboardController
-- [x] Default to current year, allow switching to previous years (5-year range)
-
-### Verification
-
-- [x] Dashboard loads with real aggregated data from all modules
-- [x] Quarterly timeline accurately reflects past/due quarters
-- [x] GCT tracker shows correct percentage
-- [x] Switching fiscal year updates all widgets
+- [x] Stats cards: total invoiced (paid), total expenses, pending invoices, overdue count
+- [x] Recent invoices list (5 most recent with client, amount, status)
+- [x] Recent expenses list (5 most recent with category, amount)
 
 ---
 
-## Phase 4 — TAJ Form Generation
+## Phase 4 — Notifications
 
-The final deliverable — bridging Kova data to official government forms.
-
-### 4.1 Form S04 / IT01 Data Mapping
-
-- [x] Service: `TajFormService`
-  - Aggregates all data for a given tax year into S04/IT01 structure via `TaxCalculationService`
-  - Line item mapping:
-    - Gross Professional/Business Income
-    - Less: Allowable Expenses (broken down by category)
-    - Net Statutory Income
-    - Less: Tax-Free Threshold
-    - Tax on first bracket (25%) with taxable amount
-    - Tax on remaining (30%) with taxable amount
-    - NIS, NHT, Education Tax contributions
-    - Less: Withholding Tax Credits
-    - Net Tax Payable / Refund Due
-  - Returns structured data with taxpayer info, income, categorized expenses, and full computation
-
-### 4.2 PDF Generation
-
-- [x] Controller: `TaxFormController` (show preview with live data, generate snapshot, view saved snapshot)
-- [x] Page: `Pages/Tax/FormPreview.vue`
-  - On-screen preview with 5 sections mirroring TAJ S04 layout
-  - Year selector for switching tax years
-  - Print/Save PDF via browser print (`window.print()` with print-optimized styles)
-  - Generate Snapshot button to freeze data for audit
-  - Snapshot history list with ability to view any saved version
-- [ ] Server-side PDF generation (requires PDF library — deferred until package is approved)
-
-### 4.3 Tax Form History
-
-- [x] Migration: `tax_form_snapshots` table
-  ```
-  user_id (FK), tax_year (int), form_type (string),
-  data (json — frozen snapshot of all computed values),
-  generated_at (timestamp), created_at, updated_at
-  ```
-- [x] Model: `TaxFormSnapshot` (belongsTo User)
-- [x] Multiple regenerations preserved for audit — each snapshot is a new record
-
-### Verification
-
-- [x] Form preview renders all correct line items for a given tax year
-- [x] Print/PDF via browser print with print-optimized layout
-- [x] Multiple regenerations preserve snapshot history (3 snapshots test)
-- [x] Generated values match tax calculation engine output
+- [x] InvoiceOverdueNotification (database + mail)
+- [x] Scheduled command: check-overdue-invoices (daily 06:00)
+- [x] Notification center page with read/unread
+- [x] Notification dropdown in nav bar with recent items
+- [x] Unread count badge
 
 ---
 
-## Phase 5 — Notifications & Scheduled Tasks
+## Phase 5 — Admin Portal
 
-Proactive reminders so users never miss a deadline.
-
-### 5.1 Notification System
-
-- [x] Notifications (database + mail via Mailpit in dev):
-  - `QuarterlyPaymentReminderNotification` — 14 days and 3 days before each quarterly deadline
-  - `GctThresholdApproachingNotification` — at 80%, 90%, 100% of GCT threshold
-  - `InvoiceOverdueNotification` — when a sent invoice passes its due date
-- [x] Page: `Pages/Notifications/Index.vue` — notification center with read/unread, mark as read, mark all read
-- [x] Shared Inertia prop: `notifications.unreadCount` in nav with bell icon badge
-- [x] Controller: `NotificationController` (index, markAsRead, markAllRead)
-
-### 5.2 Scheduled Commands
-
-- [x] `app/Console/Commands/SendQuarterlyReminders.php`
-  - Runs daily at 08:00, checks deadlines at 14 and 3 days out
-  - Deduplicates: won't re-send for same quarter + days_until combination
-- [x] `app/Console/Commands/CheckOverdueInvoices.php`
-  - Runs daily at 06:00, marks sent invoices past `due_date` as overdue, notifies user
-  - Skips already-overdue and paid invoices
-- [x] `app/Console/Commands/CheckGctThreshold.php`
-  - Runs weekly (Mondays 09:00), checks turnover against threshold at 80/90/100% levels
-  - Skips already GCT-registered users, deduplicates per level per year
-- [x] Registered in `routes/console.php` with `Schedule`
-
-### Verification
-
-- [x] Overdue invoices auto-update status and trigger notification
-- [x] GCT threshold alerts fire at correct percentages, skip registered users
-- [x] Unread count shared in Inertia props and displayed in nav badge
-- [x] Mark as read / mark all read works correctly
+- [x] Admin role via is_admin boolean on users table
+- [x] EnsureAdmin middleware
+- [x] Admin routes under /admin prefix with dedicated AdminLayout
+- [x] Admin dashboard: user stats (total, active, suspended)
+- [x] User management: list (search + filter), detail page, suspend/reactivate
+- [x] Suspended users blocked via EnsureNotSuspended middleware
 
 ---
 
 ## Phase 6 — Polish & Production Readiness
 
-### 6.1 UI/UX Polish
-
-- [x] Forest Ritual design system applied across all pages
-- [x] Responsive layout: mobile nav bar, responsive grids on all pages
-- [x] Empty states for all list pages (clients, invoices, notifications, withholding credits)
-- [x] Loading states: NProgress progress bar on all Inertia navigations (accent-colored, 2px top bar)
-- [x] Toast notifications: PrimeVue Toast replaces inline flash divs globally (success messages via layout watcher)
-- [x] Confirmation dialogs: PrimeVue ConfirmDialog on all destructive actions (delete client, invoice, withholding credit)
-- [x] All `confirm()` calls replaced with `useConfirm()` dialogs
-- [x] Inline flash `<div>` blocks removed from all pages (7 pages cleaned)
-
-### 6.2 Data Integrity
-
-- [x] Migration: performance indexes on `invoice_items.invoice_id`, `client_contacts.client_id`, `withholding_credits.date_withheld`
-- [x] Cascading deletes verified on all foreign keys (all use `cascadeOnDelete()`)
-- [x] Feature tests for every controller action (142 tests, 637 assertions)
-- [x] Unit tests for `TaxCalculationService` with edge cases:
-  - Income exactly at threshold boundaries (tax-free, 25% bracket limit)
-  - Zero income
-  - Income exceeding JMD $6M bracket (30% rate)
-  - Withholding credits exceeding tax liability (refund scenario)
-
-### 6.3 Security Audit
-
-- [x] All routes behind `auth` middleware
-- [x] Ownership authorization: `abort_unless` checks on Client, Invoice, WithholdingCredit, TaxFormSnapshot controllers
-- [x] Scoped queries: all data access goes through `$request->user()->` relationships
-- [x] Notification ownership: scoped via `$request->user()->notifications()` relationship
-- [x] No sensitive data in Inertia shared props (only name, email, settings display values)
-- [x] Rate limiting: `throttle:5,1` on login/register, `throttle:3,1` on forgot-password
-- [x] CSRF protection on all forms (handled by Inertia)
-
-### 6.4 Performance
-
-- [x] Eager loading: all controllers use `->with()` / `->load()` for related data
-- [x] Invoices and notifications paginated (20 per page)
-- [x] Dashboard uses aggregate queries (SUM/GROUP BY) instead of loading all records
-
-### Verification
-
-- [x] Full Pest test suite passes (142 tests, 637 assertions)
-- [x] No N+1 queries in controller actions (verified via eager loading audit)
+- [x] NProgress loading bar on all navigations
+- [x] PrimeVue Toast for flash messages (replaces inline divs)
+- [x] PrimeVue ConfirmDialog for destructive actions
+- [x] Mobile-responsive: reduced padding, stacked layouts, card-based line items
+- [x] PrimeIcons installed
+- [x] Mobile input text sizing
+- [x] Mobile dialog/toast width constraints
+- [x] Database performance indexes
+- [x] Rate limiting on auth routes
+- [x] All ownership checks verified
 
 ---
 
-## Phase 7 — Admin Portal
+## Phase 7 — PWA
 
-Separate subdomain (`admin.kova.zncn.app`) for platform administration. Controls statutory rates, user management, and subscription oversight.
-
-### 7.1 Admin Authentication & Authorization
-
-- [x] Migration: `is_admin` boolean column on `users` table (default false)
-- [x] User model: `is_admin` cast to boolean, shared in Inertia props
-- [x] Middleware: `EnsureAdmin` — checks `is_admin` flag, aborts 403
-- [x] Admin routes: `routes/admin.php` registered via `bootstrap/app.php` with `web + auth + EnsureAdmin` middleware stack, `/admin` prefix
-- [x] Admin layout: `AdminLayout.vue` — dark nav bar (`bg-dark-surface`), accent "Admin" badge, nav links (Dashboard, Statutory Rates, Users), "User App" link back to main app
-- [x] Admin dashboard: `Pages/Admin/Dashboard.vue` — total users stat card, recent signups list
-- [x] Controller: `Admin\DashboardController` — aggregates user count and recent signups
-- [x] Demo seeder: `admin@kova.test` / `password` admin user
-- [x] Tests (7 tests): guests blocked, regular users get 403, admin access works, user count correct, recent signups shown, `is_admin` shared in props
-
-### 7.2 Statutory Rate Management
-
-**Versioned rates** — each key maintains a full history of values by effective date, enabling historical tax calculations for any past year.
-
-- [x] Migration: drop unique constraint on `key`, add unique on `[key, effective_from]` to support multiple versions per rate
-- [x] `StatutoryRate::getValue($key, $date)` — resolves the rate effective at a given date (`effective_from <= $date`, most recent first). Defaults to today if no date provided.
-- [x] `StatutoryRate::current($key)` — returns the latest version record for a key
-- [x] All service callers updated to pass contextual dates:
-  - `TaxCalculationService` — uses Jan 1 of the tax year
-  - `InvoiceService` — uses the invoice's `issue_date`
-  - `GctMonitorService` — uses Jan 1 of the year
-- [x] Settings/TaxProfile controllers — display current effective rates (most recent where `effective_from <= now`)
-- [x] Controller: `Admin\StatutoryRateController` (index, show by key, store new version)
-  - Index groups versions by key, shows current value + version count
-  - Show displays version history timeline + add new version form + audit log
-  - Store creates a new version row (does not overwrite), rejects duplicate effective dates
-- [x] Form Request: `Admin\UpdateStatutoryRateRequest` — validates value (numeric, min 0) and effective_from (required date)
-- [x] Pages:
-  - `Pages/Admin/StatutoryRates/Index.vue` — table grouped by key with current value, effective date, version count
-  - `Pages/Admin/StatutoryRates/Show.vue` — current value card, add version form, version history timeline, audit change log
-- [x] Migration: `statutory_rate_audit_log` table (statutory_rate_id, user_id, old/new value, old/new effective_from, changed_at)
-- [x] Model: `StatutoryRateAuditLog` with relationships to StatutoryRate and User
-- [x] Routes: `GET /admin/statutory-rates`, `GET /admin/statutory-rates/{key}`, `POST /admin/statutory-rates/{key}`
-- [x] Tests (14 tests): access control, index grouping, show with versions, add new version, audit log created, duplicate date rejected, validation, negative rejected, getValue with date resolution, historical rate preservation, 404 for invalid key
-
-### 7.3 User Management
-
-- [x] Migration: `suspended_at` timestamp (nullable) on `users` table
-- [x] User model: `isSuspended()` helper, `suspended_at` cast to datetime, added to `$fillable`
-- [x] Middleware: `EnsureNotSuspended` — logs out suspended users, redirects to login with error message, registered on web middleware stack
-- [x] Controller: `Admin\UserController` (index with search + status filter, show with stats, suspend, reactivate)
-  - Suspend sets `suspended_at` to now, prevents suspending admin users
-  - Reactivate clears `suspended_at`
-  - Show aggregates client count, invoice count, total paid invoices
-- [x] Pages:
-  - `Pages/Admin/Users/Index.vue` — paginated list with search (name/email), status filter (active/suspended), status badges
-  - `Pages/Admin/Users/Show.vue` — user header with status badge, suspend/reactivate button, stats cards (clients, invoices, total invoiced), account details, tax profile
-- [x] Routes: `GET /admin/users`, `GET /admin/users/{id}`, `POST /admin/users/{id}/suspend`, `POST /admin/users/{id}/reactivate`
-- [x] Tests (13 tests): access control, index listing/search/filter/pagination, show with stats + tax profile, suspend/reactivate, cannot suspend admin, suspended user blocked from app
-
-### 7.4 Platform Dashboard
-
-- [x] Controller: `Admin\DashboardController` — aggregates platform-wide stats
-- [x] Page: `Pages/Admin/Dashboard.vue`
-- [x] Widgets:
-  - **5 stat cards**: total users, active users, suspended users (accent-highlighted if > 0), total invoices, total paid revenue (JMD)
-  - **Signup chart**: CSS bar chart showing monthly signups for the current year, with labels and counts
-  - **Recent signups**: 5 most recent users with name, email, date, suspended badge, linked to user detail page
-
-### Verification
-
-- [x] Admin can access `/admin` with `is_admin` flag
-- [x] Admin can update statutory rates with versioned history and changes reflect for all users
-- [x] Admin can view, search, filter, suspend, and reactivate user accounts
-- [x] Regular users get 403 on admin routes
-- [x] Suspended users are logged out and blocked from accessing the app
+- [x] Web app manifest with icons (192, 512, maskable, Apple sizes)
+- [x] Service worker via vite-plugin-pwa (CacheFirst for fonts/images)
+- [x] Install prompt composable with 7-day dismiss
+- [x] iOS Safari "Add to Home Screen" instructions
+- [x] Standalone mode detection
 
 ---
 
-## Phase 8 — Subscription & Billing (Paddle)
+## Phase 8 — Landing Page
 
-Subscription-based access via [Paddle](https://www.paddle.com/) as the Merchant of Record. Paddle handles payment processing, tax compliance, invoicing, and currency conversion — ideal for a Jamaica-based SaaS selling internationally.
-
-**Package:** `laravel/cashier-paddle` (Laravel Cashier for Paddle)
-
-### 8.1 Paddle Setup & Configuration
-
-- [x] Create Paddle account (sandbox first, then production)
-- [x] Create subscription products and prices in Paddle dashboard:
-  - **Kova Pro Monthly** — price in USD (Paddle handles currency conversion)
-  - **Kova Pro Yearly** — discounted annual price
-- [x] Install Laravel Cashier for Paddle:
-  ```bash
-  composer require laravel/cashier-paddle
-  ```
-- [x] Publish Cashier migrations and config:
-  ```bash
-  php artisan vendor:publish --tag=cashier-migrations
-  php artisan vendor:publish --tag=cashier-config
-  ```
-- [x] Add Paddle credentials to `.env`:
-  ```
-  PADDLE_SELLER_ID=
-  PADDLE_API_KEY=
-  PADDLE_WEBHOOK_SECRET=
-  PADDLE_SANDBOX=true
-  ```
-- [x] Add `Billable` trait to `User` model
-- [x] Run Cashier migrations (creates `customers`, `subscriptions`, `subscription_items`, `transactions` tables)
-- [x] Register Paddle webhook route (Cashier handles this automatically)
-
-### 8.2 Subscription Gating
-
-- [x] Middleware: `EnsureSubscribed` — checks `$user->subscribed('default')`
-  - Redirects unsubscribed users to pricing page
-  - Allows a grace period for past-due subscriptions
-  - Admin users bypass the check
-- [x] Apply middleware to protected routes (invoices, clients, tax features)
-- [x] Free tier vs paid tier decision:
-  - **Option A:** Free trial (14 days) then paywall
-  - **Option B:** Free tier with limited features (e.g., max 3 clients, no PDF export)
-  - **Option C:** Full paywall after registration
-- [x] User model helpers:
-  - `$user->subscribed()` — has active subscription (via Cashier)
-  - `$user->onTrial()` — is in trial period
-  - `$user->subscription()->onGracePeriod()` — cancelled but still active
-
-### 8.3 Pricing & Checkout Pages
-
-- [x] Page: `Pages/Billing/Pricing.vue` — displays available plans
-  - Monthly vs yearly toggle
-  - Feature comparison list
-  - "Subscribe" button per plan triggers Paddle Checkout overlay
-- [x] Paddle Checkout integration:
-  - Use `Paddle.Checkout.open()` JS SDK (overlay mode, not redirect)
-  - Pass `customData: { user_id }` to link payment to user
-  - On success, Cashier webhook processes the subscription
-- [x] Include Paddle JS SDK in `app.blade.php`:
-  ```html
-  <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
-  ```
-- [x] Controller: `BillingController`
-  - `pricing()` — shows plans page with Paddle price IDs
-  - `portal()` — redirects to Paddle customer portal (manage payment method, view invoices)
-
-### 8.4 Billing Management
-
-- [x] Page: `Pages/Billing/Index.vue` — user's billing dashboard
-  - Current plan and status (active, trialing, past_due, cancelled)
-  - Next billing date and amount
-  - "Change Plan" button (upgrade/downgrade via Paddle)
-  - "Cancel Subscription" with confirmation
-  - "Update Payment Method" → Paddle customer portal
-  - Transaction history from Paddle
-- [x] Controller actions:
-  - `swap()` — `$user->subscription()->swap($newPriceId)` for plan changes
-  - `cancel()` — `$user->subscription()->cancel()` (ends at period end)
-  - `resume()` — `$user->subscription()->resume()` (if on grace period)
-- [x] Link from user menu dropdown "Billing" → `/billing`
-
-### 8.5 Webhook Handling
-
-Cashier handles most webhooks automatically. Custom handlers for:
-
-- [x] `subscription.activated` — send welcome email, log event
-- [x] `subscription.cancelled` — send cancellation confirmation
-- [x] `subscription.past_due` — send payment failed notification
-- [x] `subscription.updated` — handle plan changes
-- [x] `transaction.completed` — Paddle handles invoices/receipts (no need to generate our own)
-- [x] Listener: `PaddleWebhookReceived` event for custom logic
-
-### 8.6 Admin Subscription Overview
-
-- [x] Update `Admin\DashboardController`:
-  - Active subscriptions count
-  - MRR (Monthly Recurring Revenue) from Paddle API or local aggregation
-  - Churn count (cancellations this month)
-- [x] Update `Admin\Users\Show.vue`:
-  - Show subscription status, plan, next billing date
-  - Transaction history
-- [x] Admin cannot directly modify subscriptions (Paddle is the source of truth)
-
-### 8.7 Trial & Onboarding Flow
-
-- [x] Configure trial period in Paddle product settings (14 days)
-- [x] After registration, user lands on dashboard with trial banner:
-  - "You have X days left on your free trial"
-  - "Subscribe now" CTA
-- [x] Trial expiry: `EnsureSubscribed` middleware redirects to pricing page
-- [x] Trial banner component in `AuthenticatedLayout.vue`:
-  - Shows remaining days
-  - Accent-colored, dismissible but re-appears daily
-
-### Verification
-
-- [x] User can subscribe via Paddle Checkout overlay
-- [x] Subscription status reflects correctly after payment
-- [x] Plan changes (upgrade/downgrade) work via Paddle
-- [x] Cancellation ends at period end (grace period)
-- [x] Past-due users see warning but retain access during grace period
-- [x] Expired/cancelled users redirected to pricing page
-- [x] Webhooks process correctly in sandbox
-- [x] Admin dashboard shows subscription metrics
-- [x] Trial countdown works and gates access after expiry
-
-### Implementation Order
-
-```
-8.1 Paddle Setup & Configuration
- │
-8.2 Subscription Gating (middleware)
- │
-8.3 Pricing & Checkout Pages
- │
-8.4 Billing Management (user-facing)
- │
-8.5 Webhook Handling (custom events)
- │
-8.6 Admin Subscription Overview
- │
-8.7 Trial & Onboarding Flow
-```
-
-**Why Paddle over Stripe:**
-- Paddle is a Merchant of Record — handles sales tax, VAT, and compliance globally
-- No need for Kova to register as a payment processor in Jamaica
-- Paddle handles currency conversion (users can pay in their local currency)
-- Built-in subscription invoicing and receipts (no need to generate our own)
-- Single integration for all payment methods (cards, PayPal, Apple Pay, Google Pay)
-- Laravel Cashier for Paddle provides first-party integration
+- [x] Standalone Blade landing page at / (no Inertia)
+- [x] Hero: "Invoicing made simple" + CTA
+- [x] Features grid: 6 features (invoicing, expenses, PDF/email, clients, status tracking, free forever)
+- [x] Final CTA section with dark background
+- [x] Footer with login/signup links
+- [x] Scroll animations, meta tags, OG image
+- [x] Authenticated users redirect to /dashboard
 
 ---
 
 ## Data Model Summary
 
 ```
-User (Billable)
- ├── TaxProfile (1:1)
+User
  ├── UserSetting (1:1) — business profile, invoice config, email templates
- ├── Customer (1:1, Paddle via Cashier)
- ├── Subscription (1:N, Paddle via Cashier)
- │    └── SubscriptionItem (1:N)
- ├── Transaction (1:N, Paddle via Cashier)
  ├── Client (1:N)
  │    ├── ClientContact (1:N)
  │    └── Invoice (1:N)
- │         └── InvoiceItem (1:N) — includes `unit` field
- ├── WithholdingCredit (1:N)
- └── TaxFormSnapshot (1:N)
-
-StatutoryRate (admin-managed, versioned by effective_from)
- └── StatutoryRateAuditLog (1:N)
+ │         └── InvoiceItem (1:N)
+ └── Expense (1:N)
+      └── ExpenseCategory (N:1)
 ```
 
 ---
 
-## Implementation Order & Dependencies
+## Test Coverage
 
-```
-Phase 0 ─── Authentication, Tax Profile & System Settings (done)
-   │
-Phase 1 ─── Clients & Invoicing (done)
-   │  ├── 1.1 Clients + 1.1.1 Client Enhancements (done)
-   │  └── 1.2 Invoices + 1.2.1 Invoice Enhancements (done)
-   │
-Phase 2 ─── Tax Calculation Engine (done)
-   │
-Phase 3 ─── Dashboard & Visualizations (done)
-   │
-Phase 4 ─── TAJ Form Generation (done)
-   │
-Phase 5 ─── Notifications & Scheduled Tasks (done)
-   │
-Phase 6 ─── Polish & Production Readiness (all phases)
-   │
-Phase 7 ─── Admin Portal (can start after Phase 0, independent of Phases 1-5)
-   │
-Phase 8 ─── Subscription & Billing (depends on Phase 7)
-```
-
-Phase 7 (Admin Portal) can be developed in parallel with Phases 1-6.
-Phase 8 (Subscriptions) requires Phase 7 for plan management.
+77 tests, 401 assertions — covering clients, invoices (CRUD, enhancements, PDF, email), expenses, settings, dashboard, admin (auth, user management), and landing page.

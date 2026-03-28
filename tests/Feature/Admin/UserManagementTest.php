@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Models\Client;
 use App\Models\Invoice;
-use App\Models\TaxProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -71,7 +70,6 @@ test('users index filters by status', function () {
 test('admin can view user detail page', function () {
     $admin = User::factory()->create(['is_admin' => true]);
     $user = User::factory()->create(['is_admin' => false]);
-    TaxProfile::create(['user_id' => $user->id, 'business_type' => 'specified_services', 'trn' => '123456789']);
 
     $this->actingAs($admin)
         ->get("/admin/users/{$user->id}")
@@ -80,7 +78,6 @@ test('admin can view user detail page', function () {
             ->component('Admin/Users/Show')
             ->has('user')
             ->has('stats')
-            ->where('user.tax_profile.trn', '123456789')
         );
 });
 
@@ -101,7 +98,6 @@ test('user detail shows correct stats', function () {
         ->assertInertia(fn ($page) => $page
             ->where('stats.clientCount', 1)
             ->where('stats.invoiceCount', 1)
-            ->where('stats.totalInvoiced', 100000)
         );
 });
 

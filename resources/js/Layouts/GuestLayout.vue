@@ -7,9 +7,9 @@ import { Link } from '@inertiajs/vue3';
         <nav class="bg-card shadow-sm">
             <div class="mx-auto max-w-5xl px-6 md:px-12 lg:px-16">
                 <div class="flex h-16 items-center justify-between">
-                    <Link href="/login" class="text-xl font-bold text-foreground">
+                    <a href="/" class="text-xl font-bold text-foreground">
                         Kova
-                    </Link>
+                    </a>
                     <div class="flex items-center gap-6">
                         <slot name="nav" />
                     </div>

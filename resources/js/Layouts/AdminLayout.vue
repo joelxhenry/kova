@@ -13,8 +13,7 @@ const user = computed(() => page.props.auth.user);
 
 const navigation = [
     { name: 'Dashboard', href: '/admin' },
-    { name: 'Statutory Rates', href: '/admin/statutory-rates' },
-    { name: 'Users', href: '/admin/users' },
+{ name: 'Users', href: '/admin/users' },
 ];
 
 const isActive = (href) => {

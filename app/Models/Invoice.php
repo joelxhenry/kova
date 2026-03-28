@@ -18,11 +18,7 @@ class Invoice extends Model
         'issue_date',
         'due_date',
         'subtotal',
-        'gct_amount',
         'total',
-        'withholding_tax_amount',
-        'contractors_levy_amount',
-        'net_receivable',
         'status',
         'notes',
     ];
@@ -36,11 +32,7 @@ class Invoice extends Model
             'issue_date' => 'date',
             'due_date' => 'date',
             'subtotal' => 'decimal:2',
-            'gct_amount' => 'decimal:2',
             'total' => 'decimal:2',
-            'withholding_tax_amount' => 'decimal:2',
-            'contractors_levy_amount' => 'decimal:2',
-            'net_receivable' => 'decimal:2',
         ];
     }
 

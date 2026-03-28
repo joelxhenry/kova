@@ -97,8 +97,6 @@ const formatDate = (d) => {
     return date.toLocaleDateString('en-JM', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
-const hasDeductions = Number(props.invoice.withholding_tax_amount) > 0 || Number(props.invoice.contractors_levy_amount) > 0;
-
 const businessAddress = [
     props.business.business_address_line_1,
     props.business.business_address_line_2,
@@ -156,7 +154,7 @@ const clientAddress = [
                 <!-- Header -->
                 <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8 md:mb-10">
                     <div class="min-w-0">
-                        <h1 class="text-xl sm:text-2xl md:text-3xl font-bold tracking-tighter leading-none">
+                        <h1 class="text-xl sm:text-xl md:text-2xl font-bold tracking-tighter leading-none">
                             {{ business.business_name || page.props.auth.user.name }}
                         </h1>
                         <div v-if="businessAddress.length" class="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
@@ -249,32 +247,10 @@ const clientAddress = [
                 <!-- Totals -->
                 <div class="flex justify-end">
                     <div class="w-full sm:w-64 space-y-1.5 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-muted-foreground">Subtotal</span>
-                            <span class="tabular-nums">{{ formatJMD(invoice.subtotal) }}</span>
-                        </div>
-                        <div v-if="Number(invoice.gct_amount) > 0" class="flex justify-between">
-                            <span class="text-muted-foreground">GCT (15%)</span>
-                            <span class="tabular-nums">{{ formatJMD(invoice.gct_amount) }}</span>
-                        </div>
-                        <div class="flex justify-between text-base font-semibold border-t border-border pt-2">
+                        <div class="flex justify-between text-base font-semibold">
                             <span>Total</span>
                             <span class="tabular-nums">{{ formatJMD(invoice.total) }}</span>
                         </div>
-                        <template v-if="hasDeductions">
-                            <div v-if="Number(invoice.withholding_tax_amount) > 0" class="flex justify-between text-muted-foreground">
-                                <span>Less: WHT</span>
-                                <span class="tabular-nums">-{{ formatJMD(invoice.withholding_tax_amount) }}</span>
-                            </div>
-                            <div v-if="Number(invoice.contractors_levy_amount) > 0" class="flex justify-between text-muted-foreground">
-                                <span>Less: Levy</span>
-                                <span class="tabular-nums">-{{ formatJMD(invoice.contractors_levy_amount) }}</span>
-                            </div>
-                            <div class="flex justify-between text-base font-semibold border-t border-border pt-2">
-                                <span>Net Receivable</span>
-                                <span class="tabular-nums">{{ formatJMD(invoice.net_receivable) }}</span>
-                            </div>
-                        </template>
                     </div>
                 </div>
 

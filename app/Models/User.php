@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -11,14 +10,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Paddle\Billable;
 
 #[Fillable(['name', 'email', 'password', 'suspended_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use Billable, HasFactory, Notifiable;
+    use HasFactory, Notifiable;
 
     /**
      * @return array<string, string>
@@ -39,14 +37,6 @@ class User extends Authenticatable
     }
 
     /**
-     * @return HasOne<TaxProfile, $this>
-     */
-    public function taxProfile(): HasOne
-    {
-        return $this->hasOne(TaxProfile::class);
-    }
-
-    /**
      * @return HasMany<Client, $this>
      */
     public function clients(): HasMany
@@ -63,19 +53,11 @@ class User extends Authenticatable
     }
 
     /**
-     * @return HasMany<WithholdingCredit, $this>
+     * @return HasMany<Expense, $this>
      */
-    public function withholdingCredits(): HasMany
+    public function expenses(): HasMany
     {
-        return $this->hasMany(WithholdingCredit::class);
-    }
-
-    /**
-     * @return HasMany<TaxFormSnapshot, $this>
-     */
-    public function taxFormSnapshots(): HasMany
-    {
-        return $this->hasMany(TaxFormSnapshot::class);
+        return $this->hasMany(Expense::class);
     }
 
     /**

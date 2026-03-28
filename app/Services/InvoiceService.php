@@ -4,17 +4,15 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\Client;
 use App\Models\Invoice;
-use App\Models\StatutoryRate;
 use App\Models\User;
 
 class InvoiceService
 {
     public function __construct(
-        private readonly WithholdingCreditService $withholdingCreditService,
         private readonly UserSettingService $userSettingService,
     ) {}
+
     /**
      * @param array<string, mixed> $data
      * @param list<array{description: string, quantity: float|string, unit_price: float|string}> $items
@@ -23,25 +21,12 @@ class InvoiceService
     {
         $data['invoice_number'] = $this->userSettingService->generateInvoiceNumber($user);
 
-        $client = Client::findOrFail($data['client_id']);
-        $taxProfile = $user->taxProfile;
-
-        $issueDate = $data['issue_date'] ?? now()->toDateString();
         $subtotal = $this->calculateSubtotal($items);
-        $gctAmount = $this->calculateGct($user, $subtotal, $issueDate);
-        $total = $subtotal + $gctAmount;
-        $withholdingTax = $this->calculateWithholdingTax($client, $subtotal, $taxProfile?->business_type, $issueDate);
-        $contractorsLevy = $this->calculateContractorsLevy($subtotal, $taxProfile?->business_type, $issueDate);
-        $netReceivable = $total - $withholdingTax - $contractorsLevy;
 
         $invoice = $user->invoices()->create([
             ...$data,
             'subtotal' => $subtotal,
-            'gct_amount' => $gctAmount,
-            'total' => $total,
-            'withholding_tax_amount' => $withholdingTax,
-            'contractors_levy_amount' => $contractorsLevy,
-            'net_receivable' => $netReceivable,
+            'total' => $subtotal,
         ]);
 
         $this->syncItems($invoice, $items);
@@ -55,38 +40,17 @@ class InvoiceService
      */
     public function update(Invoice $invoice, array $data, array $items): Invoice
     {
-        $user = $invoice->user;
-        $client = Client::findOrFail($data['client_id'] ?? $invoice->client_id);
-        $taxProfile = $user->taxProfile;
-
-        $issueDate = $data['issue_date'] ?? $invoice->issue_date;
         $subtotal = $this->calculateSubtotal($items);
-        $gctAmount = $this->calculateGct($user, $subtotal, $issueDate);
-        $total = $subtotal + $gctAmount;
-        $withholdingTax = $this->calculateWithholdingTax($client, $subtotal, $taxProfile?->business_type, $issueDate);
-        $contractorsLevy = $this->calculateContractorsLevy($subtotal, $taxProfile?->business_type, $issueDate);
-        $netReceivable = $total - $withholdingTax - $contractorsLevy;
 
         $invoice->update([
             ...$data,
             'subtotal' => $subtotal,
-            'gct_amount' => $gctAmount,
-            'total' => $total,
-            'withholding_tax_amount' => $withholdingTax,
-            'contractors_levy_amount' => $contractorsLevy,
-            'net_receivable' => $netReceivable,
+            'total' => $subtotal,
         ]);
 
         $this->syncItems($invoice, $items);
 
-        $invoice = $invoice->fresh(['items', 'client']);
-
-        // Auto-create withholding credit when invoice is marked as paid
-        if ($invoice->status === 'paid') {
-            $this->withholdingCreditService->createFromInvoice($invoice);
-        }
-
-        return $invoice;
+        return $invoice->fresh(['items', 'client']);
     }
 
     public function delete(Invoice $invoice): void
@@ -94,23 +58,13 @@ class InvoiceService
         $invoice->delete();
     }
 
-    /**
-     * Update only the status of an invoice.
-     */
     public function updateStatus(Invoice $invoice, string $status): Invoice
     {
         $invoice->update(['status' => $status]);
 
-        if ($status === 'paid') {
-            $this->withholdingCreditService->createFromInvoice($invoice);
-        }
-
         return $invoice->fresh(['items', 'client']);
     }
 
-    /**
-     * Duplicate an invoice as a new draft.
-     */
     public function duplicate(Invoice $invoice): Invoice
     {
         $user = $invoice->user;
@@ -141,51 +95,6 @@ class InvoiceService
         }
 
         return round($subtotal, 2);
-    }
-
-    private function calculateGct(User $user, float $subtotal, string $rateDate): float
-    {
-        $taxProfile = $user->taxProfile;
-
-        if (! $taxProfile?->is_gct_registered) {
-            return 0.0;
-        }
-
-        $gctRate = StatutoryRate::getValue('gct_rate', $rateDate);
-
-        return round($subtotal * $gctRate / 100, 2);
-    }
-
-    private function calculateWithholdingTax(Client $client, float $subtotal, ?string $businessType, string $rateDate): float
-    {
-        if (! $client->is_designated_entity) {
-            return 0.0;
-        }
-
-        $threshold = StatutoryRate::getValue('withholding_tax_invoice_threshold', $rateDate);
-
-        if ($subtotal < $threshold) {
-            return 0.0;
-        }
-
-        if ($businessType === null || in_array($businessType, ['construction', 'haulage', 'tillage'], true)) {
-            return 0.0;
-        }
-
-        $rate = StatutoryRate::getValue('withholding_tax_rate', $rateDate);
-
-        return round($subtotal * $rate / 100, 2);
-    }
-
-    private function calculateContractorsLevy(float $subtotal, ?string $businessType, string $rateDate): float
-    {
-        if (! in_array($businessType, ['construction', 'haulage', 'tillage'], true)) {
-            return 0.0;
-        }
-
-        $rate = StatutoryRate::getValue('contractors_levy_rate', $rateDate);
-
-        return round($subtotal * $rate / 100, 2);
     }
 
     /**

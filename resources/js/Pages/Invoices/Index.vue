@@ -61,7 +61,7 @@ const statusColors = {
         <section class="py-12 md:py-20">
             <div class="flex items-center justify-between mb-10">
                 <div>
-                    <h1 class="text-3xl md:text-4xl font-bold tracking-tighter leading-none">Invoices</h1>
+                    <h1 class="text-xl md:text-2xl font-bold tracking-tighter leading-none">Invoices</h1>
                 </div>
                 <Link href="/invoices/create" class="inline-flex items-center gap-2 px-5 py-2.5 bg-accent/10 text-accent font-medium text-sm rounded-full hover:bg-accent/20 transition-all duration-200">
                     New invoice

@@ -25,17 +25,5 @@
     </head>
     <body>
         @inertia
-
-        @if(config('cashier.seller_id'))
-            <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
-            <script>
-                Paddle.Setup({
-                    seller: {{ config('cashier.seller_id') }},
-                    @if(config('cashier.sandbox'))
-                    environment: 'sandbox',
-                    @endif
-                });
-            </script>
-        @endif
     </body>
 </html>

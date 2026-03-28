@@ -30,7 +30,7 @@ const formatTime = (date) => {
         <section class="py-12 md:py-20 max-w-3xl">
             <div class="flex items-center justify-between mb-10">
                 <div>
-                    <h1 class="text-3xl md:text-4xl font-bold tracking-tight leading-tight">Notifications</h1>
+                    <h1 class="text-xl md:text-2xl font-bold tracking-tight leading-tight">Notifications</h1>
                 </div>
                 <Button
                     v-if="notifications.data.some(n => !n.read_at)"

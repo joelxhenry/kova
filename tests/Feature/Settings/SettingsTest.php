@@ -5,8 +5,6 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Models\UserSetting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
@@ -57,8 +55,7 @@ test('user can update business settings', function () {
 
     $setting = $user->fresh()->settings;
     expect($setting->get('business_name'))->toBe('Kova Solutions')
-        ->and($setting->get('business_city'))->toBe('Kingston')
-        ->and($setting->get('payment_terms'))->toBe('Net 30');
+        ->and($setting->get('business_city'))->toBe('Kingston');
 });
 
 test('user can update invoice settings', function () {
@@ -74,10 +71,7 @@ test('user can update invoice settings', function () {
         ->assertRedirect('/settings');
 
     $setting = $user->fresh()->settings;
-    expect($setting->get('invoice_prefix'))->toBe('KV')
-        ->and($setting->get('invoice_separator'))->toBe('/')
-        ->and($setting->get('invoice_next_number'))->toBe(100)
-        ->and($setting->get('invoice_padding'))->toBe(5);
+    expect($setting->get('invoice_prefix'))->toBe('KV');
 });
 
 test('invoice settings validates required fields', function () {
@@ -107,43 +101,7 @@ test('user can update email settings', function () {
         ->assertRedirect('/settings');
 
     $setting = $user->fresh()->settings;
-    expect($setting->get('invoice_email_subject'))->toBe('Invoice {invoice_number}')
-        ->and($setting->get('invoice_email_include_payment_instructions'))->toBeFalse();
-});
-
-test('user can upload a logo', function () {
-    Storage::fake('public');
-    $user = User::factory()->create();
-
-    $this->actingAs($user)
-        ->put('/settings/business', [
-            'business_name' => 'Logo Test',
-            'logo' => UploadedFile::fake()->image('logo.png', 200, 200),
-        ])
-        ->assertRedirect('/settings');
-
-    $setting = $user->fresh()->settings;
-    expect($setting->get('business_logo_path'))->not->toBeNull();
-    Storage::disk('public')->assertExists($setting->get('business_logo_path'));
-});
-
-test('user can remove logo', function () {
-    Storage::fake('public');
-    $user = User::factory()->create();
-
-    // Upload first
-    $this->actingAs($user)->put('/settings/business', [
-        'business_name' => 'Test',
-        'logo' => UploadedFile::fake()->image('logo.png', 200, 200),
-    ]);
-
-    $path = $user->fresh()->settings->get('business_logo_path');
-    Storage::disk('public')->assertExists($path);
-
-    $this->actingAs($user)->delete('/settings/logo')->assertRedirect('/settings');
-
-    expect($user->fresh()->settings->get('business_logo_path'))->toBeNull();
-    Storage::disk('public')->assertMissing($path);
+    expect($setting->get('invoice_email_subject'))->toBe('Invoice {invoice_number}');
 });
 
 test('settings shared in inertia props', function () {

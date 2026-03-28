@@ -38,7 +38,7 @@ const formatDate = (d) => {
 
     <AdminLayout>
         <section class="py-12 md:py-20">
-            <h1 class="text-3xl md:text-4xl font-bold tracking-tighter leading-none mb-10">Users</h1>
+            <h1 class="text-xl md:text-2xl font-bold tracking-tighter leading-none mb-10">Users</h1>
 
             <!-- Filters -->
             <div class="flex flex-wrap gap-3 mb-8">

@@ -226,38 +226,10 @@
 
         {{-- Totals --}}
         <div class="totals">
-            <div class="total-row">
-                <span class="total-label">Subtotal</span>
-                <span class="total-value">${{ number_format((float)$invoice->subtotal, 2) }}</span>
-            </div>
-            @if((float)$invoice->gct_amount > 0)
-                <div class="total-row">
-                    <span class="total-label">GCT (15%)</span>
-                    <span class="total-value">${{ number_format((float)$invoice->gct_amount, 2) }}</span>
-                </div>
-            @endif
             <div class="total-row grand">
                 <span class="total-label">Total</span>
                 <span class="total-value">${{ number_format((float)$invoice->total, 2) }}</span>
             </div>
-            @if((float)$invoice->withholding_tax_amount > 0)
-                <div class="total-row deduction">
-                    <span class="total-label">Less: Withholding Tax</span>
-                    <span class="total-value">-${{ number_format((float)$invoice->withholding_tax_amount, 2) }}</span>
-                </div>
-            @endif
-            @if((float)$invoice->contractors_levy_amount > 0)
-                <div class="total-row deduction">
-                    <span class="total-label">Less: Contractors Levy</span>
-                    <span class="total-value">-${{ number_format((float)$invoice->contractors_levy_amount, 2) }}</span>
-                </div>
-            @endif
-            @if((float)$invoice->withholding_tax_amount > 0 || (float)$invoice->contractors_levy_amount > 0)
-                <div class="total-row net">
-                    <span class="total-label">Net Receivable</span>
-                    <span class="total-value">${{ number_format((float)$invoice->net_receivable, 2) }}</span>
-                </div>
-            @endif
         </div>
 
         {{-- Footer --}}

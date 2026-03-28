@@ -50,7 +50,7 @@ const deleteClient = () => {
 
                 <div class="flex items-start justify-between mt-3">
                     <div class="min-w-0 flex-1">
-                        <h1 class="text-2xl md:text-3xl font-bold tracking-tight leading-tight truncate">
+                        <h1 class="text-xl md:text-2xl font-bold tracking-tight leading-tight truncate">
                             {{ client.name }}
                         </h1>
                         <div class="mt-1 text-sm text-muted-foreground space-y-0.5">
