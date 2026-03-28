@@ -33,7 +33,7 @@ class QuarterlyPaymentReminderNotification extends Notification implements Shoul
         return (new MailMessage())
             ->subject("Q{$this->quarter} Tax Payment Due in {$this->daysUntil} Days")
             ->greeting("Hi {$notifiable->name},")
-            ->line("Your Q{$this->quarter} estimated tax payment of JMD " . number_format($this->amountDue, 2) . " is due on {$this->deadline}.")
+            ->line("Your Q{$this->quarter} estimated tax payment of $" . number_format($this->amountDue, 2) . " is due on {$this->deadline}.")
             ->line("You have {$this->daysUntil} days remaining.")
             ->action('View Dashboard', url('/dashboard'))
             ->line('Stay on top of your TAJ obligations with Kova.');
@@ -50,7 +50,7 @@ class QuarterlyPaymentReminderNotification extends Notification implements Shoul
             'deadline' => $this->deadline,
             'amount_due' => $this->amountDue,
             'days_until' => $this->daysUntil,
-            'message' => "Q{$this->quarter} payment of JMD " . number_format($this->amountDue, 2) . " due in {$this->daysUntil} days ({$this->deadline}).",
+            'message' => "Q{$this->quarter} payment of $" . number_format($this->amountDue, 2) . " due in {$this->daysUntil} days ({$this->deadline}).",
         ];
     }
 }

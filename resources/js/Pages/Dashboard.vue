@@ -24,10 +24,10 @@ const { year: selectedYear, years, changeYear } = useFiscalYear(props.year);
     <Head title="Dashboard" />
 
     <AuthenticatedLayout>
-        <section class="py-12 md:py-20">
-            <div class="flex items-center justify-between mb-10">
+        <section class="py-8 md:py-16 lg:py-20">
+            <div class="flex items-center justify-between mb-6 md:mb-10">
                 <div>
-                    <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
+                    <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
                         Welcome back,<br>
                         <span class="text-accent">{{ user.name }}.</span>
                     </h1>
@@ -41,19 +41,17 @@ const { year: selectedYear, years, changeYear } = useFiscalYear(props.year);
                 />
             </div>
 
-            <div class="space-y-6">
+            <div class="space-y-4 md:space-y-6">
                 <!-- Tax Summary -->
                 <TaxSummaryCard :breakdown="taxBreakdown" />
 
-                <!-- Quarterly + Withholding + GCT row -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-2">
-                        <QuarterlyEstimatesTimeline :estimates="quarterlyEstimates" />
-                    </div>
-                    <div class="space-y-6">
-                        <WithholdingCreditsWidget :credits="taxBreakdown.withholdingCredits" :year="year" />
-                        <GctThresholdTracker :gctStatus="gctStatus" />
-                    </div>
+                <!-- Quarterly Estimates -->
+                <QuarterlyEstimatesTimeline :estimates="quarterlyEstimates" />
+
+                <!-- Withholding + GCT row -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                    <WithholdingCreditsWidget :credits="taxBreakdown.withholdingCredits" :year="year" />
+                    <GctThresholdTracker :gctStatus="gctStatus" />
                 </div>
             </div>
         </section>

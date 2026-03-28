@@ -41,54 +41,59 @@ const deleteClient = () => {
     <Head :title="client.name" />
 
     <AuthenticatedLayout>
-        <section class="py-12 md:py-20 max-w-4xl">
-            <div class="flex items-start justify-between mb-8">
-                <div>
-                    <h1 class="text-3xl md:text-4xl font-bold tracking-tight leading-tight">
-                        {{ client.name }}
-                    </h1>
-                    <div class="mt-2 flex items-center gap-3 text-sm text-muted-foreground">
-                        <span v-if="client.email">{{ client.email }}</span>
-                        <span v-if="client.email && client.phone">·</span>
-                        <span v-if="client.phone">{{ client.phone }}</span>
-                        <span v-if="client.is_designated_entity" class="text-xs font-medium text-accent bg-accent/10 px-2 py-0.5 rounded-full">Designated Entity</span>
+        <section class="py-8 md:py-16 lg:py-20 max-w-4xl">
+            <!-- Header -->
+            <div class="mb-6 md:mb-8">
+                <Link href="/clients" class="text-sm text-muted-foreground hover:text-foreground transition-colors duration-150">
+                    &larr; Clients
+                </Link>
+
+                <div class="flex items-start justify-between mt-3">
+                    <div class="min-w-0 flex-1">
+                        <h1 class="text-2xl md:text-3xl font-bold tracking-tight leading-tight truncate">
+                            {{ client.name }}
+                        </h1>
+                        <div class="mt-1 text-sm text-muted-foreground space-y-0.5">
+                            <div v-if="client.email">{{ client.email }}</div>
+                            <div v-if="client.phone">{{ client.phone }}</div>
+                            <div v-if="formatAddress(client)">{{ formatAddress(client) }}</div>
+                            <div v-if="client.trn" class="tabular-nums">TRN: {{ client.trn }}</div>
+                        </div>
+                        <span v-if="client.is_designated_entity" class="inline-block mt-2 text-[11px] font-medium text-accent bg-accent/10 px-2 py-0.5 rounded-full">
+                            Designated Entity
+                        </span>
                     </div>
-                    <p v-if="formatAddress(client)" class="mt-1 text-sm text-muted-foreground">{{ formatAddress(client) }}</p>
-                    <p v-if="client.trn" class="mt-1 text-xs text-muted-foreground">TRN: {{ client.trn }}</p>
-                </div>
-                <div class="flex items-center gap-2">
-                    <Link :href="`/clients/${client.id}/edit`">
-                        <Button label="Edit" severity="secondary" outlined size="small" />
-                    </Link>
-                    <Button label="Delete" severity="danger" text size="small" @click="deleteClient" />
+                    <div class="flex items-center gap-2 ml-4 shrink-0">
+                        <Link :href="`/clients/${client.id}/edit`">
+                            <Button icon="pi pi-pencil" text size="small" />
+                        </Link>
+                        <Button icon="pi pi-trash" text severity="danger" size="small" @click="deleteClient" />
+                    </div>
                 </div>
             </div>
 
             <!-- Financial Summary -->
-            <div class="grid grid-cols-3 gap-4 mb-8">
-                <div class="bg-card rounded-2xl shadow-sm p-5">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
+                <div class="bg-card rounded-2xl shadow-sm p-4 md:p-5">
                     <div class="text-xs text-muted-foreground">Total Invoiced</div>
-                    <div class="text-xl font-bold tabular-nums mt-1">{{ formatJMD(summary.totalInvoiced) }}</div>
+                    <div class="text-lg md:text-xl font-bold tabular-nums mt-1">{{ formatJMD(summary.totalInvoiced) }}</div>
                 </div>
-                <div class="bg-card rounded-2xl shadow-sm p-5">
+                <div class="bg-card rounded-2xl shadow-sm p-4 md:p-5">
                     <div class="text-xs text-muted-foreground">Total Paid</div>
-                    <div class="text-xl font-bold tabular-nums mt-1">{{ formatJMD(summary.totalPaid) }}</div>
+                    <div class="text-lg md:text-xl font-bold tabular-nums mt-1">{{ formatJMD(summary.totalPaid) }}</div>
                 </div>
-                <div class="bg-card rounded-2xl shadow-sm p-5">
+                <div class="bg-card rounded-2xl shadow-sm p-4 md:p-5">
                     <div class="text-xs text-muted-foreground">Balance Due</div>
-                    <div class="text-xl font-bold tabular-nums mt-1" :class="summary.balanceDue > 0 ? 'text-accent' : ''">
+                    <div class="text-lg md:text-xl font-bold tabular-nums mt-1" :class="summary.balanceDue > 0 ? 'text-accent' : ''">
                         {{ formatJMD(summary.balanceDue) }}
                     </div>
                 </div>
             </div>
 
             <!-- Contacts -->
-            <div class="mb-8">
-                <h2 class="text-sm font-medium text-muted-foreground mb-3">Contacts</h2>
-                <div v-if="!client.contacts || client.contacts.length === 0" class="text-sm text-muted-foreground py-4">
-                    No contacts added. <Link :href="`/clients/${client.id}/edit`" class="text-accent hover:underline">Add contacts</Link>
-                </div>
-                <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div v-if="client.contacts?.length" class="mb-6 md:mb-8">
+                <h2 class="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Contacts</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div
                         v-for="contact in client.contacts"
                         :key="contact.id"
@@ -104,9 +109,9 @@ const deleteClient = () => {
             <!-- Invoices -->
             <div>
                 <div class="flex items-center justify-between mb-3">
-                    <h2 class="text-sm font-medium text-muted-foreground">Invoices</h2>
-                    <Link :href="`/invoices/create`">
-                        <Button label="New Invoice" size="small" />
+                    <h2 class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Invoices</h2>
+                    <Link :href="`/invoices/create`" class="text-sm text-accent font-medium hover:underline">
+                        New invoice
                     </Link>
                 </div>
 
@@ -114,29 +119,27 @@ const deleteClient = () => {
                     No invoices for this client yet.
                 </div>
 
-                <div v-else class="bg-card rounded-2xl shadow-sm overflow-hidden">
+                <div v-else class="rounded-2xl">
                     <Link
                         v-for="inv in invoices"
                         :key="inv.id"
                         :href="`/invoices/${inv.id}`"
-                        class="flex items-center justify-between py-3 px-5 border-b border-border/50 last:border-b-0 hover:bg-muted/20 transition-colors duration-200"
+                        class="flex items-center justify-between py-4 border-b border-border hover:bg-muted/50 transition-colors duration-150 -mx-4 px-4"
                     >
                         <div>
-                            <span class="text-sm tabular-nums text-muted-foreground">{{ inv.invoice_number }}</span>
-                            <span class="ml-2 text-sm text-foreground">{{ inv.issue_date?.split('T')[0] }}</span>
+                            <span class="tabular-nums text-sm text-muted-foreground">{{ inv.invoice_number }}</span>
+                            <div class="mt-0.5 text-sm text-muted-foreground">
+                                {{ inv.issue_date?.split('T')[0] }}
+                            </div>
                         </div>
-                        <div class="flex items-center gap-4">
-                            <span class="tabular-nums text-sm font-medium">{{ formatJMD(inv.total) }}</span>
-                            <span class="text-xs font-medium" :class="statusColors[inv.status]">{{ inv.status }}</span>
+                        <div class="text-right">
+                            <div class="tabular-nums text-base font-medium">{{ formatJMD(inv.total) }}</div>
+                            <div class="text-xs font-medium" :class="statusColors[inv.status]">
+                                {{ inv.status }}
+                            </div>
                         </div>
                     </Link>
                 </div>
-            </div>
-
-            <div class="mt-8">
-                <Link href="/clients" class="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200">
-                    Back to clients
-                </Link>
             </div>
         </section>
     </AuthenticatedLayout>

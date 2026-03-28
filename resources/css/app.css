@@ -65,6 +65,22 @@
     }
 }
 
+/* ── Mobile form inputs ── */
+@media (max-width: 640px) {
+    .p-inputtext, .p-select-label, .p-textarea, .p-inputnumber-input {
+        font-size: 14px !important;
+    }
+}
+
+/* ── Mobile dialogs — inset from edges ── */
+@media (max-width: 640px) {
+    .p-dialog {
+        width: calc(100% - 2rem) !important;
+        max-width: calc(100% - 2rem) !important;
+        margin: 1rem !important;
+    }
+}
+
 /* ── NProgress bar ── */
 #nprogress .bar {
     background: var(--color-accent) !important;

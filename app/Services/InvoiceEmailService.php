@@ -105,7 +105,7 @@ class InvoiceEmailService
                 $invoice->invoice_number,
                 $businessSettings['business_name'] ?? '',
                 $invoice->client?->name ?? '',
-                "J\${$total}",
+                "\${$total}",
             ],
             $template,
         );

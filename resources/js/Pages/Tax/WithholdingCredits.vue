@@ -107,7 +107,7 @@ const deleteCredit = (credit) => {
                     <form @submit.prevent="submit" class="space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <InputLabel value="Amount (JMD)" />
+                                <InputLabel value="Amount" />
                                 <InputNumber v-model="form.amount" :min="0.01" :minFractionDigits="2" :maxFractionDigits="2" fluid :invalid="!!form.errors.amount" />
                                 <InputError :message="form.errors.amount" />
                             </div>

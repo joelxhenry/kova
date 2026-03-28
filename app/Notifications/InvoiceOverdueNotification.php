@@ -31,7 +31,7 @@ class InvoiceOverdueNotification extends Notification implements ShouldQueue
         return (new MailMessage())
             ->subject("Invoice {$this->invoice->invoice_number} is Overdue")
             ->greeting("Hi {$notifiable->name},")
-            ->line("Invoice {$this->invoice->invoice_number} for JMD " . number_format((float) $this->invoice->total, 2) . " was due on {$this->invoice->due_date->format('M d, Y')} and is now overdue.")
+            ->line("Invoice {$this->invoice->invoice_number} for $" . number_format((float) $this->invoice->total, 2) . " was due on {$this->invoice->due_date->format('M d, Y')} and is now overdue.")
             ->action('View Invoice', url("/invoices/{$this->invoice->id}"))
             ->line('Follow up with your client to collect payment.');
     }
@@ -47,7 +47,7 @@ class InvoiceOverdueNotification extends Notification implements ShouldQueue
             'invoice_number' => $this->invoice->invoice_number,
             'total' => $this->invoice->total,
             'due_date' => $this->invoice->due_date->toDateString(),
-            'message' => "Invoice {$this->invoice->invoice_number} (JMD " . number_format((float) $this->invoice->total, 2) . ") is overdue.",
+            'message' => "Invoice {$this->invoice->invoice_number} ($" . number_format((float) $this->invoice->total, 2) . ") is overdue.",
         ];
     }
 }

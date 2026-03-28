@@ -5,6 +5,7 @@ import PrimeVue from 'primevue/config';
 import ToastService from 'primevue/toastservice';
 import ConfirmationService from 'primevue/confirmationservice';
 import KovaPreset from './primevue-preset.js';
+import 'primeicons/primeicons.css';
 import '../css/app.css';
 
 // Inertia progress bar via NProgress

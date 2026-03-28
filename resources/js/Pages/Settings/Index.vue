@@ -45,20 +45,11 @@ const businessForm = useForm({
     business_email: props.business.business_email ?? '',
     payment_terms: props.business.payment_terms ?? '',
     payment_instructions: props.business.payment_instructions ?? '',
-    logo: null,
 });
 
-const onLogoChange = (e) => { businessForm.logo = e.target.files[0] ?? null; };
-
 const submitBusiness = () => {
-    businessForm.transform((data) => {
-        const fd = { ...data };
-        if (!fd.logo) delete fd.logo;
-        return fd;
-    }).post('/settings/business', { forceFormData: true, method: 'put', preserveScroll: true });
+    businessForm.put('/settings/business', { preserveScroll: true });
 };
-
-const removeLogo = () => { router.delete('/settings/logo', { preserveScroll: true }); };
 
 // --- Invoice form ---
 const invoiceForm = useForm({
@@ -157,17 +148,6 @@ const formatCurrency = (key) => {
                             <InputLabel value="Business Name" />
                             <InputText v-model="businessForm.business_name" fluid placeholder="Your business or trading name" :invalid="!!businessForm.errors.business_name" />
                             <InputError :message="businessForm.errors.business_name" />
-                        </div>
-
-                        <div>
-                            <InputLabel value="Logo" />
-                            <div v-if="business.business_logo_path" class="mb-3 flex items-center gap-4">
-                                <img :src="`/storage/${business.business_logo_path}`" alt="Logo" class="h-12 rounded-lg" />
-                                <Button label="Remove" text severity="danger" size="small" @click="removeLogo" type="button" />
-                            </div>
-                            <input type="file" accept=".jpg,.jpeg,.png,.svg" @change="onLogoChange" class="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:border file:border-border file:text-sm file:font-semibold file:bg-input file:text-foreground file:rounded-lg hover:file:bg-muted file:transition-colors file:duration-150 file:cursor-pointer" />
-                            <InputError :message="businessForm.errors.logo" />
-                            <p class="mt-1.5 text-xs text-muted-foreground">JPG, PNG, or SVG. Max 2MB.</p>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

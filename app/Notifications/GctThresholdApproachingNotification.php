@@ -34,8 +34,8 @@ class GctThresholdApproachingNotification extends Notification implements Should
         return (new MailMessage())
             ->subject("GCT Threshold Alert — {$pct}% Reached")
             ->greeting("Hi {$notifiable->name},")
-            ->line("Your annual turnover has reached {$pct}% of the JMD " . number_format($this->threshold, 0) . " GCT registration threshold.")
-            ->line('Current turnover: JMD ' . number_format($this->turnover, 2))
+            ->line("Your annual turnover has reached {$pct}% of the $" . number_format($this->threshold, 0) . " GCT registration threshold.")
+            ->line('Current turnover: $' . number_format($this->turnover, 2))
             ->action('View Tax Profile', url('/tax-profile'))
             ->line('If you exceed this threshold, GCT registration becomes mandatory.');
     }

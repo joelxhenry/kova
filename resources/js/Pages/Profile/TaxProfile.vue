@@ -50,9 +50,7 @@ const formatRate = (key) => {
 const formatCurrency = (key) => {
     const rate = props.statutoryRates[key];
     if (!rate) return '—';
-    return new Intl.NumberFormat('en-JM', {
-        style: 'currency',
-        currency: 'JMD',
+    return '$' + new Intl.NumberFormat('en-US', {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
     }).format(parseFloat(rate.value));

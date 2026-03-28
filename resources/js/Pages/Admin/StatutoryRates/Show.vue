@@ -45,7 +45,7 @@ const formatAuditDate = (d) => {
 
 const formatValue = (val) => {
     if (isPercentage) return `${Number(val).toFixed(4)}%`;
-    return `J$${Number(val).toLocaleString('en-JM', { minimumFractionDigits: 2 })}`;
+    return `$${Number(val).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 };
 </script>
 
@@ -75,7 +75,7 @@ const formatValue = (val) => {
                 <form @submit.prevent="submit" class="space-y-4">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <InputLabel :value="isPercentage ? 'New Rate (%)' : 'New Amount (JMD)'" />
+                            <InputLabel :value="isPercentage ? 'New Rate (%)' : 'New Amount ($)'" />
                             <InputNumber
                                 v-model="form.value"
                                 :minFractionDigits="isPercentage ? 2 : 0"

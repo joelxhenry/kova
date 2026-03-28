@@ -88,26 +88,29 @@ const submit = () => {
                     <InputError :message="form.errors.items" />
 
                     <div class="space-y-4">
-                        <div v-for="(item, index) in form.items" :key="index" class="grid grid-cols-12 gap-3 items-end">
-                            <div class="col-span-5">
-                                <InputLabel v-if="index === 0" value="Description" />
-                                <InputText v-model="item.description" fluid :invalid="!!form.errors[`items.${index}.description`]" />
+                        <div v-for="(item, index) in form.items" :key="index" class="bg-muted/20 rounded-xl p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-medium text-muted-foreground">Item {{ index + 1 }}</span>
+                                <Button v-if="form.items.length > 1" icon="pi pi-times" text severity="danger" size="small" @click="removeItem(index)" type="button" />
+                            </div>
+                            <div class="mb-3">
+                                <InputLabel value="Description" />
+                                <Textarea v-model="item.description" rows="2" fluid :invalid="!!form.errors[`items.${index}.description`]" />
                                 <InputError :message="form.errors[`items.${index}.description`]" />
                             </div>
-                            <div class="col-span-2">
-                                <InputLabel v-if="index === 0" value="Unit" />
-                                <InputText v-model="item.unit" fluid placeholder="e.g. hours" />
-                            </div>
-                            <div class="col-span-1">
-                                <InputLabel v-if="index === 0" value="Qty" />
-                                <InputNumber v-model="item.quantity" :min="0.01" :minFractionDigits="0" :maxFractionDigits="2" fluid :invalid="!!form.errors[`items.${index}.quantity`]" />
-                            </div>
-                            <div class="col-span-3">
-                                <InputLabel v-if="index === 0" value="Unit Price" />
-                                <InputNumber v-model="item.unit_price" :min="0" :minFractionDigits="2" :maxFractionDigits="2" fluid :invalid="!!form.errors[`items.${index}.unit_price`]" />
-                            </div>
-                            <div class="col-span-1 pb-1">
-                                <Button v-if="form.items.length > 1" icon="pi pi-times" text severity="danger" size="small" @click="removeItem(index)" type="button" />
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <InputLabel value="Unit" />
+                                    <InputText v-model="item.unit" fluid placeholder="e.g. hours" />
+                                </div>
+                                <div>
+                                    <InputLabel value="Qty" />
+                                    <InputNumber v-model="item.quantity" :min="0.01" :minFractionDigits="0" :maxFractionDigits="2" fluid :invalid="!!form.errors[`items.${index}.quantity`]" />
+                                </div>
+                                <div>
+                                    <InputLabel value="Unit Price" />
+                                    <InputNumber v-model="item.unit_price" :min="0" :minFractionDigits="2" :maxFractionDigits="2" fluid :invalid="!!form.errors[`items.${index}.unit_price`]" />
+                                </div>
                             </div>
                         </div>
                     </div>

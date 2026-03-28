@@ -11,7 +11,7 @@ const formatValue = (rate) => {
     if (rate.key.includes('rate') || rate.key.includes('levy')) {
         return `${Number(rate.current_value).toFixed(2)}%`;
     }
-    return `J$${Number(rate.current_value).toLocaleString('en-JM', { minimumFractionDigits: 2 })}`;
+    return `$${Number(rate.current_value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 };
 
 const formatDate = (d) => {
