@@ -65,6 +65,13 @@ class HandleInertiaRequests extends Middleware
                 'business_name' => $request->user()->settings->get('business_name'),
                 'business_logo_path' => $request->user()->settings->get('business_logo_path'),
             ] : null,
+            'subscription' => $request->user() ? [
+                'subscribed' => $request->user()->subscribed(),
+                'onTrial' => $request->user()->onTrial(),
+                'trialDaysLeft' => $request->user()->onTrial()
+                    ? (int) now()->diffInDays($request->user()->trialEndsAt(), false)
+                    : null,
+            ] : null,
             'flash' => [
                 'status' => $request->session()->get('status'),
             ],

@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
@@ -64,6 +65,13 @@ Route::get('/withholding-credits', [WithholdingCreditController::class, 'index']
     Route::put('/settings/email', [SettingsController::class, 'updateEmail'])->name('settings.email');
     Route::put('/settings/tax-profile', [SettingsController::class, 'updateTaxProfile'])->name('settings.tax-profile');
     Route::delete('/settings/logo', [SettingsController::class, 'removeLogo'])->name('settings.logo.remove');
+
+    // Billing
+    Route::get('/billing/pricing', [BillingController::class, 'pricing'])->name('billing.pricing');
+    Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
+    Route::post('/billing/cancel', [BillingController::class, 'cancel'])->name('billing.cancel');
+    Route::post('/billing/resume', [BillingController::class, 'resume'])->name('billing.resume');
+    Route::post('/billing/swap', [BillingController::class, 'swap'])->name('billing.swap');
 
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 });

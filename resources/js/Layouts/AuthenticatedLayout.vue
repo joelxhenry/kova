@@ -15,6 +15,11 @@ const unreadCount = computed(() => page.props.notifications?.unreadCount ?? 0);
 const recentNotifications = computed(() => page.props.notifications?.recent ?? []);
 const { canInstall, showIosPrompt, showBanner, install, dismiss } = usePwaInstall();
 
+const subscription = computed(() => page.props.subscription);
+const showTrialBanner = computed(() => {
+    return subscription.value?.onTrial && subscription.value?.trialDaysLeft !== null && subscription.value?.trialDaysLeft >= 0;
+});
+
 const navigation = [
     { name: 'Clients', href: '/clients' },
     { name: 'Invoices', href: '/invoices' },
@@ -105,6 +110,19 @@ watch(() => page.props.flash.status, (message) => {
                 </div>
             </div>
         </Transition>
+
+        <!-- Trial Banner -->
+        <div v-if="showTrialBanner" class="bg-accent/10 border-b border-accent/20">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 md:px-12 lg:px-16 py-2 flex items-center justify-between gap-3">
+                <p class="text-sm text-foreground">
+                    <span class="font-medium">{{ subscription.trialDaysLeft }}</span>
+                    {{ subscription.trialDaysLeft === 1 ? 'day' : 'days' }} left on your free trial
+                </p>
+                <Link href="/billing/pricing" class="text-sm text-accent font-medium hover:underline shrink-0">
+                    Subscribe now
+                </Link>
+            </div>
+        </div>
 
         <!-- Top navbar -->
         <nav class="bg-card shadow-sm">
@@ -240,12 +258,13 @@ watch(() => page.props.flash.status, (message) => {
                     <i class="pi pi-home text-muted-foreground"></i>
                     Dashboard
                 </Link>
-                <div
-                    class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg text-muted-foreground cursor-not-allowed opacity-50"
+                <Link
+                    href="/billing"
+                    class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg hover:bg-muted/30 transition-colors"
                 >
-                    <i class="pi pi-credit-card"></i>
+                    <i class="pi pi-credit-card text-muted-foreground"></i>
                     Billing
-                </div>
+                </Link>
 
                 <div class="border-t border-border mt-1 pt-1">
                     <button

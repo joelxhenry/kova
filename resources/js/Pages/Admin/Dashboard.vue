@@ -29,28 +29,24 @@ const maxSignups = Math.max(...props.signupChart.map(m => m.count), 1);
             <h1 class="text-3xl md:text-4xl font-bold tracking-tighter leading-none mb-10">Admin Dashboard</h1>
 
             <!-- Stats -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
-                <div class="bg-card rounded-2xl shadow-sm p-6">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
+                <div class="bg-card rounded-2xl shadow-sm p-5">
                     <div class="text-xs font-medium text-muted-foreground">Total Users</div>
-                    <div class="text-3xl font-bold tabular-nums mt-2">{{ stats.totalUsers }}</div>
+                    <div class="text-2xl font-bold tabular-nums mt-2">{{ stats.totalUsers }}</div>
                 </div>
-                <div class="bg-card rounded-2xl shadow-sm p-6">
-                    <div class="text-xs font-medium text-muted-foreground">Active</div>
-                    <div class="text-3xl font-bold tabular-nums mt-2">{{ stats.activeUsers }}</div>
+                <div class="bg-card rounded-2xl shadow-sm p-5">
+                    <div class="text-xs font-medium text-muted-foreground">Active Subs</div>
+                    <div class="text-2xl font-bold tabular-nums mt-2">{{ stats.activeSubscriptions }}</div>
                 </div>
-                <div class="bg-card rounded-2xl shadow-sm p-6">
+                <div class="bg-card rounded-2xl shadow-sm p-5">
+                    <div class="text-xs font-medium text-muted-foreground">Trialing</div>
+                    <div class="text-2xl font-bold tabular-nums mt-2">{{ stats.trialingUsers }}</div>
+                </div>
+                <div class="bg-card rounded-2xl shadow-sm p-5">
                     <div class="text-xs font-medium text-muted-foreground">Suspended</div>
-                    <div class="text-3xl font-bold tabular-nums mt-2" :class="stats.suspendedUsers > 0 ? 'text-accent' : ''">
+                    <div class="text-2xl font-bold tabular-nums mt-2" :class="stats.suspendedUsers > 0 ? 'text-accent' : ''">
                         {{ stats.suspendedUsers }}
                     </div>
-                </div>
-                <div class="bg-card rounded-2xl shadow-sm p-6">
-                    <div class="text-xs font-medium text-muted-foreground">Invoices</div>
-                    <div class="text-3xl font-bold tabular-nums mt-2">{{ stats.invoiceCount }}</div>
-                </div>
-                <div class="bg-card rounded-2xl shadow-sm p-6">
-                    <div class="text-xs font-medium text-muted-foreground">Total Paid</div>
-                    <div class="text-xl font-bold tabular-nums mt-2">{{ formatJMD(stats.totalInvoiced) }}</div>
                 </div>
             </div>
 

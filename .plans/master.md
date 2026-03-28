@@ -583,58 +583,170 @@ Separate subdomain (`admin.kova.zncn.app`) for platform administration. Controls
 
 ---
 
-## Phase 8 — Subscription & Billing
+## Phase 8 — Subscription & Billing (Paddle)
 
-Subscription-based access model. Pricing structure and tiers are TBD — this phase defines the infrastructure.
+Subscription-based access via [Paddle](https://www.paddle.com/) as the Merchant of Record. Paddle handles payment processing, tax compliance, invoicing, and currency conversion — ideal for a Jamaica-based SaaS selling internationally.
 
-### 8.1 Subscription Infrastructure
+**Package:** `laravel/cashier-paddle` (Laravel Cashier for Paddle)
 
-- [ ] Migration: `subscriptions` table
+### 8.1 Paddle Setup & Configuration
+
+- [x] Create Paddle account (sandbox first, then production)
+- [x] Create subscription products and prices in Paddle dashboard:
+  - **Kova Pro Monthly** — price in USD (Paddle handles currency conversion)
+  - **Kova Pro Yearly** — discounted annual price
+- [x] Install Laravel Cashier for Paddle:
+  ```bash
+  composer require laravel/cashier-paddle
   ```
-  user_id (FK), plan_id (FK), status enum (active, past_due, cancelled, trialing),
-  trial_ends_at (nullable), current_period_start, current_period_end,
-  cancelled_at (nullable), created_at, updated_at
+- [x] Publish Cashier migrations and config:
+  ```bash
+  php artisan vendor:publish --tag=cashier-migrations
+  php artisan vendor:publish --tag=cashier-config
   ```
-- [ ] Migration: `plans` table (admin-managed)
+- [x] Add Paddle credentials to `.env`:
   ```
-  name, slug, description, price (decimal), interval enum (monthly, yearly),
-  features (json), is_active (boolean), sort_order, created_at, updated_at
+  PADDLE_SELLER_ID=
+  PADDLE_API_KEY=
+  PADDLE_WEBHOOK_SECRET=
+  PADDLE_SANDBOX=true
   ```
-- [ ] Models: `Subscription`, `Plan`
-- [ ] Service: `SubscriptionService` — manage subscription lifecycle
-- [ ] Middleware: `EnsureSubscribed` — gate access to premium features
-- [ ] Pricing page: display available plans (structure TBD)
+- [x] Add `Billable` trait to `User` model
+- [x] Run Cashier migrations (creates `customers`, `subscriptions`, `subscription_items`, `transactions` tables)
+- [x] Register Paddle webhook route (Cashier handles this automatically)
 
-### 8.2 Billing Integration (TBD)
+### 8.2 Subscription Gating
 
-- [ ] Payment gateway integration (provider TBD — Stripe, PayPal, local JM gateway)
-- [ ] Webhook handling for payment events
-- [ ] Invoice generation for subscription payments
-- [ ] Billing history page for users
+- [x] Middleware: `EnsureSubscribed` — checks `$user->subscribed('default')`
+  - Redirects unsubscribed users to pricing page
+  - Allows a grace period for past-due subscriptions
+  - Admin users bypass the check
+- [x] Apply middleware to protected routes (invoices, clients, tax features)
+- [x] Free tier vs paid tier decision:
+  - **Option A:** Free trial (14 days) then paywall
+  - **Option B:** Free tier with limited features (e.g., max 3 clients, no PDF export)
+  - **Option C:** Full paywall after registration
+- [x] User model helpers:
+  - `$user->subscribed()` — has active subscription (via Cashier)
+  - `$user->onTrial()` — is in trial period
+  - `$user->subscription()->onGracePeriod()` — cancelled but still active
 
-### 8.3 Admin Plan Management
+### 8.3 Pricing & Checkout Pages
 
-- [ ] Controller: `Admin\PlanController` (index, create, store, edit, update)
-- [ ] Pages: admin CRUD for plans — name, price, features, active toggle
-- [ ] Subscription analytics in admin dashboard
+- [x] Page: `Pages/Billing/Pricing.vue` — displays available plans
+  - Monthly vs yearly toggle
+  - Feature comparison list
+  - "Subscribe" button per plan triggers Paddle Checkout overlay
+- [x] Paddle Checkout integration:
+  - Use `Paddle.Checkout.open()` JS SDK (overlay mode, not redirect)
+  - Pass `customData: { user_id }` to link payment to user
+  - On success, Cashier webhook processes the subscription
+- [x] Include Paddle JS SDK in `app.blade.php`:
+  ```html
+  <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+  ```
+- [x] Controller: `BillingController`
+  - `pricing()` — shows plans page with Paddle price IDs
+  - `portal()` — redirects to Paddle customer portal (manage payment method, view invoices)
+
+### 8.4 Billing Management
+
+- [x] Page: `Pages/Billing/Index.vue` — user's billing dashboard
+  - Current plan and status (active, trialing, past_due, cancelled)
+  - Next billing date and amount
+  - "Change Plan" button (upgrade/downgrade via Paddle)
+  - "Cancel Subscription" with confirmation
+  - "Update Payment Method" → Paddle customer portal
+  - Transaction history from Paddle
+- [x] Controller actions:
+  - `swap()` — `$user->subscription()->swap($newPriceId)` for plan changes
+  - `cancel()` — `$user->subscription()->cancel()` (ends at period end)
+  - `resume()` — `$user->subscription()->resume()` (if on grace period)
+- [x] Link from user menu dropdown "Billing" → `/billing`
+
+### 8.5 Webhook Handling
+
+Cashier handles most webhooks automatically. Custom handlers for:
+
+- [x] `subscription.activated` — send welcome email, log event
+- [x] `subscription.cancelled` — send cancellation confirmation
+- [x] `subscription.past_due` — send payment failed notification
+- [x] `subscription.updated` — handle plan changes
+- [x] `transaction.completed` — Paddle handles invoices/receipts (no need to generate our own)
+- [x] Listener: `PaddleWebhookReceived` event for custom logic
+
+### 8.6 Admin Subscription Overview
+
+- [x] Update `Admin\DashboardController`:
+  - Active subscriptions count
+  - MRR (Monthly Recurring Revenue) from Paddle API or local aggregation
+  - Churn count (cancellations this month)
+- [x] Update `Admin\Users\Show.vue`:
+  - Show subscription status, plan, next billing date
+  - Transaction history
+- [x] Admin cannot directly modify subscriptions (Paddle is the source of truth)
+
+### 8.7 Trial & Onboarding Flow
+
+- [x] Configure trial period in Paddle product settings (14 days)
+- [x] After registration, user lands on dashboard with trial banner:
+  - "You have X days left on your free trial"
+  - "Subscribe now" CTA
+- [x] Trial expiry: `EnsureSubscribed` middleware redirects to pricing page
+- [x] Trial banner component in `AuthenticatedLayout.vue`:
+  - Shows remaining days
+  - Accent-colored, dismissible but re-appears daily
 
 ### Verification
 
-- [ ] Users can view available plans
-- [ ] Subscription middleware gates access appropriately
-- [ ] Admin can create/edit plans
-- [ ] Subscription status visible in admin user management
+- [x] User can subscribe via Paddle Checkout overlay
+- [x] Subscription status reflects correctly after payment
+- [x] Plan changes (upgrade/downgrade) work via Paddle
+- [x] Cancellation ends at period end (grace period)
+- [x] Past-due users see warning but retain access during grace period
+- [x] Expired/cancelled users redirected to pricing page
+- [x] Webhooks process correctly in sandbox
+- [x] Admin dashboard shows subscription metrics
+- [x] Trial countdown works and gates access after expiry
+
+### Implementation Order
+
+```
+8.1 Paddle Setup & Configuration
+ │
+8.2 Subscription Gating (middleware)
+ │
+8.3 Pricing & Checkout Pages
+ │
+8.4 Billing Management (user-facing)
+ │
+8.5 Webhook Handling (custom events)
+ │
+8.6 Admin Subscription Overview
+ │
+8.7 Trial & Onboarding Flow
+```
+
+**Why Paddle over Stripe:**
+- Paddle is a Merchant of Record — handles sales tax, VAT, and compliance globally
+- No need for Kova to register as a payment processor in Jamaica
+- Paddle handles currency conversion (users can pay in their local currency)
+- Built-in subscription invoicing and receipts (no need to generate our own)
+- Single integration for all payment methods (cards, PayPal, Apple Pay, Google Pay)
+- Laravel Cashier for Paddle provides first-party integration
 
 ---
 
 ## Data Model Summary
 
 ```
-User
+User (Billable)
  ├── TaxProfile (1:1)
  ├── UserSetting (1:1) — business profile, invoice config, email templates
- ├── Subscription (1:1 active)
- │    └── Plan (N:1)
+ ├── Customer (1:1, Paddle via Cashier)
+ ├── Subscription (1:N, Paddle via Cashier)
+ │    └── SubscriptionItem (1:N)
+ ├── Transaction (1:N, Paddle via Cashier)
  ├── Client (1:N)
  │    ├── ClientContact (1:N)
  │    └── Invoice (1:N)
@@ -642,8 +754,8 @@ User
  ├── WithholdingCredit (1:N)
  └── TaxFormSnapshot (1:N)
 
-StatutoryRate (admin-managed, global)
-Plan (admin-managed, global)
+StatutoryRate (admin-managed, versioned by effective_from)
+ └── StatutoryRateAuditLog (1:N)
 ```
 
 ---

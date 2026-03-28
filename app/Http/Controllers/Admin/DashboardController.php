@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\User;
+use Laravel\Paddle\Subscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -24,6 +25,9 @@ class DashboardController extends Controller
 
         $totalInvoiced = (float) Invoice::where('status', 'paid')->sum('total');
         $invoiceCount = Invoice::count();
+
+        $activeSubscriptions = Subscription::where('status', 'active')->count();
+        $trialingUsers = Subscription::where('status', 'trialing')->count();
 
         $recentSignups = User::where('is_admin', false)
             ->orderByDesc('created_at')
@@ -53,6 +57,8 @@ class DashboardController extends Controller
                 'suspendedUsers' => $suspendedUsers,
                 'totalInvoiced' => round($totalInvoiced, 2),
                 'invoiceCount' => $invoiceCount,
+                'activeSubscriptions' => $activeSubscriptions,
+                'trialingUsers' => $trialingUsers,
             ],
             'recentSignups' => $recentSignups,
             'signupChart' => $signupChart,
