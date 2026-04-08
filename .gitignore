@@ -25,3 +25,7 @@ Homestead.yaml
 Thumbs.db
 .env.local
 .env.local.bak
+.claude/
+CLAUDE.md
+.plans/
+
