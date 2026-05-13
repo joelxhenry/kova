@@ -10,6 +10,7 @@ import Textarea from 'primevue/textarea';
 import Select from 'primevue/select';
 import DatePicker from 'primevue/datepicker';
 import Button from 'primevue/button';
+import Checkbox from 'primevue/checkbox';
 import { useCurrencyFormatter } from '@/Composables/useCurrencyFormatter.js';
 
 const props = defineProps({
@@ -42,6 +43,7 @@ const form = useForm({
     due_date: props.invoice.due_date ? parseDate(props.invoice.due_date) : '',
     status: props.invoice.status,
     notes: props.invoice.notes ?? '',
+    hide_payment_instructions: !!props.invoice.hide_payment_instructions,
     items: props.invoice.items.map(item => ({
         description: item.description,
         unit: item.unit ?? '',
@@ -166,6 +168,11 @@ const submit = () => {
                 <div>
                     <InputLabel value="Notes" />
                     <Textarea v-model="form.notes" rows="3" fluid />
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <Checkbox v-model="form.hide_payment_instructions" inputId="hide_payment_instructions" :binary="true" />
+                    <label for="hide_payment_instructions" class="text-sm">Hide payment instructions on this invoice's PDF</label>
                 </div>
 
                 <div class="flex items-center gap-6 pt-4">

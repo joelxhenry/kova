@@ -21,6 +21,7 @@ class Invoice extends Model
         'total',
         'status',
         'notes',
+        'hide_payment_instructions',
     ];
 
     /**
@@ -33,6 +34,7 @@ class Invoice extends Model
             'due_date' => 'date',
             'subtotal' => 'decimal:2',
             'total' => 'decimal:2',
+            'hide_payment_instructions' => 'boolean',
         ];
     }
 

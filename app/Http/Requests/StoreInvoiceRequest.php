@@ -25,6 +25,7 @@ class StoreInvoiceRequest extends FormRequest
             'due_date' => ['nullable', 'date', 'after_or_equal:issue_date'],
             'status' => ['sometimes', Rule::in(['draft', 'sent', 'paid', 'overdue', 'cancelled'])],
             'notes' => ['nullable', 'string', 'max:2000'],
+            'hide_payment_instructions' => ['sometimes', 'boolean'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string', 'max:255'],
             'items.*.unit' => ['nullable', 'string', 'max:50'],

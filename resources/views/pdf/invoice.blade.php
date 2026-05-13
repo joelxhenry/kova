@@ -236,7 +236,7 @@
         </div>
 
         {{-- Footer --}}
-        @if($invoice->notes || $businessSettings['payment_instructions'])
+        @if($invoice->notes || ($businessSettings['payment_instructions'] && !$invoice->hide_payment_instructions))
             <div class="footer">
                 @if($invoice->notes)
                     <div class="footer-section">
@@ -244,7 +244,7 @@
                         <div class="footer-text">{{ $invoice->notes }}</div>
                     </div>
                 @endif
-                @if($businessSettings['payment_instructions'])
+                @if($businessSettings['payment_instructions'] && !$invoice->hide_payment_instructions)
                     <div class="footer-section">
                         <div class="footer-label">Payment Instructions</div>
                         <div class="footer-text">{{ $businessSettings['payment_instructions'] }}</div>
