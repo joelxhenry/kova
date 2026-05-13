@@ -29,7 +29,11 @@ const statusOptions = [
     { label: 'Cancelled', value: 'cancelled' },
 ];
 
-const parseDate = (d) => d ? new Date(d) : null;
+const parseDate = (d) => {
+    if (!d) return null;
+    const ymd = String(d).slice(0, 10).split('-');
+    return new Date(Number(ymd[0]), Number(ymd[1]) - 1, Number(ymd[2]));
+};
 
 const form = useForm({
     client_id: props.invoice.client_id,

@@ -93,7 +93,8 @@ const deleteInvoice = () => {
 
 const formatDate = (d) => {
     if (!d) return '';
-    const date = new Date(d);
+    const ymd = String(d).slice(0, 10).split('-');
+    const date = new Date(Number(ymd[0]), Number(ymd[1]) - 1, Number(ymd[2]));
     return date.toLocaleDateString('en-JM', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
