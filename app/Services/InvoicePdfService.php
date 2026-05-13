@@ -32,7 +32,7 @@ class InvoicePdfService
             'businessSettings' => $businessSettings,
         ]);
 
-        $pdf->setPaper('a4');
+        $pdf->setPaper('letter', 'portrait');
 
         return $pdf;
     }

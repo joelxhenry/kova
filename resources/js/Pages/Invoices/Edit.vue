@@ -33,6 +33,7 @@ const parseDate = (d) => d ? new Date(d) : null;
 
 const form = useForm({
     client_id: props.invoice.client_id,
+    invoice_number: props.invoice.invoice_number,
     issue_date: parseDate(props.invoice.issue_date),
     due_date: props.invoice.due_date ? parseDate(props.invoice.due_date) : '',
     status: props.invoice.status,
@@ -61,7 +62,14 @@ const subtotal = computed(() => {
     }, 0);
 });
 
-const formatDate = (d) => d ? d.toISOString().split('T')[0] : null;
+const formatDate = (d) => {
+    if (!d) return null;
+    const date = d instanceof Date ? d : new Date(d);
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+};
 
 const submit = () => {
     form.transform((data) => ({
@@ -92,6 +100,12 @@ const submit = () => {
                         <InputLabel value="Status" />
                         <Select v-model="form.status" :options="statusOptions" optionLabel="label" optionValue="value" fluid />
                     </div>
+                </div>
+
+                <div>
+                    <InputLabel value="Invoice Number" />
+                    <InputText v-model="form.invoice_number" fluid :invalid="!!form.errors.invoice_number" />
+                    <InputError :message="form.errors.invoice_number" />
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">

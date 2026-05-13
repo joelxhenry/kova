@@ -8,7 +8,7 @@
         /* Reset & Base */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: Helvetica, Arial, sans-serif;
+            font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif;
             font-size: 12px;
             line-height: 1.5;
             color: #172726;
@@ -23,8 +23,8 @@
         .clearfix::after { content: ""; display: table; clear: both; }
 
         /* Typography */
-        h1 { font-family: Helvetica, Arial, sans-serif; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: #172726; }
-        h2 { font-family: Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #476664; margin-bottom: 6px; }
+        h1 { font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: #172726; }
+        h2 { font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #476664; margin-bottom: 6px; }
         .text-muted { color: #476664; }
         .text-sm { font-size: 11px; }
         .text-right { text-align: right; }
@@ -41,24 +41,24 @@
 
         /* Header */
         .header { margin-bottom: 36px; }
-        .invoice-label { font-family: Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #476664; }
-        .invoice-number { font-family: Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 700; margin-top: 2px; }
+        .invoice-label { font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #476664; }
+        .invoice-number { font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 700; margin-top: 2px; }
 
         /* Addresses */
         .addresses { margin-bottom: 32px; }
         .address-block { margin-bottom: 16px; }
-        .address-block .name { font-family: Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 600; color: #172726; }
+        .address-block .name { font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 600; color: #172726; }
 
         /* Meta info */
         .meta { margin-bottom: 8px; }
         .meta-item { margin-bottom: 8px; }
-        .meta-label { font-family: Helvetica, Arial, sans-serif; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #476664; }
-        .meta-value { font-family: Helvetica, Arial, sans-serif; font-size: 12px; margin-top: 1px; }
+        .meta-label { font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #476664; }
+        .meta-value { font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; font-size: 12px; margin-top: 1px; }
 
         /* Line items table */
         .items-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
         .items-table th {
-            font-family: Helvetica, Arial, sans-serif;
+            font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif;
             font-size: 10px;
             font-weight: 600;
             text-transform: uppercase;
@@ -71,7 +71,7 @@
         }
         .items-table th.num { text-align: right; }
         .items-table td {
-            font-family: Helvetica, Arial, sans-serif;
+            font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif;
             padding: 10px 8px;
             border-bottom: 1px solid #e8eeed;
             font-size: 12px;
@@ -84,7 +84,7 @@
 
         /* Totals */
         .totals { float: right; width: 260px; margin-bottom: 32px; }
-        .total-row { display: table; width: 100%; padding: 5px 0; font-family: Helvetica, Arial, sans-serif; font-size: 12px; }
+        .total-row { display: table; width: 100%; padding: 5px 0; font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; font-size: 12px; }
         .total-label { display: table-cell; text-align: left; color: #476664; }
         .total-value { display: table-cell; text-align: right; width: 120px; }
         .total-row.grand {
@@ -113,8 +113,8 @@
         /* Footer */
         .footer { clear: both; border-top: 1px solid #D3E2DE; padding-top: 20px; margin-top: 20px; }
         .footer-section { margin-bottom: 12px; }
-        .footer-label { font-family: Helvetica, Arial, sans-serif; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #476664; margin-bottom: 4px; }
-        .footer-text { font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #476664; white-space: pre-line; }
+        .footer-label { font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #476664; margin-bottom: 4px; }
+        .footer-text { font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; font-size: 11px; color: #476664; white-space: pre-line; }
     </style>
 </head>
 <body>

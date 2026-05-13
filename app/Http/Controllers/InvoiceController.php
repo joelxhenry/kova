@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreInvoiceRequest;
+use App\Http\Requests\UpdateInvoiceRequest;
 use App\Models\Invoice;
 use App\Services\InvoiceEmailService;
 use App\Services\InvoicePdfService;
@@ -111,7 +112,7 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function update(StoreInvoiceRequest $request, Invoice $invoice): RedirectResponse
+    public function update(UpdateInvoiceRequest $request, Invoice $invoice): RedirectResponse
     {
         abort_unless($invoice->user_id === auth()->id(), 403);
 

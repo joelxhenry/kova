@@ -98,7 +98,7 @@ class UserSetting extends Model
 
         $result = [];
         foreach ($defaults as $key => $defaultValue) {
-            $result[$key] = $settings[$key] ?? $defaultValue;
+            $result[$key] = array_key_exists($key, $settings) ? $settings[$key] : $defaultValue;
         }
 
         return $result;
