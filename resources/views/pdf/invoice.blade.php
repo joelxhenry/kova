@@ -6,9 +6,12 @@
     <title>{{ $invoice->invoice_number }}</title>
     <style>
         /* Reset & Base */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "DejaVu Sans", sans-serif; }
+        html, body, div, span, p, table, thead, tbody, tr, th, td, h1, h2, h3, h4, h5, h6 {
+            font-family: "DejaVu Sans", sans-serif;
+        }
         body {
-            font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif;
+            font-family: "DejaVu Sans", sans-serif;
             font-size: 12px;
             line-height: 1.5;
             color: #172726;
