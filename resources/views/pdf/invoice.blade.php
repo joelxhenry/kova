@@ -115,7 +115,9 @@
 
         /* Footer */
         .footer { clear: both; border-top: 1px solid #D3E2DE; padding-top: 20px; margin-top: 20px; }
-        .footer-section { margin-bottom: 12px; }
+        .footer-section { margin-bottom: 12px; page-break-inside: avoid; }
+        .footer-text { page-break-inside: avoid; }
+        .items-table tr { page-break-inside: avoid; }
         .footer-label { font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #476664; margin-bottom: 4px; }
         .footer-text { font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; font-size: 11px; color: #476664; white-space: pre-line; }
     </style>
