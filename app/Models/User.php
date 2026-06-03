@@ -93,6 +93,14 @@ class User extends Authenticatable
     }
 
     /**
+     * @return HasMany<BudgetTarget, $this>
+     */
+    public function budgetTargets(): HasMany
+    {
+        return $this->hasMany(BudgetTarget::class);
+    }
+
+    /**
      * @return HasOne<UserSetting, $this>
      */
     public function settings(): HasOne

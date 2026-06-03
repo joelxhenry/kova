@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\BudgetController;
+use App\Http\Controllers\BudgetTargetController;
 use App\Http\Controllers\ExpectedTransactionController;
 use App\Http\Controllers\RecurringTransactionController;
 use App\Http\Controllers\TransactionController;
@@ -71,6 +72,7 @@ Route::middleware('auth')->group(function (): void {
         Route::post('expected/{expected}/realize', [ExpectedTransactionController::class, 'realize'])->name('expected.realize');
         Route::post('expected/{expected}/cancel', [ExpectedTransactionController::class, 'cancel'])->name('expected.cancel');
         Route::get('projections', [ProjectionController::class, 'index'])->name('projections.index');
+        Route::resource('targets', BudgetTargetController::class)->except(['show']);
     });
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

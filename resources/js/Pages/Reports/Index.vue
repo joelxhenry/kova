@@ -1,10 +1,11 @@
 <script setup>
-import { Head, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Select from 'primevue/select';
 import DatePicker from 'primevue/datepicker';
 import Button from 'primevue/button';
+import ProgressBar from 'primevue/progressbar';
 import { useCurrencyFormatter } from '@/Composables/useCurrencyFormatter.js';
 
 const props = defineProps({
@@ -14,10 +15,18 @@ const props = defineProps({
     byCategory: { type: Array, default: () => [] },
     monthly: { type: Array, default: () => [] },
     clients: { type: Array, default: () => [] },
+    /** @type {{month:string,rows:Array<{category_id:number,name:string,type:string,planned:number,actual:number,variance:number,percent:number,over:boolean}>,totals:{planned:number,actual:number,variance:number}}|null} */
+    budgetAdherence: { type: Object, default: null },
     filters: { type: Object, default: () => ({}) },
 });
 
 const { formatJMD } = useCurrencyFormatter();
+
+const adherenceMonthLabel = computed(() => {
+    if (!props.budgetAdherence) return '';
+    const [year, month] = props.budgetAdherence.month.split('-').map(Number);
+    return new Date(year, month - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+});
 
 const clientOptions = [
     { label: 'All clients', value: null },
@@ -130,6 +139,32 @@ const statusLabels = {
                                 :style="{ width: `${(month.expenses / maxMonthly) * 100}%` }"
                             ></div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget adherence (current month) -->
+            <div v-if="budgetAdherence && budgetAdherence.rows.length > 0" class="mb-5 md:mb-8 md:bg-card md:rounded-2xl md:shadow-sm md:p-6">
+                <div class="flex items-center justify-between mb-3 md:mb-4">
+                    <h2 class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Budget vs actual · {{ adherenceMonthLabel }}</h2>
+                    <Link href="/budget/targets" class="text-xs text-accent font-medium hover:underline">Manage targets</Link>
+                </div>
+
+                <div class="space-y-3">
+                    <div v-for="row in budgetAdherence.rows" :key="`${row.category_id}-${row.type}`" class="text-sm">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span class="font-medium">{{ row.name }}</span>
+                            <div class="flex gap-3 tabular-nums text-xs">
+                                <span :class="row.over ? 'text-accent font-semibold' : ''">{{ formatJMD(row.actual) }}</span>
+                                <span class="text-muted-foreground">/ {{ formatJMD(row.planned) }}</span>
+                            </div>
+                        </div>
+                        <ProgressBar
+                            :value="Math.min(row.percent, 100)"
+                            :showValue="false"
+                            :style="{ height: '0.5rem' }"
+                            :pt="{ value: { class: row.over ? '!bg-rose-500' : '' } }"
+                        />
                     </div>
                 </div>
             </div>

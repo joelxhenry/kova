@@ -63,6 +63,7 @@ const chartOptions = {
                     <Link href="/budget/transactions"><Button label="Transactions" icon="pi pi-list" outlined severity="secondary" size="small" /></Link>
                     <Link href="/budget/recurring"><Button label="Recurring" icon="pi pi-sync" outlined severity="secondary" size="small" /></Link>
                     <Link href="/budget/expected"><Button label="Expected" icon="pi pi-calendar-clock" outlined severity="secondary" size="small" /></Link>
+                    <Link href="/budget/targets"><Button label="Targets" icon="pi pi-bullseye" outlined severity="secondary" size="small" /></Link>
                     <Link href="/budget/projections"><Button label="Projections" icon="pi pi-chart-line" outlined severity="secondary" size="small" /></Link>
                 </div>
             </div>

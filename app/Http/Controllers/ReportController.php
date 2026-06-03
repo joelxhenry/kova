@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\ExpenseCategory;
+use App\Services\BudgetTargetService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -12,6 +14,10 @@ use Inertia\Response;
 
 class ReportController extends Controller
 {
+    public function __construct(
+        private readonly BudgetTargetService $budgetTargetService,
+    ) {}
+
     public function __invoke(Request $request): Response
     {
         $user = $request->user();
@@ -121,6 +127,18 @@ class ReportController extends Controller
 
         $clients = $user->clients()->orderBy('name')->get(['id', 'name']);
 
+        // Current-month budget adherence — surfaced only once the user has set
+        // targets, limited to targeted categories for an at-a-glance summary.
+        $budgetAdherence = null;
+        if ($user->budgetTargets()->exists()) {
+            $report = $this->budgetTargetService->report($user, Carbon::now()->startOfMonth());
+            $budgetAdherence = [
+                'month' => $report['month'],
+                'rows' => array_values(array_filter($report['rows'], fn (array $row): bool => $row['targeted'])),
+                'totals' => $report['totals'],
+            ];
+        }
+
         return Inertia::render('Reports/Index', [
             'summary' => [
                 'totalInvoiced' => round($totalInvoiced, 2),
@@ -138,6 +156,7 @@ class ReportController extends Controller
             'byCategory' => $byCategory,
             'monthly' => $months,
             'clients' => $clients,
+            'budgetAdherence' => $budgetAdherence,
             'filters' => $request->only(['from', 'to', 'client_id']),
         ]);
     }
