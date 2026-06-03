@@ -51,6 +51,13 @@ Route::middleware('auth')->group(function (): void {
     Route::resource('expenses', ExpenseController::class)->except(['show']);
     Route::get('/reports', ReportController::class)->name('reports');
 
+    // Budgeting module — accounts, transactions, recurring rules, and projections.
+    // All budget routes live under the `budget/` prefix and `budget.` name space;
+    // individual resources are registered per phase (B1–B5).
+    Route::prefix('budget')->name('budget.')->group(function (): void {
+        //
+    });
+
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');

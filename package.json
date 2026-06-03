@@ -19,6 +19,7 @@
         "@inertiajs/vue3": "^3.0.0",
         "@primevue/themes": "^4.5.4",
         "@vitejs/plugin-vue": "^6.0.5",
+        "chart.js": "^4.5.1",
         "lucide-vue-next": "^1.0.0",
         "nprogress": "^0.2.0",
         "primeicons": "^7.0.0",
