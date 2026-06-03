@@ -61,6 +61,22 @@ class User extends Authenticatable
     }
 
     /**
+     * @return HasMany<Account, $this>
+     */
+    public function accounts(): HasMany
+    {
+        return $this->hasMany(Account::class);
+    }
+
+    /**
+     * @return HasMany<Transaction, $this>
+     */
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    /**
      * @return HasOne<UserSetting, $this>
      */
     public function settings(): HasOne

@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
@@ -55,7 +56,8 @@ Route::middleware('auth')->group(function (): void {
     // All budget routes live under the `budget/` prefix and `budget.` name space;
     // individual resources are registered per phase (B1–B5).
     Route::prefix('budget')->name('budget.')->group(function (): void {
-        //
+        Route::resource('accounts', AccountController::class)->except(['show']);
+        Route::post('transfers', [AccountController::class, 'transfer'])->name('transfers.store');
     });
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

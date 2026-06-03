@@ -1,0 +1,124 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Models\Account;
+use App\Models\User;
+use App\Services\AccountService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
+
+/**
+ * @param array<string, mixed> $attributes
+ */
+function buildAccount(User $user, array $attributes = []): Account
+{
+    return $user->accounts()->create(array_merge([
+        'name' => 'Account',
+        'type' => 'debit',
+        'opening_balance' => 1000,
+        'current_balance' => 1000,
+        'is_active' => true,
+        'sort_order' => 0,
+    ], $attributes));
+}
+
+beforeEach(function () {
+    $this->service = new AccountService();
+    $this->user = User::factory()->create();
+});
+
+test('create seeds current_balance from opening_balance', function () {
+    $account = $this->service->create($this->user, [
+        'name' => 'Cash',
+        'type' => 'debit',
+        'opening_balance' => 750,
+        'is_active' => true,
+    ]);
+
+    expect((float) $account->current_balance)->toBe(750.0);
+});
+
+test('applyDelta on debit account: income adds, expense subtracts', function () {
+    $account = buildAccount($this->user, ['type' => 'debit', 'current_balance' => 1000]);
+
+    $this->service->applyDelta($account, 200, 'income');
+    expect((float) $account->fresh()->current_balance)->toBe(1200.0);
+
+    $this->service->applyDelta($account, 500, 'expense');
+    expect((float) $account->fresh()->current_balance)->toBe(700.0);
+});
+
+test('applyDelta on credit account: expense grows debt, income shrinks it', function () {
+    $account = buildAccount($this->user, ['type' => 'credit', 'opening_balance' => 0, 'current_balance' => 0]);
+
+    // A charge increases the outstanding balance (debt).
+    $this->service->applyDelta($account, 300, 'expense');
+    expect((float) $account->fresh()->current_balance)->toBe(300.0);
+
+    // A payment reduces it.
+    $this->service->applyDelta($account, 100, 'income');
+    expect((float) $account->fresh()->current_balance)->toBe(200.0);
+});
+
+test('update recalculates current_balance preserving ledger deltas', function () {
+    // 1000 opening with a +250 ledger delta already baked into current.
+    $account = buildAccount($this->user, ['opening_balance' => 1000, 'current_balance' => 1250]);
+
+    $this->service->update($account, ['opening_balance' => 1800]);
+
+    // current = 1250 + (1800 - 1000) = 2050
+    expect((float) $account->fresh()->current_balance)->toBe(2050.0);
+});
+
+test('update without opening_balance leaves current_balance untouched', function () {
+    $account = buildAccount($this->user, ['opening_balance' => 1000, 'current_balance' => 1250]);
+
+    $this->service->update($account, ['name' => 'Renamed']);
+
+    expect((float) $account->fresh()->current_balance)->toBe(1250.0);
+    expect($account->fresh()->name)->toBe('Renamed');
+});
+
+test('transfer between debit accounts moves balance and records a transfer row', function () {
+    $from = buildAccount($this->user, ['type' => 'debit', 'current_balance' => 1000]);
+    $to = buildAccount($this->user, ['type' => 'debit', 'current_balance' => 500]);
+
+    $transaction = $this->service->transfer($from, $to, [
+        'amount' => 400,
+        'date' => '2026-06-01',
+    ]);
+
+    expect($transaction->type)->toBe('transfer');
+    expect((float) $from->fresh()->current_balance)->toBe(600.0);
+    expect((float) $to->fresh()->current_balance)->toBe(900.0);
+});
+
+test('transfer from debit to credit pays down the credit balance', function () {
+    $checking = buildAccount($this->user, ['type' => 'debit', 'current_balance' => 1000]);
+    $card = buildAccount($this->user, ['type' => 'credit', 'current_balance' => 800]);
+
+    $this->service->transfer($checking, $card, [
+        'amount' => 300,
+        'date' => '2026-06-01',
+    ]);
+
+    // Debit source drops; credit destination (income leg) shrinks the debt.
+    expect((float) $checking->fresh()->current_balance)->toBe(700.0);
+    expect((float) $card->fresh()->current_balance)->toBe(500.0);
+});
+
+test('delete throws when transactions exist', function () {
+    $account = buildAccount($this->user);
+    $account->transactions()->create([
+        'user_id' => $this->user->id,
+        'type' => 'expense',
+        'amount' => 10,
+        'date' => '2026-06-01',
+        'description' => 'Test',
+    ]);
+
+    expect(fn () => $this->service->delete($account))
+        ->toThrow(RuntimeException::class);
+});
