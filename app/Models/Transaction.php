@@ -54,4 +54,22 @@ class Transaction extends Model
     {
         return $this->belongsTo(Account::class, 'transfer_account_id');
     }
+
+    /**
+     * @return BelongsTo<TransactionCategory, $this>
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(TransactionCategory::class, 'transaction_category_id');
+    }
+
+    /**
+     * Provenance link to the recurring rule that generated this row (Phase B3).
+     *
+     * @return BelongsTo<RecurringTransaction, $this>
+     */
+    public function recurringTransaction(): BelongsTo
+    {
+        return $this->belongsTo(RecurringTransaction::class);
+    }
 }

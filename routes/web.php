@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
@@ -58,6 +59,7 @@ Route::middleware('auth')->group(function (): void {
     Route::prefix('budget')->name('budget.')->group(function (): void {
         Route::resource('accounts', AccountController::class)->except(['show']);
         Route::post('transfers', [AccountController::class, 'transfer'])->name('transfers.store');
+        Route::resource('transactions', TransactionController::class)->except(['show']);
     });
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
