@@ -7,6 +7,8 @@ import { useCurrencyFormatter } from '@/Composables/useCurrencyFormatter.js';
 const props = defineProps({
     recentInvoices: { type: Array, default: () => [] },
     recentExpenses: { type: Array, default: () => [] },
+    /** @type {{debit_total:number, credit_total:number, net_worth:number}|null} */
+    budgetSummary: { type: Object, default: null },
 });
 
 const { formatJMD } = useCurrencyFormatter();
@@ -37,6 +39,28 @@ const statusColors = {
                     <Button icon="pi pi-user-plus" label="Add client" text severity="secondary" size="small" />
                 </Link>
             </div>
+
+            <!-- Budget snapshot (net worth / cash on hand) -->
+            <Link
+                v-if="budgetSummary"
+                href="/budget"
+                class="block mb-5 md:mb-8 p-4 md:p-6 rounded-2xl border border-border hover:bg-muted/20 transition-colors duration-150"
+            >
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Budget</h2>
+                    <span class="text-xs text-accent font-medium">Open</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-xs text-muted-foreground">Cash on hand</p>
+                        <p class="mt-0.5 text-lg font-bold tabular-nums">{{ formatJMD(budgetSummary.debit_total) }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-muted-foreground">Net worth</p>
+                        <p class="mt-0.5 text-lg font-bold tabular-nums">{{ formatJMD(budgetSummary.net_worth) }}</p>
+                    </div>
+                </div>
+            </Link>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-0 md:gap-6">
                 <!-- Recent Invoices -->

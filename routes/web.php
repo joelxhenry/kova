@@ -5,11 +5,14 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\BudgetController;
+use App\Http\Controllers\RecurringTransactionController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProjectionController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ReportController;
@@ -57,9 +60,13 @@ Route::middleware('auth')->group(function (): void {
     // All budget routes live under the `budget/` prefix and `budget.` name space;
     // individual resources are registered per phase (B1–B5).
     Route::prefix('budget')->name('budget.')->group(function (): void {
+        Route::get('/', [BudgetController::class, 'index'])->name('index');
         Route::resource('accounts', AccountController::class)->except(['show']);
         Route::post('transfers', [AccountController::class, 'transfer'])->name('transfers.store');
         Route::resource('transactions', TransactionController::class)->except(['show']);
+        Route::resource('recurring', RecurringTransactionController::class)->except(['show']);
+        Route::post('recurring/{recurring}/cancel', [RecurringTransactionController::class, 'cancel'])->name('recurring.cancel');
+        Route::get('projections', [ProjectionController::class, 'index'])->name('projections.index');
     });
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

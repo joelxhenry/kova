@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Account;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\User;
@@ -41,6 +42,27 @@ test('dashboard shows recent invoices', function () {
         ->assertInertia(fn ($page) => $page
             ->has('recentInvoices', 1)
         );
+});
+
+test('dashboard budget summary is null when the user has no accounts', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get('/dashboard')
+        ->assertInertia(fn ($page) => $page->where('budgetSummary', null));
+});
+
+test('dashboard surfaces net worth and cash on hand when accounts exist', function () {
+    $user = User::factory()->create();
+    Account::factory()->for($user)->create(['type' => 'debit', 'opening_balance' => 1000, 'current_balance' => 1000]);
+    Account::factory()->for($user)->credit()->create(['opening_balance' => 300, 'current_balance' => 300]);
+
+    $this->actingAs($user)
+        ->get('/dashboard')
+        ->assertInertia(fn ($page) => $page
+            ->where('budgetSummary.debit_total', 1000)
+            ->where('budgetSummary.credit_total', 300)
+            ->where('budgetSummary.net_worth', 700));
 });
 
 test('reports page loads with filters', function () {

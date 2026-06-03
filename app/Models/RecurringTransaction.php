@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Transaction extends Model
+class RecurringTransaction extends Model
 {
-    /** @use HasFactory<\Database\Factories\TransactionFactory> */
+    /** @use HasFactory<\Database\Factories\RecurringTransactionFactory> */
     use HasFactory;
 
     /** @var list<string> */
@@ -21,17 +23,24 @@ class Transaction extends Model
         'transaction_category_id',
         'type',
         'amount',
-        'date',
+        'frequency',
+        'start_date',
+        'end_date',
+        'next_run_date',
+        'last_run_date',
         'description',
-        'notes',
-        'recurring_transaction_id',
+        'is_active',
     ];
 
     protected function casts(): array
     {
         return [
             'amount' => 'decimal:2',
-            'date' => 'date',
+            'start_date' => 'date',
+            'end_date' => 'date',
+            'next_run_date' => 'date',
+            'last_run_date' => 'date',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -68,12 +77,21 @@ class Transaction extends Model
     }
 
     /**
-     * Provenance link to the recurring rule that generated this row (Phase B3).
+     * Ledger rows this rule has generated (FR-3.4 — kept on cancel/delete).
      *
-     * @return BelongsTo<RecurringTransaction, $this>
+     * @return HasMany<Transaction, $this>
      */
-    public function recurringTransaction(): BelongsTo
+    public function transactions(): HasMany
     {
-        return $this->belongsTo(RecurringTransaction::class);
+        return $this->hasMany(Transaction::class);
+    }
+
+    /**
+     * @param Builder<RecurringTransaction> $query
+     * @return Builder<RecurringTransaction>
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
     }
 }

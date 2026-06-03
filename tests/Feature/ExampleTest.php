@@ -12,7 +12,7 @@ class ExampleTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Kova');
-        $response->assertSee('without the hassle');
+        $response->assertSee('Invoices and expenses');
     }
 
     public function test_login_page_renders(): void

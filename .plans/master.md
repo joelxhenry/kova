@@ -115,6 +115,18 @@
 
 ---
 
+## Phase 9 — Budgeting (Personal Cash-Flow & Projections)
+
+See `.plans/budgeting.md` for the full B0–B5 breakdown.
+
+- [x] **B1 — Accounts:** debit/credit accounts with cached `current_balance`, net-worth summary, single-row transfers (FR-1.x)
+- [x] **B2 — Income/Expense ledger:** transactions across accounts with categories (system defaults + custom), filtered/paginated ledger; balances mutated atomically via `AccountService::applyDelta` (FR-2.x)
+- [x] **B3 — Recurring engine:** scheduled rules (daily→yearly, month-end clamping), idempotent catch-up generation, `kova:process-recurring` command (daily 00:30); editing/cancelling never touches generated rows (FR-3.x)
+- [x] **B4 — Projections:** read-only in-memory simulation to a horizon (30d/3m/6m/1y), per-account + net-worth series, debit below-zero alerts; PrimeVue `<Chart>` (chart.js), `MultiSelect`/`SelectButton` filters (FR-4.x)
+- [x] **B5 — Integration:** `/budget` overview (balance cards, net worth, recent activity, 30-day preview), dashboard net-worth/cash-on-hand card, `Account`/`Transaction`/`RecurringTransaction` factories + demo data, ConfirmDialog on all destructive actions
+
+---
+
 ## Data Model Summary
 
 ```
@@ -124,12 +136,21 @@ User
  │    ├── ClientContact (1:N)
  │    └── Invoice (1:N)
  │         └── InvoiceItem (1:N)
- └── Expense (1:N)
-      └── ExpenseCategory (N:1)
+ ├── Expense (1:N)
+ │    └── ExpenseCategory (N:1)
+ ├── Account (1:N) — debit/credit buckets, cached current_balance
+ │    ├── Transaction (1:N) — income / expense / transfer
+ │    └── RecurringTransaction (1:N) — scheduled sequences
+ └── TransactionCategory (1:N, nullable user_id for system defaults)
+      ├── Transaction (N:1)
+      └── RecurringTransaction (N:1)
+
+Transaction.transfer_account_id      → Account (destination, transfers only)
+Transaction.recurring_transaction_id → RecurringTransaction (provenance, nullable)
 ```
 
 ---
 
 ## Test Coverage
 
-77 tests, 401 assertions — covering clients, invoices (CRUD, enhancements, PDF, email), expenses, settings, dashboard, admin (auth, user management), and landing page.
+168 tests, 909 assertions — covering clients, invoices (CRUD, enhancements, PDF, email), expenses, settings, dashboard, admin (auth, user management), landing page, and the budgeting module (accounts, transactions, recurring engine, projections, overview, factories, demo seeder).

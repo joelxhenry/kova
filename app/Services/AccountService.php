@@ -108,17 +108,28 @@ class AccountService
     /**
      * Central balance-mutation helper (reused by TransactionService).
      *
-     * Sign rules (FR-1.4):
-     *  - Debit account:  income +, expense −.
-     *  - Credit account: expense/charge +, income/payment −.
-     *
      * @param string $type income|expense
      */
     public function applyDelta(Account $account, float $amount, string $type): void
     {
-        $sign = ($type === 'income' ? 1 : -1) * ($account->type === 'credit' ? -1 : 1);
+        $delta = $this->signFor($account->type, $type) * $amount;
 
-        $account->current_balance = (float) $account->current_balance + ($sign * $amount);
+        $account->current_balance = (float) $account->current_balance + $delta;
         $account->save();
+    }
+
+    /**
+     * The balance-effect sign for a (account type, entry type) pair (FR-1.4),
+     * with no side effects so read-only simulations (projections) can reuse it.
+     *
+     *  - Debit account:  income +, expense −.
+     *  - Credit account: expense/charge +, income/payment −.
+     *
+     * @param string $accountType debit|credit
+     * @param string $type        income|expense
+     */
+    public function signFor(string $accountType, string $type): int
+    {
+        return ($type === 'income' ? 1 : -1) * ($accountType === 'credit' ? -1 : 1);
     }
 }

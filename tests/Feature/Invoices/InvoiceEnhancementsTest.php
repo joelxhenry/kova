@@ -60,8 +60,11 @@ test('invoice item unit field persists on update', function () {
 
     $invoice = $user->invoices()->first();
 
+    // The Edit form always submits the (editable) invoice_number, so mirror that
+    // here — UpdateInvoiceRequest requires it for uniqueness validation.
     $this->actingAs($user)->put("/invoices/{$invoice->id}", [
         'client_id' => $client->id,
+        'invoice_number' => $invoice->invoice_number,
         'issue_date' => '2025-06-01',
         'items' => [
             ['description' => 'Updated work', 'unit' => 'days', 'quantity' => 5, 'unit_price' => 2000],

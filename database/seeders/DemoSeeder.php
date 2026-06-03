@@ -10,8 +10,12 @@ use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\TransactionCategory;
 use App\Models\User;
 use App\Models\UserSetting;
+use App\Services\AccountService;
+use App\Services\RecurringTransactionService;
+use App\Services\TransactionService;
 use Illuminate\Database\Seeder;
 
 class DemoSeeder extends Seeder
@@ -133,5 +137,28 @@ class DemoSeeder extends Seeder
         $fuelCat = $categories['Fuel & Transport'];
         Expense::create(['user_id' => $user->id, 'expense_category_id' => $fuelCat->id, 'description' => 'Fuel — client site visits Jan', 'amount' => 12000, 'date_incurred' => '2026-01-22']);
         Expense::create(['user_id' => $user->id, 'expense_category_id' => $fuelCat->id, 'description' => 'Fuel — client site visits Feb', 'amount' => 9500, 'date_incurred' => '2026-02-18']);
+
+        // ── Budget: Accounts, Transactions, Recurring ──────────────
+        // Routed through the services so cached balances stay consistent.
+        $accountService = app(AccountService::class);
+        $transactionService = app(TransactionService::class);
+        $recurringService = app(RecurringTransactionService::class);
+
+        $checking = $accountService->create($user, ['name' => 'NCB Checking', 'type' => 'debit', 'opening_balance' => 250000, 'is_active' => true, 'sort_order' => 0]);
+        $savings = $accountService->create($user, ['name' => 'Scotia Savings', 'type' => 'debit', 'opening_balance' => 600000, 'is_active' => true, 'sort_order' => 1]);
+        $card = $accountService->create($user, ['name' => 'Scotiabank Credit Card', 'type' => 'credit', 'opening_balance' => 48000, 'is_active' => true, 'sort_order' => 2]);
+
+        $txCats = TransactionCategory::whereNull('user_id')->get()->keyBy('name');
+
+        // One-off ledger entries (each updates the relevant cached balance).
+        $transactionService->create($user, ['account_id' => $checking->id, 'type' => 'income', 'amount' => 180000, 'date' => '2026-05-02', 'description' => 'Invoice BDC-0002 payment', 'transaction_category_id' => $txCats['Freelance']->id]);
+        $transactionService->create($user, ['account_id' => $checking->id, 'type' => 'expense', 'amount' => 28500, 'date' => '2026-05-06', 'description' => 'Supermarket run', 'transaction_category_id' => $txCats['Groceries']->id]);
+        $transactionService->create($user, ['account_id' => $card->id, 'type' => 'expense', 'amount' => 15600, 'date' => '2026-05-09', 'description' => 'Restaurant dinner', 'transaction_category_id' => $txCats['Entertainment']->id]);
+        $transactionService->create($user, ['account_id' => $card->id, 'type' => 'income', 'amount' => 30000, 'date' => '2026-05-20', 'description' => 'Credit card payment', 'transaction_category_id' => $txCats['Other Income']->id]);
+
+        // Recurring rules (first run scheduled on start_date).
+        $recurringService->create($user, ['account_id' => $checking->id, 'type' => 'expense', 'amount' => 85000, 'frequency' => 'monthly', 'start_date' => '2026-06-01', 'description' => 'Apartment rent', 'transaction_category_id' => $txCats['Rent']->id]);
+        $recurringService->create($user, ['account_id' => $checking->id, 'type' => 'income', 'amount' => 220000, 'frequency' => 'monthly', 'start_date' => '2026-06-28', 'description' => 'Retainer — Island Creative', 'transaction_category_id' => $txCats['Freelance']->id]);
+        $recurringService->create($user, ['account_id' => $checking->id, 'transfer_account_id' => $savings->id, 'type' => 'transfer', 'amount' => 50000, 'frequency' => 'monthly', 'start_date' => '2026-06-05', 'description' => 'Auto-save to savings']);
     }
 }
