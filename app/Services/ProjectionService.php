@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Account;
+use App\Models\ExpectedTransaction;
 use App\Models\RecurringTransaction;
 use App\Models\User;
 use Carbon\Carbon;
@@ -30,7 +31,8 @@ class ProjectionService
      *     alerts: list<array{account_id: int, name: string, date: string, balance: float}>,
      *     starting_net_worth: float,
      *     ending_net_worth: float,
-     *     lowest_net_worth: float
+     *     lowest_net_worth: float,
+     *     expected_events: list<array{account_id: int|null, name: string, date: string, type: string, amount: float, signed_delta: float}>
      * }
      */
     public function project(User $user, Carbon $until, array $accountIds = []): array
@@ -44,15 +46,26 @@ class ProjectionService
         $allAccounts = $user->accounts()->get()->keyBy('id');
 
         // Tracked accounts: the explicit filter (intersected with ownership) or,
-        // by default, every active account.
+        // by default, every active account. Note: Eloquent's only() reindexes the
+        // collection (array_values), which would corrupt the id-keyed delta
+        // lookups below — so filter by membership to keep the id keys intact.
         $tracked = $accountIds !== []
-            ? $allAccounts->only($accountIds)
+            ? $allAccounts->filter(fn (Account $a): bool => in_array($a->id, $accountIds, true))
             : $allAccounts->filter(fn (Account $a): bool => (bool) $a->is_active);
 
         $labels = $this->buildLabels($today, $until);
 
         // Per-account, per-date signed deltas from recurring rules.
         $deltas = $this->simulateDeltas($user, $tracked->keys()->all(), $allAccounts, $today, $until);
+
+        // Fold in pending one-off expected cash flows (B6). Account-bound items
+        // join their account series; unassigned items only move the aggregate.
+        $expected = $this->simulateExpected($user, $tracked->keys()->all(), $allAccounts, $accountIds, $today, $until);
+        foreach ($expected['accountDeltas'] as $accountId => $byDate) {
+            foreach ($byDate as $date => $delta) {
+                $deltas[$accountId][$date] = round(($deltas[$accountId][$date] ?? 0.0) + $delta, 2);
+            }
+        }
 
         $datasets = [];
         $alerts = [];
@@ -88,6 +101,16 @@ class ProjectionService
 
         $aggregate = $this->aggregateNetWorth($datasets, count($labels));
 
+        // Unassigned expected items (no account) move total cash flow but no
+        // single account series; apply their cumulative effect to the aggregate.
+        if ($expected['aggregateDeltas'] !== []) {
+            $running = 0.0;
+            foreach ($labels as $i => $label) {
+                $running = round($running + ($expected['aggregateDeltas'][$label] ?? 0.0), 2);
+                $aggregate[$i] = round($aggregate[$i] + $running, 2);
+            }
+        }
+
         return [
             'labels' => $labels,
             'datasets' => $datasets,
@@ -96,6 +119,104 @@ class ProjectionService
             'starting_net_worth' => $aggregate[0] ?? 0.0,
             'ending_net_worth' => $aggregate !== [] ? $aggregate[count($aggregate) - 1] : 0.0,
             'lowest_net_worth' => $aggregate !== [] ? min($aggregate) : 0.0,
+            'expected_events' => $expected['events'],
+        ];
+    }
+
+    /**
+     * Collect pending one-off expected cash flows whose `expected_date` falls in
+     * [today, until] (FR-5.4). Account-bound items contribute a signed delta to
+     * their (tracked) account's series; unassigned items contribute only to the
+     * aggregate, signed debit-style (income +, expense −). Realized and cancelled
+     * items are excluded — realized effects already live in `current_balance`
+     * (FR-5.5). Returns tagged events so the UI can mark them distinctly.
+     *
+     * @param list<int> $trackedIds Account ids included in this projection.
+     * @param Collection<int, Account> $allAccounts
+     * @param list<int> $accountIds The raw account filter (empty = all accounts).
+     * @return array{
+     *     accountDeltas: array<int, array<string, float>>,
+     *     aggregateDeltas: array<string, float>,
+     *     events: list<array{account_id: int|null, name: string, date: string, type: string, amount: float, signed_delta: float}>
+     * }
+     */
+    private function simulateExpected(
+        User $user,
+        array $trackedIds,
+        Collection $allAccounts,
+        array $accountIds,
+        Carbon $today,
+        Carbon $until,
+    ): array {
+        $accountDeltas = [];
+        $aggregateDeltas = [];
+        $events = [];
+        $trackedSet = array_flip($trackedIds);
+
+        /** @var Collection<int, ExpectedTransaction> $items */
+        $items = $user->expectedTransactions()
+            ->pending()
+            ->whereDate('expected_date', '>=', $today->toDateString())
+            ->whereDate('expected_date', '<=', $until->toDateString())
+            ->get();
+
+        foreach ($items as $item) {
+            $date = $item->expected_date->toDateString();
+            $amount = (float) $item->amount;
+
+            if ($item->account_id !== null) {
+                // Skip items bound to an account outside the tracked set.
+                if (! isset($trackedSet[$item->account_id])) {
+                    continue;
+                }
+
+                /** @var Account $account */
+                $account = $allAccounts->get($item->account_id);
+                $delta = $this->accountService->signFor($account->type, $item->type) * $amount;
+
+                $accountDeltas[$item->account_id][$date] = round(
+                    ($accountDeltas[$item->account_id][$date] ?? 0.0) + $delta,
+                    2,
+                );
+
+                // Net-worth effect mirrors the aggregate sign (credit debt subtracts).
+                $signedDelta = round(($account->type === 'credit' ? -1 : 1) * $delta, 2);
+
+                $events[] = [
+                    'account_id' => (int) $item->account_id,
+                    'name' => $account->name,
+                    'date' => $date,
+                    'type' => $item->type,
+                    'amount' => $amount,
+                    'signed_delta' => $signedDelta,
+                ];
+
+                continue;
+            }
+
+            // Unassigned items only make sense against the full (all-accounts)
+            // view; a per-account filter has no bucket for them.
+            if ($accountIds !== []) {
+                continue;
+            }
+
+            $signedDelta = round(($item->type === 'income' ? 1 : -1) * $amount, 2);
+            $aggregateDeltas[$date] = round(($aggregateDeltas[$date] ?? 0.0) + $signedDelta, 2);
+
+            $events[] = [
+                'account_id' => null,
+                'name' => 'Unassigned',
+                'date' => $date,
+                'type' => $item->type,
+                'amount' => $amount,
+                'signed_delta' => $signedDelta,
+            ];
+        }
+
+        return [
+            'accountDeltas' => $accountDeltas,
+            'aggregateDeltas' => $aggregateDeltas,
+            'events' => $events,
         ];
     }
 

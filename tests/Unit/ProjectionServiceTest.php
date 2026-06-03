@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\Account;
+use App\Models\ExpectedTransaction;
 use App\Models\RecurringTransaction;
 use App\Models\Transaction;
 use App\Models\User;
@@ -185,4 +186,122 @@ test('a recurring transfer moves balance between tracked accounts without affect
     // Net worth unchanged by an internal transfer between two debit accounts.
     $aggregate = $result['aggregate'];
     expect(end($aggregate))->toBe(1000.0);
+});
+
+test('a pending account-bound expected item is folded into the projection (FR-5.4)', function () {
+    $user = User::factory()->create();
+    $account = makeProjectionAccount($user, ['current_balance' => 1000]);
+    ExpectedTransaction::factory()->for($user)->create([
+        'account_id' => $account->id,
+        'type' => 'income',
+        'amount' => 5000,
+        'expected_date' => '2026-06-15',
+        'status' => 'pending',
+    ]);
+
+    $result = projectionService()->project($user, Carbon::parse('2026-06-30'));
+
+    $points = $result['datasets'][0]['points'];
+    expect(end($points))->toBe(6000.0);
+    expect($result['ending_net_worth'])->toBe(6000.0);
+    expect($result['expected_events'])->toHaveCount(1);
+    expect($result['expected_events'][0]['account_id'])->toBe($account->id);
+    expect($result['expected_events'][0]['date'])->toBe('2026-06-15');
+});
+
+test('an unassigned pending expected item moves only the aggregate (FR-5.4)', function () {
+    $user = User::factory()->create();
+    $account = makeProjectionAccount($user, ['current_balance' => 1000]);
+    ExpectedTransaction::factory()->for($user)->create([
+        'account_id' => null,
+        'type' => 'expense',
+        'amount' => 400,
+        'expected_date' => '2026-06-10',
+        'status' => 'pending',
+    ]);
+
+    $result = projectionService()->project($user, Carbon::parse('2026-06-30'));
+
+    // The single account series is untouched; the aggregate absorbs the expense.
+    $points = $result['datasets'][0]['points'];
+    expect(end($points))->toBe(1000.0);
+    expect(end($result['aggregate']))->toBe(600.0);
+    expect($result['expected_events'][0]['account_id'])->toBeNull();
+});
+
+test('realized and cancelled expected items are excluded from the projection (FR-5.5)', function () {
+    $user = User::factory()->create();
+    $account = makeProjectionAccount($user, ['current_balance' => 1000]);
+
+    ExpectedTransaction::factory()->for($user)->create([
+        'account_id' => $account->id,
+        'type' => 'income',
+        'amount' => 5000,
+        'expected_date' => '2026-06-15',
+        'status' => 'realized',
+    ]);
+    ExpectedTransaction::factory()->for($user)->create([
+        'account_id' => $account->id,
+        'type' => 'income',
+        'amount' => 7000,
+        'expected_date' => '2026-06-16',
+        'status' => 'cancelled',
+    ]);
+
+    $result = projectionService()->project($user, Carbon::parse('2026-06-30'));
+
+    $points = $result['datasets'][0]['points'];
+    expect(end($points))->toBe(1000.0);
+    expect($result['expected_events'])->toHaveCount(0);
+});
+
+test('expected items outside the horizon are excluded', function () {
+    $user = User::factory()->create();
+    $account = makeProjectionAccount($user, ['current_balance' => 1000]);
+    // Before today and after the horizon — both ignored.
+    ExpectedTransaction::factory()->for($user)->create([
+        'account_id' => $account->id, 'type' => 'income', 'amount' => 100, 'expected_date' => '2026-05-01', 'status' => 'pending',
+    ]);
+    ExpectedTransaction::factory()->for($user)->create([
+        'account_id' => $account->id, 'type' => 'income', 'amount' => 100, 'expected_date' => '2026-12-01', 'status' => 'pending',
+    ]);
+
+    $result = projectionService()->project($user, Carbon::parse('2026-06-30'));
+
+    $points = $result['datasets'][0]['points'];
+    expect(end($points))->toBe(1000.0);
+    expect($result['expected_events'])->toHaveCount(0);
+});
+
+test('an account-bound expected item under a per-account filter only shows for the tracked account', function () {
+    $user = User::factory()->create();
+    $a = makeProjectionAccount($user, ['name' => 'A', 'current_balance' => 1000]);
+    $b = makeProjectionAccount($user, ['name' => 'B', 'current_balance' => 1000]);
+    ExpectedTransaction::factory()->for($user)->create([
+        'account_id' => $a->id, 'type' => 'expense', 'amount' => 300, 'expected_date' => '2026-06-10', 'status' => 'pending',
+    ]);
+
+    // Filtering to B excludes A's expected item.
+    $onlyB = projectionService()->project($user, Carbon::parse('2026-06-30'), [$b->id]);
+    expect(end($onlyB['datasets'][0]['points']))->toBe(1000.0);
+    expect($onlyB['expected_events'])->toHaveCount(0);
+
+    // Filtering to A includes it.
+    $onlyA = projectionService()->project($user, Carbon::parse('2026-06-30'), [$a->id]);
+    expect(end($onlyA['datasets'][0]['points']))->toBe(700.0);
+    expect($onlyA['expected_events'])->toHaveCount(1);
+});
+
+test('projection with expected items still performs no database writes', function () {
+    $user = User::factory()->create();
+    $account = makeProjectionAccount($user, ['current_balance' => 1000]);
+    $item = ExpectedTransaction::factory()->for($user)->create([
+        'account_id' => $account->id, 'type' => 'income', 'amount' => 5000, 'expected_date' => '2026-06-15', 'status' => 'pending',
+    ]);
+
+    projectionService()->project($user, Carbon::parse('2026-12-31'));
+
+    expect(Transaction::count())->toBe(0);
+    expect((float) $account->fresh()->current_balance)->toBe(1000.0);
+    expect($item->fresh()->status)->toBe('pending');
 });

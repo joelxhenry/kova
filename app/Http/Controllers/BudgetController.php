@@ -39,10 +39,20 @@ class BudgetController extends Controller
             ->limit(6)
             ->get();
 
+        // Pending one-off cash flows still ahead of us (B6 — the "Upcoming" list).
+        $upcomingExpected = $user->expectedTransactions()
+            ->with(['account:id,name'])
+            ->pending()
+            ->whereDate('expected_date', '>=', Carbon::today()->toDateString())
+            ->orderBy('expected_date')
+            ->limit(6)
+            ->get();
+
         return Inertia::render('Budget/Index', [
             'accounts' => $accounts,
             'summary' => $this->accountService->summary($accounts),
             'recentTransactions' => $recentTransactions,
+            'upcomingExpected' => $upcomingExpected,
             'projection' => $this->projectionService->project($user, Carbon::today()->addDays(30)),
         ]);
     }

@@ -85,6 +85,14 @@ class User extends Authenticatable
     }
 
     /**
+     * @return HasMany<ExpectedTransaction, $this>
+     */
+    public function expectedTransactions(): HasMany
+    {
+        return $this->hasMany(ExpectedTransaction::class);
+    }
+
+    /**
      * @return HasOne<UserSetting, $this>
      */
     public function settings(): HasOne

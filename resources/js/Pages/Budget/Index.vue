@@ -14,6 +14,8 @@ const props = defineProps({
     summary: { type: Object, required: true },
     /** @type {Array<{id:number,type:string,amount:string,date:string,description:string,account:{name:string}|null,category:{name:string}|null}>} */
     recentTransactions: { type: Array, default: () => [] },
+    /** @type {Array<{id:number,type:string,amount:string,expected_date:string,description:string,account:{name:string}|null}>} */
+    upcomingExpected: { type: Array, default: () => [] },
     /** @type {{labels:string[], aggregate:number[], alerts:Array<{name:string,date:string,balance:number}>}} */
     projection: { type: Object, required: true },
 });
@@ -60,6 +62,7 @@ const chartOptions = {
                     <Link href="/budget/accounts"><Button label="Accounts" icon="pi pi-wallet" outlined severity="secondary" size="small" /></Link>
                     <Link href="/budget/transactions"><Button label="Transactions" icon="pi pi-list" outlined severity="secondary" size="small" /></Link>
                     <Link href="/budget/recurring"><Button label="Recurring" icon="pi pi-sync" outlined severity="secondary" size="small" /></Link>
+                    <Link href="/budget/expected"><Button label="Expected" icon="pi pi-calendar-clock" outlined severity="secondary" size="small" /></Link>
                     <Link href="/budget/projections"><Button label="Projections" icon="pi pi-chart-line" outlined severity="secondary" size="small" /></Link>
                 </div>
             </div>
@@ -135,6 +138,36 @@ const chartOptions = {
                                 class="tabular-nums text-sm font-medium shrink-0 ml-2"
                                 :class="t.type === 'income' ? 'text-emerald-600' : 'text-rose-600'"
                             >{{ signedAmount(t) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upcoming expected items (B6) -->
+                <div class="lg:col-span-2 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Upcoming expected</h2>
+                        <Link href="/budget/expected" class="text-xs text-accent font-medium hover:underline">Manage</Link>
+                    </div>
+                    <div v-if="upcomingExpected.length === 0" class="text-sm text-muted-foreground py-6 text-center">
+                        Nothing anticipated yet.
+                        <Link href="/budget/expected/create" class="block mt-1 text-accent hover:underline">Add an expected item</Link>
+                    </div>
+                    <div v-else class="rounded-2xl border border-border divide-y divide-border">
+                        <div
+                            v-for="e in upcomingExpected"
+                            :key="e.id"
+                            class="flex items-center justify-between p-4"
+                        >
+                            <div class="min-w-0">
+                                <div class="text-sm font-medium truncate">{{ e.description }}</div>
+                                <div class="text-xs text-muted-foreground">
+                                    {{ e.account?.name ?? 'Unassigned' }} · {{ e.expected_date?.split('T')[0] }}
+                                </div>
+                            </div>
+                            <span
+                                class="tabular-nums text-sm font-medium shrink-0 ml-2"
+                                :class="e.type === 'income' ? 'text-emerald-600' : 'text-rose-600'"
+                            >{{ signedAmount(e) }}</span>
                         </div>
                     </div>
                 </div>

@@ -17,7 +17,8 @@ const props = defineProps({
      *   alerts: Array<{account_id:number,name:string,date:string,balance:number}>,
      *   starting_net_worth: number,
      *   ending_net_worth: number,
-     *   lowest_net_worth: number
+     *   lowest_net_worth: number,
+     *   expected_events: Array<{account_id:number|null,name:string,date:string,type:string,amount:number,signed_delta:number}>
      * }}
      */
     projection: { type: Object, required: true },
@@ -61,8 +62,20 @@ const breachIndex = computed(() => {
 
 const PALETTE = ['#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e', '#0ea5e9'];
 
+// Indices on the net-worth line where a pending expected item lands (FR-5.4) —
+// rendered as distinct amber markers so they read apart from recurring flow.
+const expectedIndices = computed(() => {
+    const set = new Set();
+    for (const e of props.projection.expected_events ?? []) {
+        const i = props.projection.labels.indexOf(e.date);
+        if (i !== -1) set.add(i);
+    }
+    return set;
+});
+
 const chartData = computed(() => {
     const idx = breachIndex.value;
+    const expected = expectedIndices.value;
 
     const aggregate = {
         label: 'Net worth',
@@ -72,8 +85,8 @@ const chartData = computed(() => {
         borderWidth: 2.5,
         fill: true,
         tension: 0.25,
-        pointRadius: props.projection.labels.map((_, i) => (i === idx ? 5 : 0)),
-        pointBackgroundColor: props.projection.labels.map((_, i) => (i === idx ? '#ef4444' : '#111827')),
+        pointRadius: props.projection.labels.map((_, i) => (i === idx ? 5 : expected.has(i) ? 4 : 0)),
+        pointBackgroundColor: props.projection.labels.map((_, i) => (i === idx ? '#ef4444' : expected.has(i) ? '#f59e0b' : '#111827')),
     };
 
     const perAccount = props.projection.datasets.map((d, i) => ({
@@ -166,6 +179,30 @@ const chartOptions = {
 
             <div v-else class="p-4 sm:p-6 rounded-2xl border border-border">
                 <Chart type="line" :data="chartData" :options="chartOptions" class="h-[22rem] sm:h-[28rem]" />
+            </div>
+
+            <!-- Pending expected items folded into the forecast (B6) -->
+            <div v-if="projection.expected_events && projection.expected_events.length" class="mt-6">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                    <h2 class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Expected items in this window</h2>
+                </div>
+                <div class="rounded-2xl border border-border divide-y divide-border">
+                    <div
+                        v-for="(e, i) in projection.expected_events"
+                        :key="i"
+                        class="flex items-center justify-between p-4"
+                    >
+                        <div class="min-w-0">
+                            <div class="text-sm font-medium">{{ e.name }}</div>
+                            <div class="text-xs text-muted-foreground tabular-nums">{{ e.date }}</div>
+                        </div>
+                        <span
+                            class="tabular-nums text-sm font-medium shrink-0 ml-2"
+                            :class="e.type === 'income' ? 'text-emerald-600' : 'text-rose-600'"
+                        >{{ (e.type === 'income' ? '+' : '−') + formatJMD(e.amount) }}</span>
+                    </div>
+                </div>
             </div>
         </section>
     </AuthenticatedLayout>
