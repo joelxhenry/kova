@@ -84,8 +84,11 @@ class RecurringTransactionService
      * generating each missed occurrence in sequence (catch-up safe) and advancing
      * the schedule (FR-3.2/3.3). Idempotent: a second run within the same window
      * finds the schedule already advanced and generates nothing.
+     *
+     * Pass $user to scope generation to a single owner — used by the on-request
+     * catch-up middleware so one user's request never processes another's rules.
      */
-    public function generateDue(?Carbon $asOf = null): int
+    public function generateDue(?Carbon $asOf = null, ?User $user = null): int
     {
         $cutoff = ($asOf ?? Carbon::now())->copy()->startOfDay();
 
@@ -93,6 +96,7 @@ class RecurringTransactionService
 
         $rules = RecurringTransaction::query()
             ->active()
+            ->when($user !== null, fn ($query) => $query->where('user_id', $user->id))
             ->where('next_run_date', '<=', $cutoff)
             ->get();
 

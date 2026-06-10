@@ -353,3 +353,46 @@ test('kova:process-recurring command generates due transactions', function () {
     expect(Transaction::where('recurring_transaction_id', $rule->id)->exists())->toBeTrue();
     expect((float) $account->fresh()->current_balance)->toBe(900.0);
 });
+
+// ---------------------------------------------------------------------------
+// On-request catch-up middleware (scheduler-less environments)
+// ---------------------------------------------------------------------------
+
+test('an authenticated web request materializes the user\'s due occurrences', function () {
+    Carbon::setTestNow('2026-06-10');
+
+    $user = User::factory()->create();
+    $account = makeRecurringAccount($user, ['current_balance' => 1000]);
+    $rule = makeRule($user, $account, [
+        'amount' => 100,
+        'frequency' => 'monthly',
+        'start_date' => '2026-06-01',
+    ]);
+
+    $this->actingAs($user)->get('/budget/recurring')->assertOk();
+
+    // June 1 occurrence generated and the schedule advanced past the cutoff.
+    expect(Transaction::where('recurring_transaction_id', $rule->id)->count())->toBe(1);
+    expect((float) $account->fresh()->current_balance)->toBe(900.0);
+    expect($rule->fresh()->next_run_date->toDateString())->toBe('2026-07-01');
+
+    Carbon::setTestNow();
+});
+
+test('the middleware never touches another user\'s rules', function () {
+    Carbon::setTestNow('2026-06-10');
+
+    $owner = User::factory()->create();
+    $ownerAccount = makeRecurringAccount($owner);
+    $ownerRule = makeRule($owner, $ownerAccount, ['start_date' => '2026-06-01']);
+
+    $visitor = User::factory()->create();
+    makeRecurringAccount($visitor);
+
+    // The visitor's request must not generate the owner's due occurrence.
+    $this->actingAs($visitor)->get('/budget/recurring')->assertOk();
+
+    expect(Transaction::where('recurring_transaction_id', $ownerRule->id)->exists())->toBeFalse();
+
+    Carbon::setTestNow();
+});
