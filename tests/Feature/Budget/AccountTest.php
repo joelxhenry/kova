@@ -318,6 +318,36 @@ test('a recurring payment requires a frequency', function () {
         ->assertSessionHasErrors('frequency');
 });
 
+test('accounts index exposes scheduled payments for credit accounts', function () {
+    $user = User::factory()->create();
+    $checking = makeAccount($user, ['name' => 'Checking', 'type' => 'debit']);
+    $card = makeAccount($user, ['name' => 'Visa', 'type' => 'credit', 'current_balance' => 1500]);
+
+    $user->recurringTransactions()->create([
+        'account_id' => $checking->id,
+        'transfer_account_id' => $card->id,
+        'type' => 'transfer',
+        'amount' => 500,
+        'frequency' => 'monthly',
+        'start_date' => '2026-07-01',
+        'next_run_date' => '2026-07-01',
+        'description' => 'Credit card payment',
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($user)
+        ->get('/budget/accounts')
+        ->assertInertia(fn ($page) => $page
+            ->component('Budget/Accounts/Index')
+            ->has('scheduledPayments', 1, fn ($p) => $p
+                ->where('transfer_account_id', $card->id)
+                ->where('amount', '500.00')
+                ->where('account.name', 'Checking')
+                ->etc()
+            )
+        );
+});
+
 test('payment must target a credit account', function () {
     $user = User::factory()->create();
     $checking = makeAccount($user, ['name' => 'Checking', 'type' => 'debit']);

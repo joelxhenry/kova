@@ -31,9 +31,21 @@ class AccountController extends Controller
             ->orderBy('name')
             ->get();
 
+        // Active recurring payments (transfers into a credit account) so each
+        // credit card can show — and manage — its scheduled payments inline.
+        $scheduledPayments = $request->user()
+            ->recurringTransactions()
+            ->active()
+            ->where('type', 'transfer')
+            ->whereIn('transfer_account_id', $accounts->where('type', 'credit')->pluck('id'))
+            ->with('account:id,name')
+            ->orderBy('next_run_date')
+            ->get(['id', 'account_id', 'transfer_account_id', 'amount', 'frequency', 'next_run_date', 'end_date', 'description']);
+
         return Inertia::render('Budget/Accounts/Index', [
             'accounts' => $accounts,
             'summary' => $this->accountService->summary($accounts),
+            'scheduledPayments' => $scheduledPayments,
         ]);
     }
 

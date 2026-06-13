@@ -23,11 +23,31 @@ const props = defineProps({
     accounts: { type: Array, default: () => [] },
     /** @type {{debit_total:number,credit_total:number,net_worth:number}} */
     summary: { type: Object, required: true },
+    /** @type {Array<{id:number,account_id:number,transfer_account_id:number,amount:string,frequency:string,next_run_date:string,end_date:string|null,description:string,account:{id:number,name:string}|null}>} */
+    scheduledPayments: { type: Array, default: () => [] },
 });
 
 const { formatJMD } = useCurrencyFormatter();
-const { frequencyOptions } = useRecurrence();
+const { frequencyOptions, frequencyLabel } = useRecurrence();
 const confirmDialog = useConfirm();
+
+// Scheduled payments grouped by the credit account they pay, for inline display.
+const paymentsByAccount = computed(() => {
+    const map = {};
+    for (const p of props.scheduledPayments) {
+        (map[p.transfer_account_id] ??= []).push(p);
+    }
+    return map;
+});
+
+const cancelScheduledPayment = (payment) => {
+    confirmDialog.require({
+        message: `Cancel this recurring payment of ${formatJMD(payment.amount)}? Payments already made are kept.`,
+        header: 'Cancel Recurring Payment',
+        acceptClass: 'p-button-danger',
+        accept: () => router.post(`/budget/recurring/${payment.id}/cancel`, {}, { preserveScroll: true }),
+    });
+};
 
 // Sort so DataTable subheader grouping keeps debit accounts above credit ones.
 const sortedAccounts = computed(() =>
@@ -181,6 +201,19 @@ const submitPayment = () => {
                 <Column field="name" header="Name">
                     <template #body="{ data }">
                         <span class="font-medium">{{ data.name }}</span>
+                        <div v-if="paymentsByAccount[data.id]" class="mt-1 space-y-1">
+                            <div
+                                v-for="p in paymentsByAccount[data.id]"
+                                :key="p.id"
+                                class="flex items-center gap-2 text-xs text-muted-foreground"
+                            >
+                                <i class="pi pi-replay text-[0.65rem]"></i>
+                                <span class="tabular-nums">{{ formatJMD(p.amount) }} {{ frequencyLabel(p.frequency).toLowerCase() }}</span>
+                                <span v-if="p.account">from {{ p.account.name }}</span>
+                                <Link :href="`/budget/recurring/${p.id}/edit`" class="text-accent hover:underline">Edit</Link>
+                                <button type="button" class="text-rose-600 hover:underline" @click="cancelScheduledPayment(p)">Cancel</button>
+                            </div>
+                        </div>
                     </template>
                 </Column>
                 <Column field="current_balance" header="Balance">

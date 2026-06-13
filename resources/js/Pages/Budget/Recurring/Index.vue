@@ -10,13 +10,14 @@ import { useCurrencyFormatter } from '@/Composables/useCurrencyFormatter.js';
 import { useRecurrence } from '@/Composables/useRecurrence.js';
 
 const props = defineProps({
-    /** @type {Array<{id:number,type:string,amount:string,frequency:string,start_date:string,end_date:string|null,next_run_date:string,is_active:boolean,description:string,account:{name:string}|null,transferAccount:{name:string,type:string}|null,category:{name:string}|null}>} */
+    /** @type {Array<{id:number,type:string,amount:string,frequency:string,start_date:string,end_date:string|null,next_run_date:string,is_active:boolean,description:string,account:{name:string}|null,transfer_account:{name:string,type:string}|null,category:{name:string}|null}>} */
     recurring: { type: Array, default: () => [] },
 });
 
 // A recurring transfer into a credit account is a credit-card payment; surface
-// it as such so it reads naturally in the list.
-const isPayment = (rule) => rule.type === 'transfer' && rule.transferAccount?.type === 'credit';
+// it as such so it reads naturally in the list. (Eloquent serialises the
+// transferAccount relation as snake_case `transfer_account`.)
+const isPayment = (rule) => rule.type === 'transfer' && rule.transfer_account?.type === 'credit';
 
 const { formatJMD } = useCurrencyFormatter();
 const { recurrenceLabel } = useRecurrence();
@@ -71,7 +72,7 @@ const amountClass = (rule) => {
                 <Column field="account" header="Account">
                     <template #body="{ data }">
                         <span>{{ data.account?.name }}</span>
-                        <span v-if="data.type === 'transfer' && data.transferAccount" class="text-muted-foreground"> → {{ data.transferAccount.name }}</span>
+                        <span v-if="data.type === 'transfer' && data.transfer_account" class="text-muted-foreground"> → {{ data.transfer_account.name }}</span>
                     </template>
                 </Column>
                 <Column field="frequency" header="Schedule">
