@@ -10,6 +10,7 @@ use App\Http\Requests\StoreTransferRequest;
 use App\Http\Requests\UpdateAccountRequest;
 use App\Models\Account;
 use App\Services\AccountService;
+use App\Services\ExpectedTransactionService;
 use App\Services\RecurringTransactionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -111,8 +112,11 @@ class AccountController extends Controller
             ->with('status', 'Transfer recorded.');
     }
 
-    public function payment(StoreCreditPaymentRequest $request, RecurringTransactionService $recurringService): RedirectResponse
-    {
+    public function payment(
+        StoreCreditPaymentRequest $request,
+        RecurringTransactionService $recurringService,
+        ExpectedTransactionService $expectedService,
+    ): RedirectResponse {
         $validated = $request->validated();
 
         $from = Account::findOrFail($validated['from_account_id']);
@@ -120,9 +124,11 @@ class AccountController extends Controller
 
         abort_unless($from->user_id === auth()->id() && $to->user_id === auth()->id(), 403);
 
+        $schedule = $validated['schedule'] ?? 'now';
+
         // A recurring payment is scheduled as a recurring debit→credit transfer
         // so the existing recurring engine settles and projects it.
-        if ($request->boolean('recurring')) {
+        if ($schedule === 'recurring') {
             $recurringService->create($request->user(), [
                 'account_id' => $from->id,
                 'transfer_account_id' => $to->id,
@@ -136,6 +142,21 @@ class AccountController extends Controller
 
             return redirect()->route('budget.accounts.index')
                 ->with('status', 'Recurring payment scheduled.');
+        }
+
+        // A planned payment is a forecast-only expected transfer until realized.
+        if ($schedule === 'expected') {
+            $expectedService->create($request->user(), [
+                'account_id' => $from->id,
+                'transfer_account_id' => $to->id,
+                'type' => 'transfer',
+                'amount' => $validated['amount'],
+                'expected_date' => $validated['date'],
+                'description' => $validated['description'] ?? 'Credit card payment',
+            ]);
+
+            return redirect()->route('budget.accounts.index')
+                ->with('status', 'Planned payment added.');
         }
 
         $this->accountService->payCredit($from, $to, $validated);

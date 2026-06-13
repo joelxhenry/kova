@@ -26,16 +26,16 @@ class StoreCreditPaymentRequest extends FormRequest
             'from_account_id' => ['required', 'integer', 'exists:accounts,id'],
             'to_account_id' => ['required', 'integer', 'different:from_account_id', 'exists:accounts,id'],
             'amount' => ['required', 'numeric', 'min:0.01'],
-            // For a one-off payment this is the posting date; for a recurring
-            // payment it is the schedule's start date.
+            // 'now' posts immediately on this date; 'recurring' uses it as the
+            // schedule start; 'expected' uses it as the planned (forecast) date.
             'date' => ['required', 'date'],
             'description' => ['nullable', 'string', 'max:255'],
-            'recurring' => ['boolean'],
+            'schedule' => ['nullable', Rule::in(['now', 'recurring', 'expected'])],
         ];
 
         // A recurring payment becomes a scheduled transfer, so it needs a cadence
         // and may carry an optional end date.
-        if ($this->boolean('recurring')) {
+        if ($this->input('schedule') === 'recurring') {
             $rules['frequency'] = ['required', Rule::in(['daily', 'weekly', 'biweekly', 'monthly', 'yearly'])];
             $rules['end_date'] = ['nullable', 'date', 'after_or_equal:date'];
         } else {

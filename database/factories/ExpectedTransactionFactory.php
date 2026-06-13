@@ -49,6 +49,18 @@ class ExpectedTransactionFactory extends Factory
     }
 
     /**
+     * A planned payment (transfer) toward a credit account. Callers supply the
+     * funding `account_id` and the credit `transfer_account_id`.
+     */
+    public function payment(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'type' => 'transfer',
+            'description' => 'Credit card payment',
+        ]);
+    }
+
+    /**
      * A cancelled item, retained for history.
      */
     public function cancelled(): static

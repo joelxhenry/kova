@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\Account;
 use App\Models\ExpectedTransaction;
 use App\Models\Transaction;
 use App\Models\User;
@@ -14,6 +15,7 @@ class ExpectedTransactionService
 {
     public function __construct(
         private readonly TransactionService $transactionService,
+        private readonly AccountService $accountService,
     ) {}
 
     /**
@@ -66,6 +68,10 @@ class ExpectedTransactionService
             throw new RuntimeException('Only a pending expected item can be realized.');
         }
 
+        if ($expected->type === 'transfer') {
+            return $this->realizePayment($expected, $overrides);
+        }
+
         $accountId = $overrides['account_id'] ?? $expected->account_id;
 
         if ($accountId === null) {
@@ -88,6 +94,45 @@ class ExpectedTransactionService
                 'realized_transaction_id' => $transaction->id,
                 // Reflect the account the item actually landed on.
                 'account_id' => (int) $accountId,
+            ]);
+
+            return $transaction;
+        });
+    }
+
+    /**
+     * Realize a planned payment (type=transfer) by posting the real debit→credit
+     * payment. The funding account may be overridden; the credit destination is
+     * fixed (edit the item to change it). Date and amount may be overridden.
+     *
+     * @param array<string, mixed> $overrides account_id (funding)|date|amount
+     */
+    private function realizePayment(ExpectedTransaction $expected, array $overrides): Transaction
+    {
+        $fromId = $overrides['account_id'] ?? $expected->account_id;
+
+        if ($fromId === null || $expected->transfer_account_id === null) {
+            throw new RuntimeException('A payment needs both a funding account and a credit account to realize.');
+        }
+
+        return DB::transaction(function () use ($expected, $overrides, $fromId): Transaction {
+            $from = Account::findOrFail((int) $fromId);
+            $to = Account::findOrFail((int) $expected->transfer_account_id);
+
+            if ($from->type !== 'debit' || $to->type !== 'credit') {
+                throw new RuntimeException('A payment must move from a cash account to a credit account.');
+            }
+
+            $transaction = $this->accountService->payCredit($from, $to, [
+                'amount' => $overrides['amount'] ?? $expected->amount,
+                'date' => $overrides['date'] ?? $expected->expected_date->toDateString(),
+                'description' => $expected->description,
+            ]);
+
+            $expected->update([
+                'status' => 'realized',
+                'realized_transaction_id' => $transaction->id,
+                'account_id' => $from->id,
             ]);
 
             return $transaction;

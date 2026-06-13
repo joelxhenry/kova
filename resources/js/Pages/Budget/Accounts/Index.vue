@@ -7,6 +7,7 @@ import InputError from '@/Components/UI/InputError.vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Checkbox from 'primevue/checkbox';
+import SelectButton from 'primevue/selectbutton';
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import Select from 'primevue/select';
@@ -114,13 +115,20 @@ const fundingOptions = computed(() =>
         .map(a => ({ label: a.name, value: a.id })),
 );
 
+// Pay now, schedule a recurring payment, or plan one for later (forecast-only).
+const scheduleOptions = [
+    { label: 'Pay now', value: 'now' },
+    { label: 'Recurring', value: 'recurring' },
+    { label: 'Plan for later', value: 'expected' },
+];
+
 const paymentForm = useForm({
     from_account_id: null,
     to_account_id: null,
     amount: null,
     date: new Date(),
     description: '',
-    recurring: false,
+    schedule: 'now',
     frequency: 'monthly',
     end_date: null,
 });
@@ -136,13 +144,25 @@ const openPayment = (account) => {
     showPayment.value = true;
 };
 
+const paymentDateLabel = computed(() => {
+    if (paymentForm.schedule === 'recurring') return 'Start date';
+    if (paymentForm.schedule === 'expected') return 'Planned date';
+    return 'Date';
+});
+
+const paymentSubmitLabel = computed(() => {
+    if (paymentForm.schedule === 'recurring') return 'Schedule payment';
+    if (paymentForm.schedule === 'expected') return 'Add planned payment';
+    return 'Record payment';
+});
+
 const submitPayment = () => {
     paymentForm.transform((data) => ({
         ...data,
         date: formatDate(data.date),
-        // Only send schedule fields when the payment actually recurs.
-        frequency: data.recurring ? data.frequency : null,
-        end_date: data.recurring ? formatDate(data.end_date) : null,
+        // Cadence fields only apply to a recurring payment.
+        frequency: data.schedule === 'recurring' ? data.frequency : null,
+        end_date: data.schedule === 'recurring' ? formatDate(data.end_date) : null,
     })).post('/budget/payments', {
         preserveScroll: true,
         onSuccess: () => { showPayment.value = false; },
@@ -314,7 +334,7 @@ const submitPayment = () => {
                         <InputError :message="paymentForm.errors.amount" />
                     </div>
                     <div>
-                        <InputLabel :value="paymentForm.recurring ? 'Start date' : 'Date'" />
+                        <InputLabel :value="paymentDateLabel" />
                         <DatePicker v-model="paymentForm.date" dateFormat="yy-mm-dd" showIcon fluid :invalid="!!paymentForm.errors.date" />
                         <InputError :message="paymentForm.errors.date" />
                     </div>
@@ -325,12 +345,13 @@ const submitPayment = () => {
                     <InputError :message="paymentForm.errors.description" />
                 </div>
 
-                <div class="flex items-center gap-2 pt-1">
-                    <Checkbox v-model="paymentForm.recurring" :binary="true" inputId="payment_recurring" />
-                    <InputLabel value="Repeat this payment automatically" for="payment_recurring" class="!mb-0" />
+                <div>
+                    <InputLabel value="When" />
+                    <SelectButton v-model="paymentForm.schedule" :options="scheduleOptions" optionLabel="label" optionValue="value" :allowEmpty="false" />
+                    <p v-if="paymentForm.schedule === 'expected'" class="mt-2 text-xs text-muted-foreground">Planned payments appear in your projection and under Expected, where you can realize them when paid.</p>
                 </div>
 
-                <div v-if="paymentForm.recurring" class="grid grid-cols-2 gap-4">
+                <div v-if="paymentForm.schedule === 'recurring'" class="grid grid-cols-2 gap-4">
                     <div>
                         <InputLabel value="Frequency" />
                         <Select v-model="paymentForm.frequency" :options="frequencyOptions" optionLabel="label" optionValue="value" fluid :invalid="!!paymentForm.errors.frequency" />
@@ -345,7 +366,7 @@ const submitPayment = () => {
 
                 <div class="flex items-center justify-end gap-3 pt-2">
                     <Button type="button" label="Cancel" text severity="secondary" @click="showPayment = false" />
-                    <Button type="submit" :label="paymentForm.recurring ? 'Schedule payment' : 'Record payment'" :loading="paymentForm.processing" />
+                    <Button type="submit" :label="paymentSubmitLabel" :loading="paymentForm.processing" />
                 </div>
             </form>
         </Dialog>

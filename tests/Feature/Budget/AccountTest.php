@@ -281,7 +281,7 @@ test('a recurring payment schedules a transfer rule instead of posting immediate
             'to_account_id' => $card->id,
             'amount' => 500,
             'date' => '2026-07-01',
-            'recurring' => true,
+            'schedule' => 'recurring',
             'frequency' => 'monthly',
         ])
         ->assertRedirect('/budget/accounts');
@@ -313,9 +313,40 @@ test('a recurring payment requires a frequency', function () {
             'to_account_id' => $card->id,
             'amount' => 500,
             'date' => '2026-07-01',
-            'recurring' => true,
+            'schedule' => 'recurring',
         ])
         ->assertSessionHasErrors('frequency');
+});
+
+test('a planned payment creates a pending expected transfer without posting', function () {
+    $user = User::factory()->create();
+    $checking = makeAccount($user, ['name' => 'Checking', 'type' => 'debit', 'opening_balance' => 5000, 'current_balance' => 5000]);
+    $card = makeAccount($user, ['name' => 'Visa', 'type' => 'credit', 'opening_balance' => 0, 'current_balance' => 1500]);
+
+    $this->actingAs($user)
+        ->post('/budget/payments', [
+            'from_account_id' => $checking->id,
+            'to_account_id' => $card->id,
+            'amount' => 400,
+            'date' => '2026-08-01',
+            'schedule' => 'expected',
+        ])
+        ->assertRedirect('/budget/accounts');
+
+    $this->assertDatabaseHas('expected_transactions', [
+        'user_id' => $user->id,
+        'account_id' => $checking->id,
+        'transfer_account_id' => $card->id,
+        'type' => 'transfer',
+        'amount' => 400,
+        'status' => 'pending',
+        'expected_date' => '2026-08-01',
+        'description' => 'Credit card payment',
+    ]);
+    // Forecast only — nothing posts and no balance moves yet.
+    $this->assertDatabaseMissing('transactions', ['type' => 'transfer']);
+    expect((float) $checking->fresh()->current_balance)->toBe(5000.0);
+    expect((float) $card->fresh()->current_balance)->toBe(1500.0);
 });
 
 test('accounts index exposes scheduled payments for credit accounts', function () {

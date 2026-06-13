@@ -225,6 +225,42 @@ class ProjectionService
             $date = $item->expected_date->toDateString();
             $amount = (float) $item->amount;
 
+            // A planned payment (transfer): the funding leg behaves like an
+            // expense, the credit destination like income, applied to whichever
+            // legs are tracked. Net-worth neutral, mirroring recurring transfers.
+            if ($item->type === 'transfer') {
+                $touched = false;
+
+                if ($item->account_id !== null && isset($trackedSet[$item->account_id])) {
+                    $from = $allAccounts->get($item->account_id);
+                    $delta = $this->accountService->signFor($from->type, 'expense') * $amount;
+                    $accountDeltas[$item->account_id][$date] = round(($accountDeltas[$item->account_id][$date] ?? 0.0) + $delta, 2);
+                    $touched = true;
+                }
+
+                if ($item->transfer_account_id !== null && isset($trackedSet[$item->transfer_account_id])) {
+                    $to = $allAccounts->get($item->transfer_account_id);
+                    $delta = $this->accountService->signFor($to->type, 'income') * $amount;
+                    $accountDeltas[$item->transfer_account_id][$date] = round(($accountDeltas[$item->transfer_account_id][$date] ?? 0.0) + $delta, 2);
+                    $touched = true;
+                }
+
+                if ($touched) {
+                    $destination = $item->transfer_account_id !== null ? $allAccounts->get($item->transfer_account_id) : null;
+                    $events[] = [
+                        'account_id' => $item->transfer_account_id !== null ? (int) $item->transfer_account_id : null,
+                        'name' => $destination?->name ?? 'Payment',
+                        'date' => $date,
+                        'type' => 'transfer',
+                        'amount' => $amount,
+                        // A transfer between your own accounts does not move net worth.
+                        'signed_delta' => 0.0,
+                    ];
+                }
+
+                continue;
+            }
+
             if ($item->account_id !== null) {
                 // Skip items bound to an account outside the tracked set.
                 if (! isset($trackedSet[$item->account_id])) {

@@ -12,7 +12,7 @@ import DatePicker from 'primevue/datepicker';
 import Button from 'primevue/button';
 
 const props = defineProps({
-    /** @type {{id:number,account_id:number|null,type:string,transaction_category_id:number|null,amount:string,expected_date:string,description:string,notes:string|null}} */
+    /** @type {{id:number,account_id:number|null,transfer_account_id:number|null,type:string,transaction_category_id:number|null,amount:string,expected_date:string,description:string,notes:string|null}} */
     expected: { type: Object, required: true },
     /** @type {Array<{id:number,name:string,type:string}>} */
     accounts: { type: Array, default: () => [] },
@@ -21,16 +21,20 @@ const props = defineProps({
 });
 
 const accountOptions = props.accounts.map(a => ({ label: a.name, value: a.id }));
+const debitOptions = props.accounts.filter(a => a.type === 'debit').map(a => ({ label: a.name, value: a.id }));
+const creditOptions = props.accounts.filter(a => a.type === 'credit').map(a => ({ label: a.name, value: a.id }));
 
 const typeOptions = [
     { label: 'Income', value: 'income' },
     { label: 'Expense', value: 'expense' },
+    { label: 'Payment', value: 'transfer' },
 ];
 
 const parseDate = (d) => d ? new Date(d) : new Date();
 
 const form = useForm({
     account_id: props.expected.account_id,
+    transfer_account_id: props.expected.transfer_account_id,
     type: props.expected.type,
     transaction_category_id: props.expected.transaction_category_id,
     amount: Number(props.expected.amount),
@@ -39,6 +43,8 @@ const form = useForm({
     notes: props.expected.notes ?? '',
 });
 
+const isPayment = computed(() => form.type === 'transfer');
+
 const categoryOptions = computed(() =>
     props.categories
         .filter(c => c.kind === form.type || c.kind === 'both')
@@ -46,8 +52,13 @@ const categoryOptions = computed(() =>
 );
 
 watch(() => form.type, () => {
-    if (!categoryOptions.value.some(o => o.value === form.transaction_category_id)) {
+    if (isPayment.value) {
         form.transaction_category_id = null;
+    } else {
+        form.transfer_account_id = null;
+        if (!categoryOptions.value.some(o => o.value === form.transaction_category_id)) {
+            form.transaction_category_id = null;
+        }
     }
 });
 
@@ -71,8 +82,8 @@ const submit = () => {
             <form @submit.prevent="submit" class="mt-8 space-y-6">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <InputLabel value="Account (optional)" />
-                        <Select v-model="form.account_id" :options="accountOptions" optionLabel="label" optionValue="value" placeholder="Decide later" showClear fluid :invalid="!!form.errors.account_id" />
+                        <InputLabel :value="isPayment ? 'Pay from (cash account)' : 'Account (optional)'" />
+                        <Select v-model="form.account_id" :options="isPayment ? debitOptions : accountOptions" optionLabel="label" optionValue="value" :placeholder="isPayment ? 'Cash account' : 'Decide later'" :showClear="!isPayment" fluid :invalid="!!form.errors.account_id" />
                         <InputError :message="form.errors.account_id" />
                     </div>
                     <div>
@@ -82,7 +93,13 @@ const submit = () => {
                     </div>
                 </div>
 
-                <div>
+                <div v-if="isPayment">
+                    <InputLabel value="Pay to (credit account)" />
+                    <Select v-model="form.transfer_account_id" :options="creditOptions" optionLabel="label" optionValue="value" placeholder="Credit account" fluid :invalid="!!form.errors.transfer_account_id" />
+                    <InputError :message="form.errors.transfer_account_id" />
+                </div>
+
+                <div v-else>
                     <InputLabel value="Category" />
                     <Select v-model="form.transaction_category_id" :options="categoryOptions" optionLabel="label" optionValue="value" placeholder="Select a category" showClear fluid :invalid="!!form.errors.transaction_category_id" />
                     <InputError :message="form.errors.transaction_category_id" />

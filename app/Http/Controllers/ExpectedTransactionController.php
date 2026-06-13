@@ -27,7 +27,7 @@ class ExpectedTransactionController extends Controller
         $user = $request->user();
 
         $query = $user->expectedTransactions()
-            ->with(['account:id,name,type', 'category:id,name'])
+            ->with(['account:id,name,type', 'transferAccount:id,name,type', 'category:id,name'])
             ->orderBy('expected_date')
             ->orderByDesc('id');
 

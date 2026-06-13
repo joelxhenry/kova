@@ -18,6 +18,7 @@ class ExpectedTransaction extends Model
     protected $fillable = [
         'user_id',
         'account_id',
+        'transfer_account_id',
         'transaction_category_id',
         'type',
         'amount',
@@ -50,6 +51,16 @@ class ExpectedTransaction extends Model
     public function account(): BelongsTo
     {
         return $this->belongsTo(Account::class);
+    }
+
+    /**
+     * Destination account for a planned payment (type=transfer).
+     *
+     * @return BelongsTo<Account, $this>
+     */
+    public function transferAccount(): BelongsTo
+    {
+        return $this->belongsTo(Account::class, 'transfer_account_id');
     }
 
     /**

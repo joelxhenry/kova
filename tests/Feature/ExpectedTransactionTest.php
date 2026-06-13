@@ -282,7 +282,7 @@ test('validation rejects bad input', function () {
     $this->actingAs($user)
         ->post('/budget/expected', [
             'account_id' => null,
-            'type' => 'transfer',
+            'type' => 'nonsense',
             'amount' => 0,
             'expected_date' => 'not-a-date',
             'description' => '',

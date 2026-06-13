@@ -11,7 +11,7 @@ test('recurring payment is listed under recurring with its credit destination', 
 
     $this->actingAs($user)->post('/budget/payments', [
         'from_account_id'=>$checking->id,'to_account_id'=>$card->id,
-        'amount'=>5000,'date'=>'2026-07-13','recurring'=>true,'frequency'=>'monthly',
+        'amount'=>5000,'date'=>'2026-07-13','schedule'=>'recurring','frequency'=>'monthly',
     ])->assertRedirect('/budget/accounts');
 
     $this->actingAs($user)->get('/budget/recurring')
