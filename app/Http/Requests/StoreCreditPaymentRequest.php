@@ -8,6 +8,7 @@ use App\Models\Account;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\Rule;
 
 class StoreCreditPaymentRequest extends FormRequest
 {
@@ -21,13 +22,28 @@ class StoreCreditPaymentRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'from_account_id' => ['required', 'integer', 'exists:accounts,id'],
             'to_account_id' => ['required', 'integer', 'different:from_account_id', 'exists:accounts,id'],
             'amount' => ['required', 'numeric', 'min:0.01'],
+            // For a one-off payment this is the posting date; for a recurring
+            // payment it is the schedule's start date.
             'date' => ['required', 'date'],
             'description' => ['nullable', 'string', 'max:255'],
+            'recurring' => ['boolean'],
         ];
+
+        // A recurring payment becomes a scheduled transfer, so it needs a cadence
+        // and may carry an optional end date.
+        if ($this->boolean('recurring')) {
+            $rules['frequency'] = ['required', Rule::in(['daily', 'weekly', 'biweekly', 'monthly', 'yearly'])];
+            $rules['end_date'] = ['nullable', 'date', 'after_or_equal:date'];
+        } else {
+            $rules['frequency'] = ['nullable'];
+            $rules['end_date'] = ['nullable'];
+        }
+
+        return $rules;
     }
 
     /**

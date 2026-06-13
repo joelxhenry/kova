@@ -25,7 +25,7 @@ class RecurringTransactionController extends Controller
         $user = $request->user();
 
         $recurring = $user->recurringTransactions()
-            ->with(['account:id,name,type', 'transferAccount:id,name', 'category:id,name'])
+            ->with(['account:id,name,type', 'transferAccount:id,name,type', 'category:id,name'])
             ->orderByDesc('is_active')
             ->orderBy('next_run_date')
             ->get();

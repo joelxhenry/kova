@@ -10,6 +10,7 @@ use App\Http\Requests\StoreTransferRequest;
 use App\Http\Requests\UpdateAccountRequest;
 use App\Models\Account;
 use App\Services\AccountService;
+use App\Services\RecurringTransactionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -98,7 +99,7 @@ class AccountController extends Controller
             ->with('status', 'Transfer recorded.');
     }
 
-    public function payment(StoreCreditPaymentRequest $request): RedirectResponse
+    public function payment(StoreCreditPaymentRequest $request, RecurringTransactionService $recurringService): RedirectResponse
     {
         $validated = $request->validated();
 
@@ -106,6 +107,24 @@ class AccountController extends Controller
         $to = Account::findOrFail($validated['to_account_id']);
 
         abort_unless($from->user_id === auth()->id() && $to->user_id === auth()->id(), 403);
+
+        // A recurring payment is scheduled as a recurring debit→credit transfer
+        // so the existing recurring engine settles and projects it.
+        if ($request->boolean('recurring')) {
+            $recurringService->create($request->user(), [
+                'account_id' => $from->id,
+                'transfer_account_id' => $to->id,
+                'type' => 'transfer',
+                'amount' => $validated['amount'],
+                'frequency' => $validated['frequency'],
+                'start_date' => $validated['date'],
+                'end_date' => $validated['end_date'] ?? null,
+                'description' => $validated['description'] ?? 'Credit card payment',
+            ]);
+
+            return redirect()->route('budget.accounts.index')
+                ->with('status', 'Recurring payment scheduled.');
+        }
 
         $this->accountService->payCredit($from, $to, $validated);
 

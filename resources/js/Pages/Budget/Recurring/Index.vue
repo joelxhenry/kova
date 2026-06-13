@@ -10,9 +10,13 @@ import { useCurrencyFormatter } from '@/Composables/useCurrencyFormatter.js';
 import { useRecurrence } from '@/Composables/useRecurrence.js';
 
 const props = defineProps({
-    /** @type {Array<{id:number,type:string,amount:string,frequency:string,start_date:string,end_date:string|null,next_run_date:string,is_active:boolean,description:string,account:{name:string}|null,transferAccount:{name:string}|null,category:{name:string}|null}>} */
+    /** @type {Array<{id:number,type:string,amount:string,frequency:string,start_date:string,end_date:string|null,next_run_date:string,is_active:boolean,description:string,account:{name:string}|null,transferAccount:{name:string,type:string}|null,category:{name:string}|null}>} */
     recurring: { type: Array, default: () => [] },
 });
+
+// A recurring transfer into a credit account is a credit-card payment; surface
+// it as such so it reads naturally in the list.
+const isPayment = (rule) => rule.type === 'transfer' && rule.transferAccount?.type === 'credit';
 
 const { formatJMD } = useCurrencyFormatter();
 const { recurrenceLabel } = useRecurrence();
@@ -61,6 +65,7 @@ const amountClass = (rule) => {
                 <Column field="description" header="Description">
                     <template #body="{ data }">
                         <span class="font-medium">{{ data.description }}</span>
+                        <Tag v-if="isPayment(data)" value="Payment" severity="info" class="ml-2" />
                     </template>
                 </Column>
                 <Column field="account" header="Account">

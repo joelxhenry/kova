@@ -16,6 +16,7 @@ import DatePicker from 'primevue/datepicker';
 import { useForm } from '@inertiajs/vue3';
 import { useConfirm } from 'primevue/useconfirm';
 import { useCurrencyFormatter } from '@/Composables/useCurrencyFormatter.js';
+import { useRecurrence } from '@/Composables/useRecurrence.js';
 
 const props = defineProps({
     /** @type {Array<{id:number,name:string,type:string,current_balance:string,interest_rate:string|null,rate_basis:string,credit_limit:string|null,available_credit:number|null,effective_annual_rate:number|null,estimated_monthly_interest:number|null,is_active:boolean}>} */
@@ -25,6 +26,7 @@ const props = defineProps({
 });
 
 const { formatJMD } = useCurrencyFormatter();
+const { frequencyOptions } = useRecurrence();
 const confirmDialog = useConfirm();
 
 // Sort so DataTable subheader grouping keeps debit accounts above credit ones.
@@ -98,6 +100,9 @@ const paymentForm = useForm({
     amount: null,
     date: new Date(),
     description: '',
+    recurring: false,
+    frequency: 'monthly',
+    end_date: null,
 });
 
 const openPayment = (account) => {
@@ -115,6 +120,9 @@ const submitPayment = () => {
     paymentForm.transform((data) => ({
         ...data,
         date: formatDate(data.date),
+        // Only send schedule fields when the payment actually recurs.
+        frequency: data.recurring ? data.frequency : null,
+        end_date: data.recurring ? formatDate(data.end_date) : null,
     })).post('/budget/payments', {
         preserveScroll: true,
         onSuccess: () => { showPayment.value = false; },
@@ -273,7 +281,7 @@ const submitPayment = () => {
                         <InputError :message="paymentForm.errors.amount" />
                     </div>
                     <div>
-                        <InputLabel value="Date" />
+                        <InputLabel :value="paymentForm.recurring ? 'Start date' : 'Date'" />
                         <DatePicker v-model="paymentForm.date" dateFormat="yy-mm-dd" showIcon fluid :invalid="!!paymentForm.errors.date" />
                         <InputError :message="paymentForm.errors.date" />
                     </div>
@@ -283,9 +291,28 @@ const submitPayment = () => {
                     <InputText v-model="paymentForm.description" placeholder="Optional note" fluid :invalid="!!paymentForm.errors.description" />
                     <InputError :message="paymentForm.errors.description" />
                 </div>
+
+                <div class="flex items-center gap-2 pt-1">
+                    <Checkbox v-model="paymentForm.recurring" :binary="true" inputId="payment_recurring" />
+                    <InputLabel value="Repeat this payment automatically" for="payment_recurring" class="!mb-0" />
+                </div>
+
+                <div v-if="paymentForm.recurring" class="grid grid-cols-2 gap-4">
+                    <div>
+                        <InputLabel value="Frequency" />
+                        <Select v-model="paymentForm.frequency" :options="frequencyOptions" optionLabel="label" optionValue="value" fluid :invalid="!!paymentForm.errors.frequency" />
+                        <InputError :message="paymentForm.errors.frequency" />
+                    </div>
+                    <div>
+                        <InputLabel value="End date" />
+                        <DatePicker v-model="paymentForm.end_date" dateFormat="yy-mm-dd" showIcon showButtonBar fluid :invalid="!!paymentForm.errors.end_date" />
+                        <InputError :message="paymentForm.errors.end_date" />
+                    </div>
+                </div>
+
                 <div class="flex items-center justify-end gap-3 pt-2">
                     <Button type="button" label="Cancel" text severity="secondary" @click="showPayment = false" />
-                    <Button type="submit" label="Record payment" :loading="paymentForm.processing" />
+                    <Button type="submit" :label="paymentForm.recurring ? 'Schedule payment' : 'Record payment'" :loading="paymentForm.processing" />
                 </div>
             </form>
         </Dialog>

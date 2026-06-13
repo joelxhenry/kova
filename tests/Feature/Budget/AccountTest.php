@@ -270,6 +270,54 @@ test('payment pays down a credit account from a cash account', function () {
     ]);
 });
 
+test('a recurring payment schedules a transfer rule instead of posting immediately', function () {
+    $user = User::factory()->create();
+    $checking = makeAccount($user, ['name' => 'Checking', 'type' => 'debit', 'opening_balance' => 5000, 'current_balance' => 5000]);
+    $card = makeAccount($user, ['name' => 'Visa', 'type' => 'credit', 'opening_balance' => 0, 'current_balance' => 1500]);
+
+    $this->actingAs($user)
+        ->post('/budget/payments', [
+            'from_account_id' => $checking->id,
+            'to_account_id' => $card->id,
+            'amount' => 500,
+            'date' => '2026-07-01',
+            'recurring' => true,
+            'frequency' => 'monthly',
+        ])
+        ->assertRedirect('/budget/accounts');
+
+    // A recurring rule is created; no ledger row posts and balances are untouched.
+    $this->assertDatabaseHas('recurring_transactions', [
+        'user_id' => $user->id,
+        'account_id' => $checking->id,
+        'transfer_account_id' => $card->id,
+        'type' => 'transfer',
+        'amount' => 500,
+        'frequency' => 'monthly',
+        'description' => 'Credit card payment',
+        'next_run_date' => '2026-07-01',
+    ]);
+    $this->assertDatabaseMissing('transactions', ['type' => 'transfer']);
+    expect((float) $checking->fresh()->current_balance)->toBe(5000.0);
+    expect((float) $card->fresh()->current_balance)->toBe(1500.0);
+});
+
+test('a recurring payment requires a frequency', function () {
+    $user = User::factory()->create();
+    $checking = makeAccount($user, ['name' => 'Checking', 'type' => 'debit']);
+    $card = makeAccount($user, ['name' => 'Visa', 'type' => 'credit', 'current_balance' => 1500]);
+
+    $this->actingAs($user)
+        ->post('/budget/payments', [
+            'from_account_id' => $checking->id,
+            'to_account_id' => $card->id,
+            'amount' => 500,
+            'date' => '2026-07-01',
+            'recurring' => true,
+        ])
+        ->assertSessionHasErrors('frequency');
+});
+
 test('payment must target a credit account', function () {
     $user = User::factory()->create();
     $checking = makeAccount($user, ['name' => 'Checking', 'type' => 'debit']);
