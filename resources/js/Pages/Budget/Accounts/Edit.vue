@@ -10,7 +10,7 @@ import Checkbox from 'primevue/checkbox';
 import Button from 'primevue/button';
 
 const props = defineProps({
-    /** @type {{id:number,name:string,type:string,opening_balance:string,current_balance:string,is_active:boolean}} */
+    /** @type {{id:number,name:string,type:string,opening_balance:string,current_balance:string,interest_rate:string|null,credit_limit:string|null,is_active:boolean}} */
     account: { type: Object, required: true },
 });
 
@@ -23,6 +23,8 @@ const form = useForm({
     name: props.account.name,
     type: props.account.type,
     opening_balance: Number(props.account.opening_balance),
+    interest_rate: props.account.interest_rate !== null ? Number(props.account.interest_rate) : null,
+    credit_limit: props.account.credit_limit !== null ? Number(props.account.credit_limit) : null,
     is_active: props.account.is_active,
 });
 
@@ -56,6 +58,18 @@ const submit = () => {
                     <InputNumber v-model="form.opening_balance" :minFractionDigits="2" :maxFractionDigits="2" fluid :invalid="!!form.errors.opening_balance" />
                     <InputError :message="form.errors.opening_balance" />
                     <p class="mt-1 text-xs text-muted-foreground">Changing this re-derives the current balance, keeping recorded transactions intact.</p>
+                </div>
+
+                <div>
+                    <InputLabel :value="form.type === 'credit' ? 'Interest rate (APR %)' : 'Interest rate (APR %, optional)'" />
+                    <InputNumber v-model="form.interest_rate" suffix=" %" :min="0" :max="100" :minFractionDigits="2" :maxFractionDigits="3" placeholder="e.g. 19.99" fluid :invalid="!!form.errors.interest_rate" />
+                    <InputError :message="form.errors.interest_rate" />
+                </div>
+
+                <div v-if="form.type === 'credit'">
+                    <InputLabel value="Credit limit" />
+                    <InputNumber v-model="form.credit_limit" :min="0" :minFractionDigits="2" :maxFractionDigits="2" placeholder="Optional spending limit" fluid :invalid="!!form.errors.credit_limit" />
+                    <InputError :message="form.errors.credit_limit" />
                 </div>
 
                 <div class="flex items-center gap-2">

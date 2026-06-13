@@ -109,6 +109,40 @@ test('transfer from debit to credit pays down the credit balance', function () {
     expect((float) $card->fresh()->current_balance)->toBe(500.0);
 });
 
+test('available_credit reflects limit minus outstanding balance on credit accounts', function () {
+    $card = buildAccount($this->user, [
+        'type' => 'credit',
+        'current_balance' => 30000,
+        'credit_limit' => 100000,
+    ]);
+
+    expect($card->available_credit)->toBe(70000.0);
+});
+
+test('available_credit is null for debit accounts or when no limit is set', function () {
+    $checking = buildAccount($this->user, ['type' => 'debit', 'current_balance' => 5000]);
+    expect($checking->available_credit)->toBeNull();
+
+    $card = buildAccount($this->user, ['type' => 'credit', 'current_balance' => 5000]);
+    expect($card->available_credit)->toBeNull();
+});
+
+test('estimated_monthly_interest divides the annual rate across twelve months', function () {
+    $card = buildAccount($this->user, [
+        'type' => 'credit',
+        'current_balance' => 120000,
+        'interest_rate' => 24,
+    ]);
+
+    // 120000 * (24 / 100) / 12 = 2400
+    expect($card->estimated_monthly_interest)->toBe(2400.0);
+});
+
+test('estimated_monthly_interest is null when no rate is set', function () {
+    $account = buildAccount($this->user, ['current_balance' => 1000]);
+    expect($account->estimated_monthly_interest)->toBeNull();
+});
+
 test('delete throws when transactions exist', function () {
     $account = buildAccount($this->user);
     $account->transactions()->create([

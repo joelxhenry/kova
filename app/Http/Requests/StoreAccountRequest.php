@@ -23,6 +23,8 @@ class StoreAccountRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', Rule::in(['debit', 'credit'])],
             'opening_balance' => ['required', 'numeric'],
+            'interest_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'credit_limit' => ['nullable', 'numeric', 'min:0'],
             'is_active' => ['boolean'],
             'sort_order' => ['nullable', 'integer'],
         ];

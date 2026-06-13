@@ -18,6 +18,8 @@ const form = useForm({
     name: '',
     type: 'debit',
     opening_balance: 0,
+    interest_rate: null,
+    credit_limit: null,
     is_active: true,
 });
 
@@ -50,6 +52,18 @@ const submit = () => {
                     <InputLabel value="Opening balance" />
                     <InputNumber v-model="form.opening_balance" :minFractionDigits="2" :maxFractionDigits="2" fluid :invalid="!!form.errors.opening_balance" />
                     <InputError :message="form.errors.opening_balance" />
+                </div>
+
+                <div>
+                    <InputLabel :value="form.type === 'credit' ? 'Interest rate (APR %)' : 'Interest rate (APR %, optional)'" />
+                    <InputNumber v-model="form.interest_rate" suffix=" %" :min="0" :max="100" :minFractionDigits="2" :maxFractionDigits="3" placeholder="e.g. 19.99" fluid :invalid="!!form.errors.interest_rate" />
+                    <InputError :message="form.errors.interest_rate" />
+                </div>
+
+                <div v-if="form.type === 'credit'">
+                    <InputLabel value="Credit limit" />
+                    <InputNumber v-model="form.credit_limit" :min="0" :minFractionDigits="2" :maxFractionDigits="2" placeholder="Optional spending limit" fluid :invalid="!!form.errors.credit_limit" />
+                    <InputError :message="form.errors.credit_limit" />
                 </div>
 
                 <div class="flex items-center gap-2">

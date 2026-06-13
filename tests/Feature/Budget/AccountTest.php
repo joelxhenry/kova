@@ -73,6 +73,64 @@ test('current_balance initializes from opening_balance', function () {
     ]);
 });
 
+test('credit account stores interest rate and credit limit', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->post('/budget/accounts', [
+            'name' => 'Visa Platinum',
+            'type' => 'credit',
+            'opening_balance' => 0,
+            'interest_rate' => 19.99,
+            'credit_limit' => 250000,
+            'is_active' => true,
+        ])
+        ->assertRedirect('/budget/accounts');
+
+    $this->assertDatabaseHas('accounts', [
+        'user_id' => $user->id,
+        'name' => 'Visa Platinum',
+        'type' => 'credit',
+        'interest_rate' => 19.99,
+        'credit_limit' => 250000,
+    ]);
+});
+
+test('interest rate cannot exceed 100 percent', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->post('/budget/accounts', [
+            'name' => 'Card',
+            'type' => 'credit',
+            'opening_balance' => 0,
+            'interest_rate' => 150,
+        ])
+        ->assertSessionHasErrors('interest_rate');
+});
+
+test('interest rate and credit limit can be updated', function () {
+    $user = User::factory()->create();
+    $account = makeAccount($user, ['type' => 'credit', 'interest_rate' => 18, 'credit_limit' => 100000]);
+
+    $this->actingAs($user)
+        ->put("/budget/accounts/{$account->id}", [
+            'name' => 'Card',
+            'type' => 'credit',
+            'opening_balance' => 0,
+            'interest_rate' => 24.5,
+            'credit_limit' => 300000,
+            'is_active' => true,
+        ])
+        ->assertRedirect('/budget/accounts');
+
+    $this->assertDatabaseHas('accounts', [
+        'id' => $account->id,
+        'interest_rate' => 24.5,
+        'credit_limit' => 300000,
+    ]);
+});
+
 test('account name and type are required', function () {
     $user = User::factory()->create();
 

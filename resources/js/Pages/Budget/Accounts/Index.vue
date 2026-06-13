@@ -18,7 +18,7 @@ import { useConfirm } from 'primevue/useconfirm';
 import { useCurrencyFormatter } from '@/Composables/useCurrencyFormatter.js';
 
 const props = defineProps({
-    /** @type {Array<{id:number,name:string,type:string,current_balance:string,is_active:boolean}>} */
+    /** @type {Array<{id:number,name:string,type:string,current_balance:string,interest_rate:string|null,credit_limit:string|null,available_credit:number|null,estimated_monthly_interest:number|null,is_active:boolean}>} */
     accounts: { type: Array, default: () => [] },
     /** @type {{debit_total:number,credit_total:number,net_worth:number}} */
     summary: { type: Object, required: true },
@@ -139,6 +139,21 @@ const submitTransfer = () => {
                 <Column field="current_balance" header="Balance">
                     <template #body="{ data }">
                         <span class="tabular-nums">{{ formatJMD(data.current_balance) }}</span>
+                    </template>
+                </Column>
+                <Column field="interest_rate" header="Rate (APR)">
+                    <template #body="{ data }">
+                        <span v-if="data.interest_rate !== null" class="tabular-nums">{{ Number(data.interest_rate) }}%</span>
+                        <span v-else class="text-muted-foreground">—</span>
+                    </template>
+                </Column>
+                <Column header="Credit limit">
+                    <template #body="{ data }">
+                        <div v-if="data.type === 'credit' && data.credit_limit !== null" class="tabular-nums">
+                            <span>{{ formatJMD(data.credit_limit) }}</span>
+                            <span class="block text-xs text-muted-foreground">{{ formatJMD(data.available_credit) }} available</span>
+                        </div>
+                        <span v-else class="text-muted-foreground">—</span>
                     </template>
                 </Column>
                 <Column header="Active">

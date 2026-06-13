@@ -40,6 +40,8 @@ class AccountFactory extends Factory
         return $this->state(fn (array $attributes): array => [
             'name' => 'Credit Card',
             'type' => 'credit',
+            'interest_rate' => fake()->randomFloat(2, 18, 55),
+            'credit_limit' => fake()->randomFloat(2, 50000, 500000),
         ]);
     }
 
