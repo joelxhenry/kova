@@ -65,6 +65,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/', [BudgetController::class, 'index'])->name('index');
         Route::resource('accounts', AccountController::class)->except(['show']);
         Route::post('transfers', [AccountController::class, 'transfer'])->name('transfers.store');
+        Route::post('payments', [AccountController::class, 'payment'])->name('payments.store');
         Route::resource('transactions', TransactionController::class)->except(['show']);
         Route::resource('recurring', RecurringTransactionController::class)->except(['show']);
         Route::post('recurring/{recurring}/cancel', [RecurringTransactionController::class, 'cancel'])->name('recurring.cancel');

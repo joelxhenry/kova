@@ -244,6 +244,78 @@ test('transfer moves balance between accounts and is not income or expense', fun
     $this->assertDatabaseMissing('transactions', ['type' => 'expense']);
 });
 
+test('payment pays down a credit account from a cash account', function () {
+    $user = User::factory()->create();
+    $checking = makeAccount($user, ['name' => 'Checking', 'type' => 'debit', 'opening_balance' => 5000, 'current_balance' => 5000]);
+    $card = makeAccount($user, ['name' => 'Visa', 'type' => 'credit', 'opening_balance' => 0, 'current_balance' => 1500]);
+
+    $this->actingAs($user)
+        ->post('/budget/payments', [
+            'from_account_id' => $checking->id,
+            'to_account_id' => $card->id,
+            'amount' => 600,
+            'date' => '2026-06-13',
+        ])
+        ->assertRedirect('/budget/accounts');
+
+    expect((float) $checking->fresh()->current_balance)->toBe(4400.0);
+    expect((float) $card->fresh()->current_balance)->toBe(900.0);
+
+    $this->assertDatabaseHas('transactions', [
+        'account_id' => $checking->id,
+        'transfer_account_id' => $card->id,
+        'type' => 'transfer',
+        'amount' => 600,
+        'description' => 'Credit card payment',
+    ]);
+});
+
+test('payment must target a credit account', function () {
+    $user = User::factory()->create();
+    $checking = makeAccount($user, ['name' => 'Checking', 'type' => 'debit']);
+    $savings = makeAccount($user, ['name' => 'Savings', 'type' => 'debit']);
+
+    $this->actingAs($user)
+        ->post('/budget/payments', [
+            'from_account_id' => $checking->id,
+            'to_account_id' => $savings->id,
+            'amount' => 100,
+            'date' => '2026-06-13',
+        ])
+        ->assertSessionHasErrors('to_account_id');
+});
+
+test('payment must come from a debit account', function () {
+    $user = User::factory()->create();
+    $cardA = makeAccount($user, ['name' => 'Card A', 'type' => 'credit', 'current_balance' => 500]);
+    $cardB = makeAccount($user, ['name' => 'Card B', 'type' => 'credit', 'current_balance' => 500]);
+
+    $this->actingAs($user)
+        ->post('/budget/payments', [
+            'from_account_id' => $cardA->id,
+            'to_account_id' => $cardB->id,
+            'amount' => 100,
+            'date' => '2026-06-13',
+        ])
+        ->assertSessionHasErrors('from_account_id');
+});
+
+test('user cannot pay a credit account using another users cash account', function () {
+    $owner = User::factory()->create();
+    $intruder = User::factory()->create();
+    $ownerCash = makeAccount($owner, ['name' => 'Owner cash', 'type' => 'debit']);
+    $intruderCard = makeAccount($intruder, ['name' => 'Intruder card', 'type' => 'credit', 'current_balance' => 500]);
+
+    $this->actingAs($intruder)
+        ->post('/budget/payments', [
+            'from_account_id' => $ownerCash->id,
+            'to_account_id' => $intruderCard->id,
+            'amount' => 100,
+            'date' => '2026-06-13',
+        ])
+        ->assertStatus(403);
+});
+
 test('transfer cannot target the same account', function () {
     $user = User::factory()->create();
     $account = makeAccount($user);

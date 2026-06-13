@@ -168,6 +168,22 @@ test('effective_annual_rate passes an effective rate through unchanged', functio
     expect($card->effective_annual_rate)->toBe(26.824);
 });
 
+test('payCredit pays down a credit account from a debit account', function () {
+    $checking = buildAccount($this->user, ['type' => 'debit', 'current_balance' => 5000]);
+    $card = buildAccount($this->user, ['type' => 'credit', 'current_balance' => 1200]);
+
+    $transaction = $this->service->payCredit($checking, $card, [
+        'amount' => 800,
+        'date' => '2026-06-13',
+    ]);
+
+    expect($transaction->type)->toBe('transfer');
+    expect($transaction->description)->toBe('Credit card payment');
+    // Cash drops, the card's debt shrinks.
+    expect((float) $checking->fresh()->current_balance)->toBe(4200.0);
+    expect((float) $card->fresh()->current_balance)->toBe(400.0);
+});
+
 test('delete throws when transactions exist', function () {
     $account = buildAccount($this->user);
     $account->transactions()->create([

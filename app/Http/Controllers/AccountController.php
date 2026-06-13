@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreAccountRequest;
+use App\Http\Requests\StoreCreditPaymentRequest;
 use App\Http\Requests\StoreTransferRequest;
 use App\Http\Requests\UpdateAccountRequest;
 use App\Models\Account;
@@ -95,5 +96,20 @@ class AccountController extends Controller
 
         return redirect()->route('budget.accounts.index')
             ->with('status', 'Transfer recorded.');
+    }
+
+    public function payment(StoreCreditPaymentRequest $request): RedirectResponse
+    {
+        $validated = $request->validated();
+
+        $from = Account::findOrFail($validated['from_account_id']);
+        $to = Account::findOrFail($validated['to_account_id']);
+
+        abort_unless($from->user_id === auth()->id() && $to->user_id === auth()->id(), 403);
+
+        $this->accountService->payCredit($from, $to, $validated);
+
+        return redirect()->route('budget.accounts.index')
+            ->with('status', 'Payment recorded.');
     }
 }

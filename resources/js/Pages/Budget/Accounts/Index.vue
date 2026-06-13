@@ -81,6 +81,45 @@ const submitTransfer = () => {
         onSuccess: () => { showTransfer.value = false; },
     });
 };
+
+// Credit-card payment — pay down a credit account from a cash (debit) account.
+const showPayment = ref(false);
+const paymentTarget = ref(null);
+
+const fundingOptions = computed(() =>
+    props.accounts
+        .filter(a => a.type === 'debit' && a.is_active)
+        .map(a => ({ label: a.name, value: a.id })),
+);
+
+const paymentForm = useForm({
+    from_account_id: null,
+    to_account_id: null,
+    amount: null,
+    date: new Date(),
+    description: '',
+});
+
+const openPayment = (account) => {
+    paymentTarget.value = account;
+    paymentForm.reset();
+    paymentForm.to_account_id = account.id;
+    // Prefill with the outstanding balance so "pay it off" is one tap, but editable.
+    paymentForm.amount = Number(account.current_balance) > 0 ? Number(account.current_balance) : null;
+    paymentForm.date = new Date();
+    paymentForm.clearErrors();
+    showPayment.value = true;
+};
+
+const submitPayment = () => {
+    paymentForm.transform((data) => ({
+        ...data,
+        date: formatDate(data.date),
+    })).post('/budget/payments', {
+        preserveScroll: true,
+        onSuccess: () => { showPayment.value = false; },
+    });
+};
 </script>
 
 <template>
@@ -164,9 +203,10 @@ const submitTransfer = () => {
                         <Checkbox v-model="data.is_active" :binary="true" @change="toggleActive(data)" />
                     </template>
                 </Column>
-                <Column header="" :style="{ width: '8rem' }">
+                <Column header="" :style="{ width: '12rem' }">
                     <template #body="{ data }">
                         <div class="flex items-center justify-end gap-2">
+                            <Button v-if="data.type === 'credit'" label="Pay" icon="pi pi-credit-card" text size="small" @click="openPayment(data)" />
                             <Link :href="`/budget/accounts/${data.id}/edit`">
                                 <Button icon="pi pi-pencil" text severity="secondary" size="small" />
                             </Link>
@@ -210,6 +250,42 @@ const submitTransfer = () => {
                 <div class="flex items-center justify-end gap-3 pt-2">
                     <Button type="button" label="Cancel" text severity="secondary" @click="showTransfer = false" />
                     <Button type="submit" label="Transfer" :loading="transferForm.processing" />
+                </div>
+            </form>
+        </Dialog>
+
+        <!-- Credit-card payment dialog -->
+        <Dialog v-model:visible="showPayment" modal :header="paymentTarget ? `Pay ${paymentTarget.name}` : 'Make a payment'" :style="{ width: '28rem' }">
+            <form @submit.prevent="submitPayment" class="space-y-5">
+                <div v-if="paymentTarget" class="p-4 rounded-xl border border-border bg-accent/5">
+                    <p class="text-xs uppercase tracking-wide text-muted-foreground">Current balance owed</p>
+                    <p class="mt-1 text-lg font-bold tabular-nums">{{ formatJMD(paymentTarget.current_balance) }}</p>
+                </div>
+                <div>
+                    <InputLabel value="Pay from" />
+                    <Select v-model="paymentForm.from_account_id" :options="fundingOptions" optionLabel="label" optionValue="value" placeholder="Cash account" fluid :invalid="!!paymentForm.errors.from_account_id" />
+                    <InputError :message="paymentForm.errors.from_account_id" />
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <InputLabel value="Amount" />
+                        <InputNumber v-model="paymentForm.amount" :min="0.01" :minFractionDigits="2" :maxFractionDigits="2" fluid :invalid="!!paymentForm.errors.amount" />
+                        <InputError :message="paymentForm.errors.amount" />
+                    </div>
+                    <div>
+                        <InputLabel value="Date" />
+                        <DatePicker v-model="paymentForm.date" dateFormat="yy-mm-dd" showIcon fluid :invalid="!!paymentForm.errors.date" />
+                        <InputError :message="paymentForm.errors.date" />
+                    </div>
+                </div>
+                <div>
+                    <InputLabel value="Description" />
+                    <InputText v-model="paymentForm.description" placeholder="Optional note" fluid :invalid="!!paymentForm.errors.description" />
+                    <InputError :message="paymentForm.errors.description" />
+                </div>
+                <div class="flex items-center justify-end gap-3 pt-2">
+                    <Button type="button" label="Cancel" text severity="secondary" @click="showPayment = false" />
+                    <Button type="submit" label="Record payment" :loading="paymentForm.processing" />
                 </div>
             </form>
         </Dialog>

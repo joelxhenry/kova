@@ -106,6 +106,22 @@ class AccountService
     }
 
     /**
+     * Pay down a credit account from a cash (debit) account. A payment is a
+     * transfer with payment semantics: the source leg behaves like an expense
+     * (cash leaves) and the credit destination's income leg shrinks the debt
+     * (FR-1.4). Recorded as a single transfer row so it is never miscounted as
+     * income or expense in analytics.
+     *
+     * @param array<string, mixed> $data
+     */
+    public function payCredit(Account $from, Account $to, array $data): Transaction
+    {
+        $data['description'] = $data['description'] ?? 'Credit card payment';
+
+        return $this->transfer($from, $to, $data);
+    }
+
+    /**
      * Central balance-mutation helper (reused by TransactionService).
      *
      * @param string $type income|expense
