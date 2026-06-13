@@ -14,11 +14,17 @@ const typeOptions = [
     { label: 'Credit (liability — credit card, loan)', value: 'credit' },
 ];
 
+const rateBasisOptions = [
+    { label: 'APR (nominal)', value: 'apr' },
+    { label: 'Effective annual (EAR)', value: 'effective' },
+];
+
 const form = useForm({
     name: '',
     type: 'debit',
     opening_balance: 0,
     interest_rate: null,
+    rate_basis: 'apr',
     credit_limit: null,
     is_active: true,
 });
@@ -54,10 +60,17 @@ const submit = () => {
                     <InputError :message="form.errors.opening_balance" />
                 </div>
 
-                <div>
-                    <InputLabel :value="form.type === 'credit' ? 'Interest rate (APR %)' : 'Interest rate (APR %, optional)'" />
-                    <InputNumber v-model="form.interest_rate" suffix=" %" :min="0" :max="100" :minFractionDigits="2" :maxFractionDigits="3" placeholder="e.g. 19.99" fluid :invalid="!!form.errors.interest_rate" />
-                    <InputError :message="form.errors.interest_rate" />
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <InputLabel value="Interest rate" />
+                        <InputNumber v-model="form.interest_rate" suffix=" %" :min="0" :max="100" :minFractionDigits="2" :maxFractionDigits="3" placeholder="e.g. 19.99" fluid :invalid="!!form.errors.interest_rate" />
+                        <InputError :message="form.errors.interest_rate" />
+                    </div>
+                    <div>
+                        <InputLabel value="Rate basis" />
+                        <Select v-model="form.rate_basis" :options="rateBasisOptions" optionLabel="label" optionValue="value" fluid :invalid="!!form.errors.rate_basis" />
+                        <InputError :message="form.errors.rate_basis" />
+                    </div>
                 </div>
 
                 <div v-if="form.type === 'credit'">

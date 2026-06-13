@@ -18,7 +18,7 @@ import { useConfirm } from 'primevue/useconfirm';
 import { useCurrencyFormatter } from '@/Composables/useCurrencyFormatter.js';
 
 const props = defineProps({
-    /** @type {Array<{id:number,name:string,type:string,current_balance:string,interest_rate:string|null,credit_limit:string|null,available_credit:number|null,estimated_monthly_interest:number|null,is_active:boolean}>} */
+    /** @type {Array<{id:number,name:string,type:string,current_balance:string,interest_rate:string|null,rate_basis:string,credit_limit:string|null,available_credit:number|null,effective_annual_rate:number|null,estimated_monthly_interest:number|null,is_active:boolean}>} */
     accounts: { type: Array, default: () => [] },
     /** @type {{debit_total:number,credit_total:number,net_worth:number}} */
     summary: { type: Object, required: true },
@@ -141,9 +141,12 @@ const submitTransfer = () => {
                         <span class="tabular-nums">{{ formatJMD(data.current_balance) }}</span>
                     </template>
                 </Column>
-                <Column field="interest_rate" header="Rate (APR)">
+                <Column field="interest_rate" header="Interest rate">
                     <template #body="{ data }">
-                        <span v-if="data.interest_rate !== null" class="tabular-nums">{{ Number(data.interest_rate) }}%</span>
+                        <div v-if="data.interest_rate !== null" class="tabular-nums">
+                            <span>{{ Number(data.interest_rate) }}% {{ data.rate_basis === 'effective' ? 'EAR' : 'APR' }}</span>
+                            <span v-if="data.rate_basis !== 'effective'" class="block text-xs text-muted-foreground">{{ Number(data.effective_annual_rate) }}% effective</span>
+                        </div>
                         <span v-else class="text-muted-foreground">—</span>
                     </template>
                 </Column>

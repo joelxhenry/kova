@@ -127,20 +127,45 @@ test('available_credit is null for debit accounts or when no limit is set', func
     expect($card->available_credit)->toBeNull();
 });
 
-test('estimated_monthly_interest divides the annual rate across twelve months', function () {
+test('estimated_monthly_interest divides an APR across twelve months', function () {
     $card = buildAccount($this->user, [
         'type' => 'credit',
         'current_balance' => 120000,
         'interest_rate' => 24,
+        'rate_basis' => 'apr',
     ]);
 
     // 120000 * (24 / 100) / 12 = 2400
     expect($card->estimated_monthly_interest)->toBe(2400.0);
 });
 
+test('estimated_monthly_interest un-compounds an effective annual rate', function () {
+    // An EAR of 26.824% compounds from a 2% monthly rate, so a 120000 balance
+    // accrues ~2400/month — less than naively dividing the EAR by 12 (2682).
+    $card = buildAccount($this->user, [
+        'type' => 'credit',
+        'current_balance' => 120000,
+        'interest_rate' => 26.824,
+        'rate_basis' => 'effective',
+    ]);
+
+    expect($card->estimated_monthly_interest)->toEqualWithDelta(2400.0, 1.0);
+});
+
 test('estimated_monthly_interest is null when no rate is set', function () {
     $account = buildAccount($this->user, ['current_balance' => 1000]);
     expect($account->estimated_monthly_interest)->toBeNull();
+});
+
+test('effective_annual_rate compounds an APR up to its EAR', function () {
+    // 24% APR compounded monthly = (1 + 0.24/12)^12 - 1 = 26.824%.
+    $card = buildAccount($this->user, ['interest_rate' => 24, 'rate_basis' => 'apr']);
+    expect($card->effective_annual_rate)->toEqualWithDelta(26.824, 0.01);
+});
+
+test('effective_annual_rate passes an effective rate through unchanged', function () {
+    $card = buildAccount($this->user, ['interest_rate' => 26.824, 'rate_basis' => 'effective']);
+    expect($card->effective_annual_rate)->toBe(26.824);
 });
 
 test('delete throws when transactions exist', function () {

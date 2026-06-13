@@ -96,6 +96,61 @@ test('credit account stores interest rate and credit limit', function () {
     ]);
 });
 
+test('credit account can store an effective annual rate basis', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->post('/budget/accounts', [
+            'name' => 'NCB Visa',
+            'type' => 'credit',
+            'opening_balance' => 0,
+            'interest_rate' => 26.824,
+            'rate_basis' => 'effective',
+            'is_active' => true,
+        ])
+        ->assertRedirect('/budget/accounts');
+
+    $this->assertDatabaseHas('accounts', [
+        'user_id' => $user->id,
+        'name' => 'NCB Visa',
+        'interest_rate' => 26.824,
+        'rate_basis' => 'effective',
+    ]);
+});
+
+test('rate basis must be a known value', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->post('/budget/accounts', [
+            'name' => 'Card',
+            'type' => 'credit',
+            'opening_balance' => 0,
+            'interest_rate' => 20,
+            'rate_basis' => 'weekly',
+        ])
+        ->assertSessionHasErrors('rate_basis');
+});
+
+test('rate basis defaults to apr when omitted', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->post('/budget/accounts', [
+            'name' => 'Card',
+            'type' => 'credit',
+            'opening_balance' => 0,
+            'interest_rate' => 20,
+            'is_active' => true,
+        ])
+        ->assertRedirect('/budget/accounts');
+
+    $this->assertDatabaseHas('accounts', [
+        'name' => 'Card',
+        'rate_basis' => 'apr',
+    ]);
+});
+
 test('interest rate cannot exceed 100 percent', function () {
     $user = User::factory()->create();
 

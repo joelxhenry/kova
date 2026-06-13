@@ -24,6 +24,7 @@ class Account extends Model
         'opening_balance',
         'current_balance',
         'interest_rate',
+        'rate_basis',
         'credit_limit',
         'is_active',
         'sort_order',
@@ -32,6 +33,7 @@ class Account extends Model
     /** @var list<string> */
     protected $appends = [
         'available_credit',
+        'effective_annual_rate',
         'estimated_monthly_interest',
     ];
 
@@ -66,12 +68,15 @@ class Account extends Model
     }
 
     /**
-     * Interest accrued over one month at the current balance and APR
-     * (annual rate ÷ 12). Null when no rate is set.
+     * The rate normalised to an Effective Annual Rate (%) so accounts quoted
+     * as APR and as EAR can be compared on equal footing. Null when no rate.
+     *
+     * APR is nominal (compounded monthly): EAR = (1 + APR/12)^12 − 1.
+     * An 'effective' rate is already an EAR and passes through unchanged.
      *
      * @return Attribute<float|null, never>
      */
-    protected function estimatedMonthlyInterest(): Attribute
+    protected function effectiveAnnualRate(): Attribute
     {
         return Attribute::make(
             get: function (): ?float {
@@ -79,7 +84,59 @@ class Account extends Model
                     return null;
                 }
 
-                return round((float) $this->current_balance * ((float) $this->interest_rate / 100) / 12, 2);
+                $rate = (float) $this->interest_rate / 100;
+
+                $ear = $this->rate_basis === 'effective'
+                    ? $rate
+                    : (1 + $rate / 12) ** 12 - 1;
+
+                return round($ear * 100, 3);
+            },
+        );
+    }
+
+    /**
+     * The periodic (monthly) interest rate as a fraction, respecting how the
+     * rate is quoted. Null when no rate is set. Shared by the monthly-interest
+     * estimate and the projection engine so both compound consistently.
+     *
+     *  - APR:       monthly rate = APR ÷ 12.
+     *  - Effective: monthly rate = (1 + EAR)^(1/12) − 1 (un-compounded), so a
+     *               year of these monthly charges compounds back up to the EAR.
+     *
+     * @return Attribute<float|null, never>
+     */
+    protected function monthlyInterestRate(): Attribute
+    {
+        return Attribute::make(
+            get: function (): ?float {
+                if ($this->interest_rate === null) {
+                    return null;
+                }
+
+                $rate = (float) $this->interest_rate / 100;
+
+                return $this->rate_basis === 'effective'
+                    ? (1 + $rate) ** (1 / 12) - 1
+                    : $rate / 12;
+            },
+        );
+    }
+
+    /**
+     * Interest accrued over one month at the current balance. Null when no rate.
+     *
+     * @return Attribute<float|null, never>
+     */
+    protected function estimatedMonthlyInterest(): Attribute
+    {
+        return Attribute::make(
+            get: function (): ?float {
+                if ($this->monthly_interest_rate === null) {
+                    return null;
+                }
+
+                return round((float) $this->current_balance * $this->monthly_interest_rate, 2);
             },
         );
     }

@@ -18,7 +18,8 @@ const props = defineProps({
      *   starting_net_worth: number,
      *   ending_net_worth: number,
      *   lowest_net_worth: number,
-     *   expected_events: Array<{account_id:number|null,name:string,date:string,type:string,amount:number,signed_delta:number}>
+     *   expected_events: Array<{account_id:number|null,name:string,date:string,type:string,amount:number,signed_delta:number}>,
+     *   interest: {cost:number,earned:number,net_worth_impact:number,by_account:Array<{account_id:number,name:string,type:string,accrued:number}>}
      * }}
      */
     projection: { type: Object, required: true },
@@ -179,6 +180,44 @@ const chartOptions = {
 
             <div v-else class="p-4 sm:p-6 rounded-2xl border border-border">
                 <Chart type="line" :data="chartData" :options="chartOptions" class="h-[22rem] sm:h-[28rem]" />
+            </div>
+
+            <!-- Interest accrued over the window on rate-bearing accounts (B9) -->
+            <div v-if="projection.interest && projection.interest.by_account.length" class="mt-6">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-violet-500"></span>
+                    <h2 class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Projected interest in this window</h2>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                    <div class="p-5 rounded-2xl border border-border">
+                        <p class="text-xs uppercase tracking-wide text-muted-foreground">Interest cost (credit)</p>
+                        <p class="mt-1 text-xl font-bold tabular-nums text-rose-600">{{ formatJMD(projection.interest.cost) }}</p>
+                    </div>
+                    <div class="p-5 rounded-2xl border border-border">
+                        <p class="text-xs uppercase tracking-wide text-muted-foreground">Interest earned (savings)</p>
+                        <p class="mt-1 text-xl font-bold tabular-nums text-emerald-600">{{ formatJMD(projection.interest.earned) }}</p>
+                    </div>
+                    <div class="p-5 rounded-2xl border border-border bg-accent/5">
+                        <p class="text-xs uppercase tracking-wide text-muted-foreground">Net worth impact</p>
+                        <p class="mt-1 text-xl font-bold tabular-nums" :class="projection.interest.net_worth_impact < 0 ? 'text-rose-600' : 'text-emerald-600'">{{ formatJMD(projection.interest.net_worth_impact) }}</p>
+                    </div>
+                </div>
+                <div class="rounded-2xl border border-border divide-y divide-border">
+                    <div
+                        v-for="row in projection.interest.by_account"
+                        :key="row.account_id"
+                        class="flex items-center justify-between p-4"
+                    >
+                        <div class="min-w-0">
+                            <div class="text-sm font-medium">{{ row.name }}</div>
+                            <div class="text-xs text-muted-foreground">{{ row.type === 'credit' ? 'Interest charged' : 'Interest earned' }}</div>
+                        </div>
+                        <span
+                            class="tabular-nums text-sm font-medium shrink-0 ml-2"
+                            :class="row.type === 'credit' ? 'text-rose-600' : 'text-emerald-600'"
+                        >{{ '+' + formatJMD(row.accrued) }}</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Pending expected items folded into the forecast (B6) -->

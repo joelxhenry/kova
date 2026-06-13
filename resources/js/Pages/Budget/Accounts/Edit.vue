@@ -10,7 +10,7 @@ import Checkbox from 'primevue/checkbox';
 import Button from 'primevue/button';
 
 const props = defineProps({
-    /** @type {{id:number,name:string,type:string,opening_balance:string,current_balance:string,interest_rate:string|null,credit_limit:string|null,is_active:boolean}} */
+    /** @type {{id:number,name:string,type:string,opening_balance:string,current_balance:string,interest_rate:string|null,rate_basis:string,credit_limit:string|null,is_active:boolean}} */
     account: { type: Object, required: true },
 });
 
@@ -19,11 +19,17 @@ const typeOptions = [
     { label: 'Credit (liability — credit card, loan)', value: 'credit' },
 ];
 
+const rateBasisOptions = [
+    { label: 'APR (nominal)', value: 'apr' },
+    { label: 'Effective annual (EAR)', value: 'effective' },
+];
+
 const form = useForm({
     name: props.account.name,
     type: props.account.type,
     opening_balance: Number(props.account.opening_balance),
     interest_rate: props.account.interest_rate !== null ? Number(props.account.interest_rate) : null,
+    rate_basis: props.account.rate_basis ?? 'apr',
     credit_limit: props.account.credit_limit !== null ? Number(props.account.credit_limit) : null,
     is_active: props.account.is_active,
 });
@@ -60,10 +66,17 @@ const submit = () => {
                     <p class="mt-1 text-xs text-muted-foreground">Changing this re-derives the current balance, keeping recorded transactions intact.</p>
                 </div>
 
-                <div>
-                    <InputLabel :value="form.type === 'credit' ? 'Interest rate (APR %)' : 'Interest rate (APR %, optional)'" />
-                    <InputNumber v-model="form.interest_rate" suffix=" %" :min="0" :max="100" :minFractionDigits="2" :maxFractionDigits="3" placeholder="e.g. 19.99" fluid :invalid="!!form.errors.interest_rate" />
-                    <InputError :message="form.errors.interest_rate" />
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <InputLabel value="Interest rate" />
+                        <InputNumber v-model="form.interest_rate" suffix=" %" :min="0" :max="100" :minFractionDigits="2" :maxFractionDigits="3" placeholder="e.g. 19.99" fluid :invalid="!!form.errors.interest_rate" />
+                        <InputError :message="form.errors.interest_rate" />
+                    </div>
+                    <div>
+                        <InputLabel value="Rate basis" />
+                        <Select v-model="form.rate_basis" :options="rateBasisOptions" optionLabel="label" optionValue="value" fluid :invalid="!!form.errors.rate_basis" />
+                        <InputError :message="form.errors.rate_basis" />
+                    </div>
                 </div>
 
                 <div v-if="form.type === 'credit'">

@@ -93,6 +93,71 @@ test('income increases and credit-account rules follow their sign rules', functi
     expect($result['ending_net_worth'])->toBe(650.0);
 });
 
+test('credit-account interest compounds monthly into the projection (B9)', function () {
+    $user = User::factory()->create();
+    // 12% APR → 1% per month. No recurring activity, so the balance compounds.
+    makeProjectionAccount($user, [
+        'name' => 'Card',
+        'type' => 'credit',
+        'current_balance' => 100000,
+        'interest_rate' => 12,
+        'rate_basis' => 'apr',
+    ]);
+
+    // Horizon to today + 12 months → 12 monthly accruals.
+    $result = projectionService()->project($user, Carbon::parse('2026-06-01')->addMonthsNoOverflow(12));
+
+    $card = collect($result['datasets'])->firstWhere('name', 'Card');
+    // 100000 * 1.01^12 ≈ 112682.50.
+    expect(end($card['points']))->toEqualWithDelta(112682.50, 1.0);
+    expect($card['interest_accrued'])->toEqualWithDelta(12682.50, 1.0);
+    expect($result['interest']['cost'])->toEqualWithDelta(12682.50, 1.0);
+    expect($result['interest']['earned'])->toBe(0.0);
+    expect($result['interest']['net_worth_impact'])->toEqualWithDelta(-12682.50, 1.0);
+});
+
+test('an effective-rate account compounds back up to its stated annual rate', function () {
+    $user = User::factory()->create();
+    // 26.824% EAR compounds from ~2%/month, so 12 months ≈ +26.824%.
+    makeProjectionAccount($user, [
+        'name' => 'EAR Card',
+        'type' => 'credit',
+        'current_balance' => 100000,
+        'interest_rate' => 26.824,
+        'rate_basis' => 'effective',
+    ]);
+
+    $result = projectionService()->project($user, Carbon::parse('2026-06-01')->addMonthsNoOverflow(12));
+
+    $card = collect($result['datasets'])->firstWhere('name', 'EAR Card');
+    expect(end($card['points']))->toEqualWithDelta(126824.0, 2.0);
+});
+
+test('accounts without a rate accrue no interest and report none', function () {
+    $user = User::factory()->create();
+    makeProjectionAccount($user, ['name' => 'Plain', 'current_balance' => 5000]);
+
+    $result = projectionService()->project($user, Carbon::parse('2026-06-01')->addMonthsNoOverflow(6));
+
+    $plain = collect($result['datasets'])->firstWhere('name', 'Plain');
+    expect(end($plain['points']))->toBe(5000.0);
+    expect($plain['interest_accrued'])->toBe(0.0);
+    expect($result['interest']['by_account'])->toHaveCount(0);
+    expect($result['interest']['cost'])->toBe(0.0);
+});
+
+test('interest accrual performs no database writes', function () {
+    $user = User::factory()->create();
+    $card = makeProjectionAccount($user, [
+        'type' => 'credit', 'current_balance' => 50000, 'interest_rate' => 24, 'rate_basis' => 'apr',
+    ]);
+
+    projectionService()->project($user, Carbon::parse('2026-12-31'));
+
+    expect((float) $card->fresh()->current_balance)->toBe(50000.0);
+    expect(Transaction::count())->toBe(0);
+});
+
 test('account filtering changes the returned series (FR-4.3)', function () {
     $user = User::factory()->create();
     $a = makeProjectionAccount($user, ['name' => 'A', 'current_balance' => 1000]);

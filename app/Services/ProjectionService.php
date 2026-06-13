@@ -26,13 +26,14 @@ class ProjectionService
      * @param list<int> $accountIds Restrict the projection to these accounts; empty = all active accounts.
      * @return array{
      *     labels: list<string>,
-     *     datasets: list<array{account_id: int, name: string, type: string, points: list<float>}>,
+     *     datasets: list<array{account_id: int, name: string, type: string, points: list<float>, interest_accrued: float}>,
      *     aggregate: list<float>,
      *     alerts: list<array{account_id: int, name: string, date: string, balance: float}>,
      *     starting_net_worth: float,
      *     ending_net_worth: float,
      *     lowest_net_worth: float,
-     *     expected_events: list<array{account_id: int|null, name: string, date: string, type: string, amount: float, signed_delta: float}>
+     *     expected_events: list<array{account_id: int|null, name: string, date: string, type: string, amount: float, signed_delta: float}>,
+     *     interest: array{cost: float, earned: float, net_worth_impact: float, by_account: list<array{account_id: int, name: string, type: string, accrued: float}>}
      * }
      */
     public function project(User $user, Carbon $until, array $accountIds = []): array
@@ -55,6 +56,10 @@ class ProjectionService
 
         $labels = $this->buildLabels($today, $until);
 
+        // Monthly anniversaries of today within the horizon — the dates interest
+        // compounds on (B9). Anchored to today so every account accrues in step.
+        $accrualSet = array_flip($this->buildAccrualDates($today, $until));
+
         // Per-account, per-date signed deltas from recurring rules.
         $deltas = $this->simulateDeltas($user, $tracked->keys()->all(), $allAccounts, $today, $until);
 
@@ -69,14 +74,30 @@ class ProjectionService
 
         $datasets = [];
         $alerts = [];
+        $interestRows = [];
+        $interestCost = 0.0;
+        $interestEarned = 0.0;
 
         foreach ($tracked as $accountId => $account) {
             $running = (float) $account->current_balance;
+            $monthlyRate = $account->monthly_interest_rate;
+            $accrued = 0.0;
             $points = [];
             $breached = false;
 
             foreach ($labels as $label) {
                 $running = round($running + ($deltas[$accountId][$label] ?? 0.0), 2);
+
+                // Compound interest on each monthly anniversary (B9). Interest
+                // always grows the balance magnitude: more debt on a credit
+                // account, more savings on a debit one — so it simply adds to
+                // the running balance, which the net-worth aggregate then signs.
+                if ($monthlyRate !== null && isset($accrualSet[$label])) {
+                    $charge = round($running * $monthlyRate, 2);
+                    $running = round($running + $charge, 2);
+                    $accrued = round($accrued + $charge, 2);
+                }
+
                 $points[] = $running;
 
                 // FR-4.5: flag the first day a debit account dips below zero.
@@ -96,7 +117,23 @@ class ProjectionService
                 'name' => $account->name,
                 'type' => $account->type,
                 'points' => $points,
+                'interest_accrued' => $accrued,
             ];
+
+            if ($monthlyRate !== null && $accrued !== 0.0) {
+                $interestRows[] = [
+                    'account_id' => (int) $accountId,
+                    'name' => $account->name,
+                    'type' => $account->type,
+                    'accrued' => $accrued,
+                ];
+
+                if ($account->type === 'credit') {
+                    $interestCost = round($interestCost + $accrued, 2);
+                } else {
+                    $interestEarned = round($interestEarned + $accrued, 2);
+                }
+            }
         }
 
         $aggregate = $this->aggregateNetWorth($datasets, count($labels));
@@ -120,7 +157,31 @@ class ProjectionService
             'ending_net_worth' => $aggregate !== [] ? $aggregate[count($aggregate) - 1] : 0.0,
             'lowest_net_worth' => $aggregate !== [] ? min($aggregate) : 0.0,
             'expected_events' => $expected['events'],
+            'interest' => [
+                'cost' => $interestCost,
+                'earned' => $interestEarned,
+                'net_worth_impact' => round($interestEarned - $interestCost, 2),
+                'by_account' => $interestRows,
+            ],
         ];
+    }
+
+    /**
+     * Monthly-anniversary dates of $today within (today, until]. These are the
+     * dates interest compounds on; anchored to today's day-of-month so all
+     * accounts accrue together (e.g. today 06-13 → 07-13, 08-13, …).
+     *
+     * @return list<string>
+     */
+    private function buildAccrualDates(Carbon $today, Carbon $until): array
+    {
+        $dates = [];
+
+        for ($date = $today->copy()->addMonthNoOverflow(); $date->lte($until); $date->addMonthNoOverflow()) {
+            $dates[] = $date->toDateString();
+        }
+
+        return $dates;
     }
 
     /**

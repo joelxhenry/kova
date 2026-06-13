@@ -24,6 +24,7 @@ class UpdateAccountRequest extends FormRequest
             'type' => ['sometimes', 'required', Rule::in(['debit', 'credit'])],
             'opening_balance' => ['sometimes', 'required', 'numeric'],
             'interest_rate' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:100'],
+            'rate_basis' => ['sometimes', 'nullable', Rule::in(['apr', 'effective'])],
             'credit_limit' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'is_active' => ['sometimes', 'boolean'],
             'sort_order' => ['sometimes', 'nullable', 'integer'],
